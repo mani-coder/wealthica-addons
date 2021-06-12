@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
+    "build": "rm -rf public/assets; rollup -c && cp -vR public/* ../../public/mani-coder/wealthica-portfolio-addon/widgets/pnl/",
     "dev": "rollup -c -w",
     "start": "sirv public",
     "validate": "svelte-check",
-    "deploy": "rm -rf public/assets; npm run build && gh-pages -d public"
+    "deploy": "npm run build && firebase deploy"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
