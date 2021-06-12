@@ -24,7 +24,9 @@
   let timer;
 
   try {
-    addon = new Addon({});
+    addon = new Addon({
+      id: "mani-coder/wealthica-portfolio-addon/widgets/pnl",
+    });
     addon.on("init", (options) => {
       console.debug("[pnl-widget] Addon initialization", options);
       debounced(options);
@@ -53,17 +55,13 @@
   async function load(options) {
     privateMode = options.privateMode;
     loading = true;
-    const [
-      currencyData,
-      portfolioData,
-      accounts,
-      transactions,
-    ] = await Promise.all([
-      loadCurrenciesCache(),
-      loadPortfolioData(options),
-      loadInstitutionsData(options),
-      loadTransactions(options),
-    ]);
+    const [currencyData, portfolioData, accounts, transactions] =
+      await Promise.all([
+        loadCurrenciesCache(),
+        loadPortfolioData(options),
+        loadInstitutionsData(options),
+        loadTransactions(options),
+      ]);
     currencyCache = currencyData ? currencyData : currencyCache;
     computePortfolios(portfolioData, transactions, accounts, currencyCache);
     loading = false;
