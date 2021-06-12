@@ -1,11 +1,16 @@
 #!/bin/sh
 
-echo "Building Addon"
+echo "Building Addon ..."
 cd addon/pnl
-npm run build
+npm run test
 
-echo "Building Widget"
+cd ../../
+
+echo "Building Widget ..."
 cd widgets/pnl
 npm run build
 
+cd ../../
+
+echo "Deploying ..."
 firebase deploy
