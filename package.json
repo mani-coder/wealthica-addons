@@ -33,7 +33,7 @@
     "not ie <= 11",
     "not op_mini all"
   ],
-  "homepage": "https://mani-coder.github.io/wealthica-portfolio-addon/",
+  "homepage": "mani-coder/wealthica-portfolio-addon",
   "devDependencies": {
     "@babel/helper-builder-react-jsx": "^7.10.4",
     "@babel/helper-call-delegate": "^7.12.1",
