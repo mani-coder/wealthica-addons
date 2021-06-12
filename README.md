@@ -4,6 +4,6 @@ P/L Timeline tracker addon for wealthica. This add-on helps to track your profit
 
 Samples:
 
-[Addon](https://my-project-1554851948544.web.app/mani-coder/wealthica-portfolio-addon/)
+[Addon](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/)
 
-[Widget](https://my-project-1554851948544.web.app/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
+[Widget](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
