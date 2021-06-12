@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build && cp -vR build/* ../../public/mani-coder/wealthica-portfolio-addon/",
+    "build": "GENERATE_SOURCEMAP=false craco build && mkdir -p ../../public/mani-coder/wealthica-portfolio-addon/ && rm -rf ../../public/mani-coder/wealthica-portfolio-addon/static; cp -vR build/* ../../public/mani-coder/wealthica-portfolio-addon/",
     "deploy": "npm run build && firebase deploy --only hosting:mani-coder"
   },
   "eslintConfig": {

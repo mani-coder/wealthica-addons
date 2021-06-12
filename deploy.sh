@@ -1,8 +1,11 @@
 #!/bin/sh
 
+echo "Deleting build files ..."
+rm -rf public/mani-coder
+
 echo "Building Addon ..."
 cd addon/pnl
-npm run test
+npm run build
 
 cd ../../
 
