@@ -13,4 +13,4 @@ npm run build
 cd ../../
 
 echo "Deploying ..."
-firebase deploy
+firebase deploy --only hosting:mani-coder
