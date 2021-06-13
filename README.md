@@ -7,10 +7,10 @@ Currently we have [one addon](https://github.com/mani-coder/wealthica-addons/tre
 
 Samples:
 
-[Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/
+[Wealthica PnL Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/
 
 
-[Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/
 
 
 
