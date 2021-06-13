@@ -5,11 +5,7 @@
   "main": "public/index.html",
   "scripts": {
     "build": "./build.sh",
-    "deploy": "firebase deploy --only hosting:mani-coder"
-  },
-  "devDependencies": {
-    "firebase": "*",
-    "vercel": "*"
+    "deploy": "npx firebase deploy --only hosting:mani-coder"
   },
   "repository": {
     "type": "git",
