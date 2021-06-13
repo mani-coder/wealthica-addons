@@ -1,4 +1,4 @@
-export const CURRENCIES_API_RESPONSE = {
+export const DATA = {
   from: '2004-01-02T00:00:00.000Z',
   to: '2021-05-15T00:00:00.000Z',
   high: {

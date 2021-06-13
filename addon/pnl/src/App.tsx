@@ -34,7 +34,6 @@ import RealizedPnL from './components/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import { TRANSACTIONS_FROM_DATE } from './constants';
-import { CURRENCIES_API_RESPONSE } from './mocks/currencies';
 import { Account, AccountTransaction, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, getCurrencyInCAD, getSymbol } from './utils';
 
@@ -354,13 +353,14 @@ class App extends Component<Props, State> {
   }
 
   async loadStaticPortfolioData() {
-    let institutionsData, portfolioData, positionsData, transactionsData;
+    let institutionsData, portfolioData, positionsData, transactionsData, currenciesData;
     if (process.env.NODE_ENV === 'development') {
-      [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
+      [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
         import('./mocks/institutions-prod').then((response) => response.DATA),
         import('./mocks/portfolio-prod').then((response) => response.DATA),
         import('./mocks/positions-prod').then((response) => response.DATA),
         import('./mocks/transactions-prod').then((response) => response.DATA),
+        import('./mocks/currencies-prod').then((response) => response.DATA),
       ]);
     } else {
       [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
@@ -370,7 +370,7 @@ class App extends Component<Props, State> {
         import('./mocks/transactions').then((response) => response.DATA),
       ]);
     }
-    const currencyCache = parseCurrencyReponse(CURRENCIES_API_RESPONSE);
+    const currencyCache = parseCurrencyReponse(currenciesData);
     const portfolioByDate = parsePortfolioResponse(portfolioData);
     const positions = parsePositionsResponse(positionsData);
     const accounts = parseInstitutionsResponse(institutionsData);
