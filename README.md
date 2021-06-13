@@ -1,9 +1,19 @@
-# wealthica-pnl-addon
+# Wealthica Developer Addons
 
-P/L Timeline tracker addon for wealthica. This add-on helps to track your profit loss over a period of time. This add-on also shows the PnL change over different periods of time as-in 1 day PnL, WTD PnL, 1 month PnL etc.,
+This is the new consolidated repo containing all the addons and widgets developed by [Elayamani Krishnnamoorthi](https://github.com/mani-coder/) for [Wealthica](https://app.wealthica.com/).
+
+Currently we have [one addon](https://github.com/mani-coder/wealthica-addons/tree/master/addon/pnl) which primarily focuses on the PnL related charting and also provides useful stock market analysis tools for your day-to-day trading. 
+
+We also have [a widget](https://github.com/mani-coder/wealthica-addons/tree/master/widgets/pnl) shows the PnL change over different periods of time as-in 1 day PnL, WTD PnL, 1 month PnL etc.,
+
 
 Samples:
 
-[Addon](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/)
+[Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/)
 
-[Widget](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
+[Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
+
+
+Deprecated Repos:
+[mani-coder/wealthica-portfolio-addon](https://github.com/mani-coder/wealthica-portfolio-addon)
+[mani-coder/wealthica-pnl-widget](https://github.com/mani-coder/wealthica-pnl-widget)
