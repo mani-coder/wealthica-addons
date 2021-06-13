@@ -1,22 +1,6 @@
-#!/bin/sh
-set -e
+#!/usr/bin/env bash
 
-echo "Deleting build files ..."
-rm -rf public/mani-coder
-
-echo "Building Addon ..."
-cd addon/pnl
-npm install
-npm run build
-
-cd ../../
-
-echo "Building Widget ..."
-cd widgets/pnl
-npm install
-npm run build
-
-cd ../../
+./build.sh
 
 echo "Deploying ..."
-firebase deploy --only hosting:mani-coder
+# firebase deploy --only hosting:mani-coder
