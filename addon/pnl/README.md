@@ -1,6 +1,8 @@
-## Wealthica PnL Developer Add-on
+## Wealthica PnL Add-on
 
-Wealthica addon to compare the portfolio value against the total deposits made as of the date. This add-on has been added to the Wealthica's trusted [third party addons](https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon). This addon also provides more rich PnL analysis tools. Feel free to explore the addon with sample data [here](https://mani-coder.dev/mani-coder/wealthica-portfolio-addon/?dev-mode). 
+Wealthica PnL Addon primiarily focuses on the PnL analysis and plotting the PnL timelines across portfolio, individual position etc.,  This addon also provides more rich stock analysis tools like Events, News, Interests, Fees, Gainers/Losers etc., Feel free to explore the addon with sample data [here](https://mani-coder.dev/mani-coder/wealthica-portfolio-addon/?dev-mode). 
+
+##### This add-on has been added to the Wealthica's trusted [third party addons](https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon).
 
 Addon sample: https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/
 
