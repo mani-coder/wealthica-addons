@@ -354,22 +354,24 @@ class App extends Component<Props, State> {
 
   async loadStaticPortfolioData() {
     let institutionsData, portfolioData, positionsData, transactionsData, currenciesData;
-    if (process.env.NODE_ENV === 'development') {
+    [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
+      import('./mocks/institutions-prod').then((response) => response.DATA),
+      import('./mocks/portfolio-prod').then((response) => response.DATA),
+      import('./mocks/positions-prod').then((response) => response.DATA),
+      import('./mocks/transactions-prod').then((response) => response.DATA),
+      import('./mocks/currencies-prod').then((response) => response.DATA),
+    ]);
+
+    if (!institutionsData || !institutionsData.length) {
       [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
-        import('./mocks/institutions-prod').then((response) => response.DATA),
-        import('./mocks/portfolio-prod').then((response) => response.DATA),
-        import('./mocks/positions-prod').then((response) => response.DATA),
-        import('./mocks/transactions-prod').then((response) => response.DATA),
-        import('./mocks/currencies-prod').then((response) => response.DATA),
-      ]);
-    } else {
-      [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
         import('./mocks/institutions').then((response) => response.DATA),
         import('./mocks/portfolio').then((response) => response.DATA),
         import('./mocks/positions').then((response) => response.DATA),
         import('./mocks/transactions').then((response) => response.DATA),
+        import('./mocks/currencies').then((response) => response.DATA),
       ]);
     }
+
     const currencyCache = parseCurrencyReponse(currenciesData);
     const portfolioByDate = parsePortfolioResponse(portfolioData);
     const positions = parsePositionsResponse(positionsData);
@@ -406,7 +408,7 @@ class App extends Component<Props, State> {
                     style={{ fontWeight: 'bolder', textAlign: 'center', color: '#C00316', textDecoration: 'underline' }}
                   >
                     <img
-                      src="/wealthica-portfolio-addon/favicon.png"
+                      src="/mani-coder/wealthica-portfolio-addon/favicon.png"
                       alt="favicon"
                       width="50"
                       height="50"
