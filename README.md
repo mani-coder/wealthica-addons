@@ -1,4 +1,4 @@
-# Wealthica Developer Addons
+# Wealthica Addons
 
 This is the new consolidated repo containing all the addons and widgets developed by [Elayamani Krishnnamoorthi](https://github.com/mani-coder/) for [Wealthica](https://app.wealthica.com/).
 
@@ -9,11 +9,15 @@ We also have [a widget](https://github.com/mani-coder/wealthica-addons/tree/mast
 
 Samples:
 
-[Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/)
-
-[Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
+[Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/
 
 
-Deprecated Repos:
+[Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/
+
+
+
+___Deprecated Repos:___
+
 [mani-coder/wealthica-portfolio-addon](https://github.com/mani-coder/wealthica-portfolio-addon)
+
 [mani-coder/wealthica-pnl-widget](https://github.com/mani-coder/wealthica-pnl-widget)
