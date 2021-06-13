@@ -5,7 +5,7 @@
   "main": "public/index.html",
   "scripts": {
     "build": "./build.sh",
-    "deploy": "npx firebase deploy --only hosting:mani-coder"
+    "deploy": "npm run build && npx firebase deploy --only hosting:mani-coder"
   },
   "repository": {
     "type": "git",
