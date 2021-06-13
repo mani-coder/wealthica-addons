@@ -356,13 +356,15 @@ class App extends Component<Props, State> {
 
   async loadStaticPortfolioData() {
     let institutionsData, portfolioData, positionsData, transactionsData, currenciesData;
-    [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
-      import('./mocks/institutions-prod').then((response) => response.DATA),
-      import('./mocks/portfolio-prod').then((response) => response.DATA),
-      import('./mocks/positions-prod').then((response) => response.DATA),
-      import('./mocks/transactions-prod').then((response) => response.DATA),
-      import('./mocks/currencies-prod').then((response) => response.DATA),
-    ]);
+    if (process.env.NODE_ENV === 'development') {
+      [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
+        import('./mocks/institutions-prod').then((response) => response.DATA),
+        import('./mocks/portfolio-prod').then((response) => response.DATA),
+        import('./mocks/positions-prod').then((response) => response.DATA),
+        import('./mocks/transactions-prod').then((response) => response.DATA),
+        import('./mocks/currencies-prod').then((response) => response.DATA),
+      ]);
+    }
 
     if (!institutionsData || !institutionsData.length) {
       [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
