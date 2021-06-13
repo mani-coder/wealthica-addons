@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 
 set -e
+stars=$(printf '%*s' 30 '')
 
 echo "Deleting build files ..."
 rm -rf public/mani-coder
 
-echo "Building Addon ..."
-cd addon/pnl
-npm install
-npm run build
+for DIR in 'pnl'
+do
+  echo "${stars// /*}"
+  echo "Building $DIR Addon"
+  echo "${stars// /*}"
+
+  cd addon/$DIR
+  npm install
+  npm run build
+
+done
 
 cd ../../
 
-echo "Building Widget ..."
-cd widgets/pnl
-npm install
-npm run build
+for DIR in 'pnl'
+do
+  echo "${stars// /*}"
+  echo "Building $DIR Widget"
+  echo "${stars// /*}"
+
+  cd widgets/$DIR
+  npm install
+  npm run build
+
+done
 
 cd ../../
