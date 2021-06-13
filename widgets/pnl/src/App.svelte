@@ -24,9 +24,12 @@
   let timer;
 
   try {
-    addon = new Addon({
-      id: "mani-coder/wealthica-portfolio-addon/widgets/pnl",
-    });
+    addon = new Addon(
+      (window.location.search || "").includes("?dev-mode")
+        ? {}
+        : { id: "mani-coder/wealthica-portfolio-addon" }
+    );
+
     addon.on("init", (options) => {
       console.debug("[pnl-widget] Addon initialization", options);
       debounced(options);

@@ -77,7 +77,9 @@ class App extends Component<Props, State> {
 
   getAddon = (): any => {
     try {
-      const addon = new Addon({ id: 'mani-coder/wealthica-portfolio-addon' });
+      const addon = new Addon(
+        (window.location.search || '').includes('?dev-mode') ? {} : { id: 'mani-coder/wealthica-portfolio-addon' },
+      );
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
