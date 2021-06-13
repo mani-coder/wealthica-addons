@@ -1,9 +1,29 @@
-# wealthica-pnl-addon
+## Wealthica PnL Developer Add-on (Portfolio vs Deposits Analyser)
 
-P/L Timeline tracker addon for wealthica. This add-on helps to track your profit loss over a period of time. This add-on also shows the PnL change over different periods of time as-in 1 day PnL, WTD PnL, 1 month PnL etc.,
+Wealthica addon to compare the portfolio value against the total deposits made as of the date. This add-on has been added to the Wealthica's trusted third party addons -- https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon.
 
-Samples:
+Steps to load the addon:
 
-[Addon](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/)
+1. Sign in into your Wealthica account
+2. Go to addons page -- https://app.wealthica.com/addons/
+3. Click P&L Timeline addon and install -- https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon
 
-[Widget](https://mani-coder.web.app/mani-coder/wealthica-portfolio-addon/widgets/pnl/)
+You can take a quick look at the charts using the demo data.
+
+Hope this add-on is useful to you!
+
+##### Note: PnL % change chart of this add-on is available as a developer widget [here](https://github.com/mani-coder/wealthica-addons/tree/master/widgets/pnl).</b>
+
+## Samples
+
+![Deposits Vs Portfolio](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Deposits_Vs_Portfolio_Value_THiV5ZQlw.png)
+
+![PnL YoY Change Chart](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/pnl-yoy-chart_F_NqYoQNP.png)
+
+![PnL Timelines](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/PnL_Timelines_x8yS_q-Ly.png)
+
+![Holdings Chart](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/holdings-analyzer-1_SvA5pT4QD.png)
+
+![Gainers/Losers](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/stock-pnl-timeline-chart_xAEevDsMn.png)
+
+![Realized PnL](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Realized_PnL_ISmwPJbTB.png)
