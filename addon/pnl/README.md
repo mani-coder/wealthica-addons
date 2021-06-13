@@ -1,8 +1,8 @@
-## Wealthica PnL Developer Add-on (Portfolio vs Deposits Analyser)
+## Wealthica PnL Developer Add-on
 
-Wealthica addon to compare the portfolio value against the total deposits made as of the date. This add-on has been added to the Wealthica's trusted third party addons -- https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon.
+Wealthica addon to compare the portfolio value against the total deposits made as of the date. This add-on has been added to the Wealthica's trusted third party addons -- https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon. This addon also provides more rich PnL analysis tools. Feel free to explore the addon with sample data [here](https://mani-coder.dev/mani-coder/wealthica-portfolio-addon/?dev-mode). 
 
-Steps to load the addon:
+Steps to load the addon in your wealthica account:
 
 1. Sign in into your Wealthica account
 2. Go to addons page -- https://app.wealthica.com/addons/
