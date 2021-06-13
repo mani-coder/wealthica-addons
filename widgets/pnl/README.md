@@ -8,12 +8,13 @@ Steps to load the addon:
 2. Under widgets in the dashboard, click on the three dots and select "Manage Widgets"
 3. Select Developer Widget to the top 3 widgets
 4. Then click on the three dots in the developer widget and select "Configure"
-5. In the Widget URL input box, paste https://mani-coder.github.io/wealthica-pnl-widget/ URL and click "Save"
+5. In the Widget URL input box, paste https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?dev-mode URL and click "Save"
 
-You can take a quick look at the charts using the demo data -- https://mani-coder.github.io/wealthica-pnl-widget/.
+You can take a quick look at the charts using the demo data -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?dev-mode.
 
 Hope this widget is useful to you!
 
 ## Samples
 
-![P&L Widget](https://raw.githubusercontent.com/mani-coder/wealthica-pnl-widget/main/samples/pnl-widget.png)
+![PnL Widget](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/pnl-widget-1_q9ZHNXGdU.png) 
+![PnL Widget](https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/pnl-widget-2_NEbh-d-O6.png)
