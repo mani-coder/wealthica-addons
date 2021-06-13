@@ -1,6 +1,6 @@
 ## Wealthica PnL Add-on
 
-Wealthica PnL Addon primiarily focuses on the PnL analysis and plotting the PnL timelines across portfolio, individual position etc.,  This addon also provides more rich stock analysis tools like Events, News, Interests, Fees, Gainers/Losers etc., Feel free to explore the addon with sample data [here](https://mani-coder.dev/mani-coder/wealthica-portfolio-addon/?dev-mode). 
+Wealthica PnL Addon primiarily focuses on the PnL analysis and plotting the PnL timelines across portfolio, individual position etc., This addon also provides more rich stock analysis tools like Events, News, Interests, Fees, Gainers/Losers etc., Feel free to explore the addon with sample data [here](https://mani-coder.dev/mani-coder/wealthica-portfolio-addon/).
 
 ##### This add-on has been added to the Wealthica's trusted [third party addons](https://app.wealthica.com/addons/details?id=mani-coder/wealthica-portfolio-addon).
 

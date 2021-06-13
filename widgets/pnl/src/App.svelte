@@ -25,7 +25,7 @@
 
   try {
     addon = new Addon(
-      (window.location.search || "").includes("?dev-mode")
+      (window.location.search || "").includes("?developer")
         ? {}
         : { id: "mani-coder/wealthica-portfolio-addon" }
     );
