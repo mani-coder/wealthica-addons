@@ -1,0 +1,32 @@
+{
+  "name": "wealthica-addons",
+  "version": "1.0.0",
+  "description": "Wealthica Addons Developed By mani-coder (Elayamani Krishnamoorthi)",
+  "main": "public/index.html",
+  "scripts": {
+    "build": "./build.sh",
+    "deploy": "firebase deploy --only hosting:mani-coder"
+  },
+  "devDependencies": {
+    "firebase": "*",
+    "vercel": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mani-coder/wealthica-addons.git"
+  },
+  "keywords": [
+    "wealthica",
+    "addons",
+    "pnl",
+    "timeline",
+    "stock",
+    "market"
+  ],
+  "author": "ZeroDown Infra <mani@zerodown.com> (https://www.zerodown.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mani-coder/wealthica-addons/issues"
+  },
+  "homepage": "https://github.com/mani-coder/wealthica-addons#readme"
+}
