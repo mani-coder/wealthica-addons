@@ -68,3 +68,6 @@ node_modules/
 .env
 
 .vercel
+
+# Local Netlify folder
+.netlify
