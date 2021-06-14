@@ -36,9 +36,9 @@ export default {
 	input: 'src/main.ts',
 	output: {
 		sourcemap: false,
-		format: 'iife',
+		format: 'es',
 		name: 'app',
-		file: 'public/assets/bundle.js',
+		dir: 'public/assets/',
 	},
 	plugins: [
 		svelte({
