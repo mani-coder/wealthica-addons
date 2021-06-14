@@ -6,6 +6,7 @@ import { terser } from 'rollup-plugin-terser';
 import sveltePreprocess from 'svelte-preprocess';
 import injectProcessEnv from 'rollup-plugin-inject-process-env';
 import typescript from '@rollup/plugin-typescript';
+import analyze from 'rollup-plugin-analyzer';
 import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
@@ -34,10 +35,10 @@ function serve() {
 export default {
 	input: 'src/main.ts',
 	output: {
-		sourcemap: true,
-		format: 'iife',
+		sourcemap: false,
+		format: 'es',
 		name: 'app',
-		file: 'public/assets/bundle.js',
+		dir: 'public/assets/',
 	},
 	plugins: [
 		svelte({
@@ -71,7 +72,6 @@ export default {
 		resolve({
 			browser: true,
 			dedupe: ['svelte']
-
 		}),
 		commonjs(),
 		typescript({ inlineSources: !production }),
@@ -88,6 +88,8 @@ export default {
 				],
 			}
 		),
+
+		analyze({ limit: 5 }),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated

@@ -9,10 +9,6 @@
   import Loading from "./components/Loading.svelte";
   import PnLWidget from "./components/PnLWidget.svelte";
   import { TRANSACTIONS_FROM_DATE } from "./constants";
-  import { CURRENCIES_API_RESPONSE } from "./mocks/currencies";
-  import { INSTITUTIONS_DATA } from "./mocks/institutions";
-  import { PORTFOLIO_API_RESPONSE } from "./mocks/portfolio";
-  import { TRANSACTIONS_API_RESPONSE } from "./mocks/transactions";
   import Tailwindcss from "./styles/Tailwindcss.svelte";
   import type { Portfolio } from "./types";
 
@@ -37,7 +33,7 @@
 
     addon.on("reload", () => {
       // Start reloading
-      console.debug("[pnl-widget] Reload invoked!");
+      debug("[pnl-widget] Reload invoked!");
     });
 
     addon.on("update", (options) => {
@@ -68,18 +64,28 @@
     currencyCache = currencyData ? currencyData : currencyCache;
     computePortfolios(portfolioData, transactions, accounts, currencyCache);
     loading = false;
-    console.debug("Done with loading data", { portfolios });
+    debug("Done with loading data", { portfolios });
   }
 
-  function loadStaticPortfolioData() {
+  async function loadStaticPortfolioData() {
+    const [institutionsData, portfolioData, transactionsData, currenciesData] =
+      await Promise.all([
+        import("./mocks/institutions").then((response) => response.DATA),
+        import("./mocks/portfolio").then((response) => response.DATA),
+        import("./mocks/transactions").then((response) => response.DATA),
+        import("./mocks/currencies").then((response) => response.DATA),
+      ]);
+
     computePortfolios(
-      parsePortfolioResponse(PORTFOLIO_API_RESPONSE),
-      TRANSACTIONS_API_RESPONSE,
-      parseInstitutionsResponse(INSTITUTIONS_DATA),
-      parseCurrencyReponse(CURRENCIES_API_RESPONSE)
+      parsePortfolioResponse(portfolioData),
+      transactionsData,
+      parseInstitutionsResponse(institutionsData),
+      parseCurrencyReponse(currenciesData)
     );
     loading = false;
-    console.debug("[pnl-widget] Static Dev State:", { portfolios });
+    if (!process.env.production) {
+      debug("[pnl-widget] Static Dev State:", { portfolios });
+    }
   }
 
   function computePortfolios(
@@ -130,12 +136,18 @@
     portfolios = _portfolios;
   }
 
+  function debug(...data: any[]) {
+    if (!process.env.production) {
+      console.debug(...data);
+    }
+  }
+
   function loadCurrenciesCache() {
     if (currencyCache) {
       return null;
     }
 
-    console.debug("[pnl-widget] Loading currencies data.");
+    debug("[pnl-widget] Loading currencies data.");
     return addon
       .request({
         method: "GET",
@@ -151,7 +163,7 @@
   }
 
   function loadPortfolioData(options) {
-    console.debug("[pnl-widget] Loading portfolio data.");
+    debug("[pnl-widget] Loading portfolio data.");
     const query = {
       assets: false,
       from: options.fromDate,
@@ -174,7 +186,7 @@
   }
 
   function loadInstitutionsData(options) {
-    console.debug("[pnl-widget] Loading institutions data..");
+    debug("[pnl-widget] Loading institutions data..");
     const query = {
       assets: false,
       groups: options.groupsFilter,
@@ -203,7 +215,7 @@
   }
 
   function loadTransactions(options) {
-    console.debug("[pnl-widget] Loading transactions data.");
+    debug("[pnl-widget] Loading transactions data.");
     const fromDate = options.fromDate;
     const query = {
       assets: false,

@@ -1,10 +1,10 @@
-export const CURRENCIES_API_RESPONSE = {
-  from: '2004-01-02T00:00:00.000Z',
-  to: '2021-03-01T00:00:00.000Z',
-  high: { date: '2007-11-07T00:00:00.000Z', value: 1.0905 },
-  low: { date: '2016-01-20T00:00:00.000Z', value: 0.6854 },
-  first: { date: '2007-01-02T00:00:00.000Z', value: 0.8584 },
-  last: { date: '2021-03-01T00:00:00.000Z', value: 0.78982703 },
+export const DATA = {
+  from: "2004-01-02T00:00:00.000Z",
+  to: "2021-03-01T00:00:00.000Z",
+  high: { date: "2007-11-07T00:00:00.000Z", value: 1.0905 },
+  low: { date: "2016-01-20T00:00:00.000Z", value: 0.6854 },
+  first: { date: "2007-01-02T00:00:00.000Z", value: 0.8584 },
+  last: { date: "2021-03-01T00:00:00.000Z", value: 0.78982703 },
   difference: -0.06857297000000007,
   change: -0.0799,
   data: [

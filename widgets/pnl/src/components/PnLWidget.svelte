@@ -181,8 +181,6 @@
         };
       });
 
-    console.debug("PnL change data -- ", data);
-
     return data;
   }
 
