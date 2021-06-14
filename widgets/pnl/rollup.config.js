@@ -89,7 +89,7 @@ export default {
 			}
 		),
 
-		analyze({ limit: 10 }),
+		analyze({ limit: 5 }),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
