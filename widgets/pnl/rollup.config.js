@@ -6,6 +6,7 @@ import { terser } from 'rollup-plugin-terser';
 import sveltePreprocess from 'svelte-preprocess';
 import injectProcessEnv from 'rollup-plugin-inject-process-env';
 import typescript from '@rollup/plugin-typescript';
+import analyze from 'rollup-plugin-analyzer';
 import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
@@ -71,7 +72,6 @@ export default {
 		resolve({
 			browser: true,
 			dedupe: ['svelte']
-
 		}),
 		commonjs(),
 		typescript({ inlineSources: !production }),
@@ -88,6 +88,8 @@ export default {
 				],
 			}
 		),
+
+		analyze(),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
