@@ -87,12 +87,15 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
 
       const startDate =
         position.transactions && position.transactions.length ? position.transactions[0].date : moment();
+      const endpoint = `securities/${position.security.id}/history?from=${startDate.format(
+        'YYYY-MM-DD',
+      )}&to=${moment().format('YYYY-MM-DD')}`;
       if (addon) {
         addon
           .request({
             query: {},
             method: 'GET',
-            endpoint: `securities/${position.security.id}/history?from=${startDate.format('YYYY-MM-DD')}`,
+            endpoint,
           })
           .then((response) => parseSecuritiesResponse(response))
           .catch((error) => {
@@ -101,9 +104,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           })
           .finally(() => setLoading(false));
       } else {
-        const url = `https://app.wealthica.com/api/securities/${position.security.id}/history?from=${startDate.format(
-          'YYYY-MM-DD',
-        )}&to=${moment().format('YYYY-MM-DD')}`;
+        const url = `https://app.wealthica.com/api/${endpoint}`;
         fetch(buildCorsFreeUrl(url), {
           cache: 'force-cache',
           headers: { 'Content-Type': 'application/json' },

@@ -105,24 +105,24 @@ class StockTimeline extends Component<Props, State> {
       moment().subtract(6, 'months'),
     );
 
+    const endpoint = `securities/${this.props.position.security.id}/history?from=${startDate.format(
+      'YYYY-MM-DD',
+    )}&to=${moment().format('YYYY-MM-DD')}`;
     if (this.props.addon) {
       this.props.addon
         .request({
           query: {},
           method: 'GET',
-          endpoint: `securities/${this.props.position.security.id}/history?from=${startDate.format('YYYY-MM-DD')}`,
+          endpoint,
         })
         .then((response) => {
           this.parseSecuritiesResponse(response);
         })
         .catch((error) => console.log(error));
     } else {
-      const url = `https://app.wealthica.com/api/securities/${
-        this.props.position.security.id
-      }/history?from=${startDate.format('YYYY-MM-DD')}&to=${moment().format('YYYY-MM-DD')}`;
+      const url = `https://app.wealthica.com/api/securities/${endpoint}`;
 
       console.debug('Fetching stock data..', url);
-
       fetch(buildCorsFreeUrl(url), {
         cache: 'force-cache',
         headers: {
