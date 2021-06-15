@@ -542,7 +542,7 @@ class App extends Component<Props, State> {
             Please trade responsibly. For any issues or feedback, contact the developer at{' '}
             <a href="mailto:k.elayamani@gmail.com">k.elayamani@gmail.com</a> or create a github issue{' '}
             <a
-              href="https://github.com/mani-coder/wealthica-portfolio-addon/issues/new?assignees=&labels=&template=custom.md&title="
+              href="https://github.com/mani-coder/wealthica-addons/issues/new?assignees=mani-coder&labels=pnl-addon&template=custom.md&title=[P/L Addon]"
               target="_blank"
               rel="noopener noreferrer"
             >
