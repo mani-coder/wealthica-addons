@@ -119,7 +119,8 @@ class StockTimeline extends Component<Props, State> {
     } else {
       const url = `https://app.wealthica.com/api/securities/${
         this.props.position.security.id
-      }/history?from=${startDate.format('YYYY-MM-DD')}`;
+      }/history?from=${startDate.format('YYYY-MM-DD')}&to=${moment().format('YYYY-MM-DD')}`;
+
       console.debug('Fetching stock data..', url);
 
       fetch(buildCorsFreeUrl(url), {

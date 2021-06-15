@@ -1,15 +1,81 @@
-import moment from 'moment';
-import React from 'react';
-import { Portfolio } from '../types';
+import startCase from 'lodash/startCase';
+import moment, { Moment } from 'moment';
+import React, { useMemo } from 'react';
+import { TYPE_TO_COLOR } from '../constants';
+import type { Account, AccountTransaction, Portfolio } from '../types';
+import { formatMoney } from '../utils';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 
 type Props = {
   portfolios: Portfolio[];
+  accounts: Account[];
+  accountTransactions: AccountTransaction[];
   isPrivateMode: boolean;
 };
 
 function DepositVsPortfolioValueTimeline(props: Props) {
+  const accountById = useMemo(() => {
+    return props.accounts.reduce((hash, account) => {
+      hash[account.id] = account;
+      return hash;
+    }, {} as { [K: string]: Account });
+  }, [props.accounts]);
+
+  function getFlags(type: string): Highcharts.SeriesFlagsOptions {
+    return {
+      name: startCase(type),
+      shape: 'squarepin',
+      type: 'flags',
+      width: 25,
+
+      stackDistance: 20,
+
+      tooltip: {
+        pointFormat: '{point.text}',
+      },
+
+      data: props.accountTransactions
+        .filter((t) => t.type === type)
+        .sort((a, b) => a.date.valueOf() - b.date.valueOf())
+        .reduce((array, transaction) => {
+          const lastTransaction = array.pop();
+          if (lastTransaction && lastTransaction.date.valueOf() === transaction.date.valueOf()) {
+            array.push({
+              ...lastTransaction,
+              amount: transaction.amount + lastTransaction.amount,
+              transactions: lastTransaction.transactions.concat(transaction),
+            });
+          } else {
+            if (lastTransaction) {
+              array.push(lastTransaction);
+            }
+            array.push({ ...transaction, transactions: [transaction] });
+          }
+          return array;
+        }, [] as { type: string; date: Moment; amount: number; transactions: AccountTransaction[] }[])
+        .map((transaction) => {
+          return {
+            x: transaction.date.valueOf(),
+            title: type.charAt(0).toUpperCase(),
+            text: `<b>${startCase(type)}</b><br /><br />
+              ${transaction.transactions
+                .map((t) => {
+                  const account = accountById[t.account] ? accountById[t.account].name : 'N/A';
+                  return `<span>${account}: <b>$${formatMoney(t.amount, 0)}</b></span>`;
+                })
+                .join('<br />')}
+            `,
+          };
+        }),
+      color: TYPE_TO_COLOR[type],
+      fillColor: TYPE_TO_COLOR[type],
+      style: {
+        color: 'white', // text style
+      },
+    };
+  }
+
   function getSeries(): any {
     return [
       {
@@ -38,6 +104,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
         type: 'spline',
         color: '#C00316',
       },
+      ...['deposit', 'withdrawal'].map((type) => getFlags(type)),
     ];
   }
 
@@ -47,8 +114,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
         text: 'Deposits Vs Portfolio Value',
       },
       subtitle: {
-        text:
-          'This chart shows the total (deposits - withdrawals) made by you and the value of your portfolio value over the selected period of time.',
+        text: 'This chart shows the total (deposits - withdrawals) made by you and the value of your portfolio value over the selected period of time.',
         style: {
           color: '#1F2A33',
         },
@@ -112,6 +178,9 @@ function DepositVsPortfolioValueTimeline(props: Props) {
             },
           },
         ],
+      },
+      legend: {
+        enabled: true,
       },
       series: getSeries(),
     };

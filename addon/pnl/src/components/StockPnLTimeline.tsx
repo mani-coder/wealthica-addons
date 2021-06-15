@@ -103,7 +103,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       } else {
         const url = `https://app.wealthica.com/api/securities/${position.security.id}/history?from=${startDate.format(
           'YYYY-MM-DD',
-        )}`;
+        )}&to=${moment().format('YYYY-MM-DD')}`;
         fetch(buildCorsFreeUrl(url), {
           cache: 'force-cache',
           headers: { 'Content-Type': 'application/json' },
