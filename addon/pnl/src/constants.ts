@@ -9,6 +9,8 @@ export const TYPE_TO_COLOR = {
   distribution: 'green',
   tax: 'brown',
   fee: 'brown',
+  deposit: '#9254de',
+  withdrawal: '#ff7875',
 };
 
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';
