@@ -448,8 +448,6 @@ class App extends Component<Props, State> {
 
                   <DepositVsPortfolioValueTimeline
                     portfolios={this.state.portfolios}
-                    accounts={this.state.accounts}
-                    accountTransactions={this.state.accountTransactions}
                     isPrivateMode={this.state.privateMode}
                   />
 
