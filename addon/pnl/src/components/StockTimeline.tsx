@@ -120,7 +120,7 @@ class StockTimeline extends Component<Props, State> {
         })
         .catch((error) => console.log(error));
     } else {
-      const url = `https://app.wealthica.com/api/securities/${endpoint}`;
+      const url = `https://app.wealthica.com/api/${endpoint}`;
 
       console.debug('Fetching stock data..', url);
       fetch(buildCorsFreeUrl(url), {
