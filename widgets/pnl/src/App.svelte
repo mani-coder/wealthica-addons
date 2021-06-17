@@ -23,7 +23,7 @@
     addon = new Addon(
       (window.location.search || "").includes("?developer")
         ? {}
-        : { id: "mani-coder/wealthica-portfolio-addon" }
+        : { id: "mani-coder/wealthica-portfolio-addon/widgets/pnl" }
     );
 
     addon.on("init", (options) => {
