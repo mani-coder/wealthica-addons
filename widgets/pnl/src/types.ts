@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from 'moment';
 
 // This is the data of the portfolio on the single day.
 export type PortfolioData = {

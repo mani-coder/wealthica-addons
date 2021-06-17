@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatCurrency } from "utils";
+  import { formatCurrency } from 'utils';
 
   export let date: string;
   export let value: number;
@@ -16,7 +16,7 @@
       {#if privateMode}
         $--
       {:else}
-        {value >= 0 ? "" : "-"}${formatCurrency(Math.abs(value), 2)}
+        {value >= 0 ? '' : '-'}${formatCurrency(Math.abs(value), 2)}
       {/if}
     </div>
   </div>

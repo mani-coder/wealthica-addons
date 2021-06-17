@@ -19,10 +19,7 @@
       />
     </svg>
 
-    <span
-      class="tooltiptext text-sm p-1 text-center border rounded-lg text-white"
-      >{tooltip}</span
-    >
+    <span class="tooltiptext text-sm p-1 text-center border rounded-lg text-white">{tooltip}</span>
   </div>
 </div>
 

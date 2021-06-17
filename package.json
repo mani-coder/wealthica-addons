@@ -24,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/mani-coder/wealthica-addons/issues"
   },
-  "homepage": "https://github.com/mani-coder/wealthica-addons#readme"
+  "homepage": "https://github.com/mani-coder/wealthica-addons#readme",
+  "devDependencies": {
+    "prettier": "^2.3.1"
+  }
 }

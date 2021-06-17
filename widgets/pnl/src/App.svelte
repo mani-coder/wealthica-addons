@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { Addon } from "@wealthica/wealthica.js/index";
+  import { Addon } from '@wealthica/wealthica.js/index';
   import {
     parseCurrencyReponse,
     parseInstitutionsResponse,
     parsePortfolioResponse,
     parseTransactionsResponse,
-  } from "./api";
-  import Loading from "./components/Loading.svelte";
-  import PnLWidget from "./components/PnLWidget.svelte";
-  import { TRANSACTIONS_FROM_DATE } from "./constants";
-  import Tailwindcss from "./styles/Tailwindcss.svelte";
-  import type { Portfolio } from "./types";
+  } from './api';
+  import Loading from './components/Loading.svelte';
+  import PnLWidget from './components/PnLWidget.svelte';
+  import { TRANSACTIONS_FROM_DATE } from './constants';
+  import Tailwindcss from './styles/Tailwindcss.svelte';
+  import type { Portfolio } from './types';
 
   let currencyCache: { [K: string]: string };
   let addon: any;
@@ -18,31 +18,29 @@
   let portfolios: Portfolio[] = [];
   let privateMode: boolean;
   let timer;
+  let prod = (window.location.search || '').includes('?developer');
 
   try {
-    addon = new Addon(
-      (window.location.search || "").includes("?developer")
-        ? {}
-        : { id: "mani-coder/wealthica-portfolio-addon/widgets/pnl" }
-    );
+    addon = new Addon(prod ? { id: 'mani-coder/wealthica-portfolio-addon/widgets/pnl' } : {});
 
-    addon.on("init", (options) => {
-      console.debug("[pnl-widget] Addon initialization", options);
+    addon.on('init', (options) => {
+      console.debug('[pnl-widget] Addon initialization', options);
       debounced(options);
     });
 
-    addon.on("reload", () => {
+    addon.on('reload', () => {
       // Start reloading
-      debug("[pnl-widget] Reload invoked!");
+      debug('[pnl-widget] Reload invoked!');
     });
 
-    addon.on("update", (options) => {
+    addon.on('update', (options) => {
       // Update according to the received options
-      console.debug("[pnl-widget] Addon update - options: ", options);
+      console.debug('[pnl-widget] Addon update - options: ', options);
       debounced(options);
     });
   } catch (error) {
-    console.warn("Falied to load the addon -- ", error);
+    prod = false;
+    console.warn('Falied to load the addon -- ', error);
     setTimeout(() => loadStaticPortfolioData(), 100);
   }
 
@@ -54,51 +52,40 @@
   async function load(options) {
     privateMode = options.privateMode;
     loading = true;
-    const [currencyData, portfolioData, accounts, transactions] =
-      await Promise.all([
-        loadCurrenciesCache(),
-        loadPortfolioData(options),
-        loadInstitutionsData(options),
-        loadTransactions(options),
-      ]);
+    const [currencyData, portfolioData, accounts, transactions] = await Promise.all([
+      loadCurrenciesCache(),
+      loadPortfolioData(options),
+      loadInstitutionsData(options),
+      loadTransactions(options),
+    ]);
     currencyCache = currencyData ? currencyData : currencyCache;
     computePortfolios(portfolioData, transactions, accounts, currencyCache);
     loading = false;
-    debug("Done with loading data", { portfolios });
+    debug('Done with loading data', { portfolios });
   }
 
   async function loadStaticPortfolioData() {
-    const [institutionsData, portfolioData, transactionsData, currenciesData] =
-      await Promise.all([
-        import("./mocks/institutions").then((response) => response.DATA),
-        import("./mocks/portfolio").then((response) => response.DATA),
-        import("./mocks/transactions").then((response) => response.DATA),
-        import("./mocks/currencies").then((response) => response.DATA),
-      ]);
+    const [institutionsData, portfolioData, transactionsData, currenciesData] = await Promise.all([
+      import('./mocks/institutions').then((response) => response.DATA),
+      import('./mocks/portfolio').then((response) => response.DATA),
+      import('./mocks/transactions').then((response) => response.DATA),
+      import('./mocks/currencies').then((response) => response.DATA),
+    ]);
 
     computePortfolios(
       parsePortfolioResponse(portfolioData),
       transactionsData,
       parseInstitutionsResponse(institutionsData),
-      parseCurrencyReponse(currenciesData)
+      parseCurrencyReponse(currenciesData),
     );
     loading = false;
     if (!process.env.production) {
-      debug("[pnl-widget] Static Dev State:", { portfolios });
+      debug('[pnl-widget] Static Dev State:', { portfolios });
     }
   }
 
-  function computePortfolios(
-    portfolioData,
-    transactions,
-    accounts,
-    currencyData
-  ) {
-    const transactionsByDate = parseTransactionsResponse(
-      transactions,
-      currencyData,
-      accounts
-    );
+  function computePortfolios(portfolioData, transactions, accounts, currencyData) {
+    const transactionsByDate = parseTransactionsResponse(transactions, currencyData, accounts);
 
     const portfolioPerDay = Object.keys(portfolioData).reduce((hash, date) => {
       const data = transactionsByDate[date] || {};
@@ -147,96 +134,88 @@
       return null;
     }
 
-    debug("[pnl-widget] Loading currencies data.");
+    debug('[pnl-widget] Loading currencies data.');
     return addon
       .request({
-        method: "GET",
-        endpoint: "currencies/usd/history",
+        method: 'GET',
+        endpoint: 'currencies/usd/history',
         query: {
-          base: "cad",
+          base: 'cad',
         },
       })
       .then((response) => parseCurrencyReponse(response))
       .catch((error) => {
-        console.error("[pnl-widget] Failed to load currency data.", error);
+        console.error('[pnl-widget] Failed to load currency data.', error);
       });
   }
 
   function loadPortfolioData(options) {
-    debug("[pnl-widget] Loading portfolio data.");
+    debug('[pnl-widget] Loading portfolio data.');
     const query = {
       assets: false,
       from: options.fromDate,
       to: options.toDate,
       groups: options.groupsFilter,
       institutions: options.institutionsFilter,
-      investments:
-        options.investmentsFilter === "all" ? null : options.investmentsFilter,
+      investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
     return addon
       .request({
         query,
-        method: "GET",
-        endpoint: "portfolio",
+        method: 'GET',
+        endpoint: 'portfolio',
       })
       .then((response) => parsePortfolioResponse(response))
       .catch((error) => {
-        console.error("[pnl-widget] Failed to load portfolio data.", error);
+        console.error('[pnl-widget] Failed to load portfolio data.', error);
       });
   }
 
   function loadInstitutionsData(options) {
-    debug("[pnl-widget] Loading institutions data..");
+    debug('[pnl-widget] Loading institutions data..');
     const query = {
       assets: false,
       groups: options.groupsFilter,
       institutions: options.institutionsFilter,
-      investments:
-        options.investmentsFilter === "all" ? null : options.investmentsFilter,
+      investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
     return addon
       .request({
         query,
-        method: "GET",
-        endpoint: "institutions",
+        method: 'GET',
+        endpoint: 'institutions',
       })
       .then((response) =>
         parseInstitutionsResponse(
           response,
-          options.groupsFilter ? options.groupsFilter.split(",") : [],
-          options.institutionsFilter
-            ? options.institutionsFilter.split(",")
-            : []
-        )
+          options.groupsFilter ? options.groupsFilter.split(',') : [],
+          options.institutionsFilter ? options.institutionsFilter.split(',') : [],
+        ),
       )
       .catch((error) => {
-        console.error("[pnl-widget] Failed to load institutions data.", error);
+        console.error('[pnl-widget] Failed to load institutions data.', error);
       });
   }
 
   function loadTransactions(options) {
-    debug("[pnl-widget] Loading transactions data.");
+    debug('[pnl-widget] Loading transactions data.');
     const fromDate = options.fromDate;
     const query = {
       assets: false,
-      from:
-        fromDate && fromDate < TRANSACTIONS_FROM_DATE
-          ? fromDate
-          : TRANSACTIONS_FROM_DATE,
+      from: fromDate && fromDate < TRANSACTIONS_FROM_DATE ? fromDate : TRANSACTIONS_FROM_DATE,
       groups: options.groupsFilter,
       institutions: options.institutionsFilter,
-      investments:
-        options.investmentsFilter === "all" ? null : options.investmentsFilter,
+      investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
     return addon
       .request({
         query,
-        method: "GET",
-        endpoint: "transactions",
+        method: 'GET',
+        endpoint: 'transactions',
       })
       .then((response) => response)
       .catch((error) => {
-        console.error("[pnl-widget] Failed to load transactions data.", error);
+        console.error('[pnl-widget] Failed to load transactions data.', error);
       });
   }
 </script>
@@ -246,14 +225,14 @@
 </svelte:head>
 
 <main>
-  <div class={!addon ? "flex border w-max my-4 mx-auto p-2 rounded-lg" : ""}>
-    <div class="container" style={`--width:${addon ? "100%" : "219px"};`}>
+  <div class={!addon ? 'flex border w-max my-4 mx-auto p-2 rounded-lg' : ''}>
+    <div class="container" style={`--width:${addon ? '100%' : '219px'};`}>
       {#if loading}
         <div class="flex justify-center py-2 w-full h-full">
           <Loading />
         </div>
       {:else if portfolios}
-        <PnLWidget {portfolios} {privateMode} />
+        <PnLWidget {portfolios} {privateMode} {prod} />
       {:else}
         <p>No Data</p>
       {/if}
