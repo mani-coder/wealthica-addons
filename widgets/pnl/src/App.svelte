@@ -18,7 +18,7 @@
   let portfolios: Portfolio[] = [];
   let privateMode: boolean;
   let timer;
-  let prod = (window.location.search || '').includes('?developer');
+  let prod = !(window.location.search || '').includes('?developer');
 
   try {
     addon = new Addon(prod ? { id: 'mani-coder/wealthica-portfolio-addon/widgets/pnl' } : {});

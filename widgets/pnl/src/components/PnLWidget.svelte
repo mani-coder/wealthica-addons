@@ -185,7 +185,7 @@
   }
 </script>
 
-<div class="w-full h-full overflow-scroll">
+<div class="w-full h-full overflow-scroll no-scrollbar">
   <!-- <img src="favicon.png" alt="P&L" width={20} height={20} /> -->
 
   <h5 class="my-0 mb-1 text-sm text-center text-gray-500">
