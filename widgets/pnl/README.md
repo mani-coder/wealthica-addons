@@ -6,9 +6,7 @@ Steps to load the addon:
 
 1. Sign in into your Wealthica account
 2. Under widgets in the dashboard, click on the three dots and select "Manage Widgets"
-3. Select Developer Widget to the top 3 widgets
-4. Then click on the three dots in the developer widget and select "Configure"
-5. In the Widget URL input box, paste https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer URL and click "Save"
+3. Select P/L % Change to the top 3 widgets
 
 You can take a quick look at the charts using the demo data -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/.
 

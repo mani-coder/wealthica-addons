@@ -22,6 +22,22 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2021-06-17',
+    tab: 'Dashboard Widgets',
+    title: 'P&L % Change Widget',
+    description:
+      'P&L Ratio (%) Change widget is now published to wealthica and is available under widgets. You can add the widget by selecting manage widgets option and adding P&L % Change widget to the top.',
+    link: (
+      <Typography.Link href="https://github.com/mani-coder/wealthica-addons/tree/master/widgets/pnl" target="_blank">
+        P&amp;L % Change Widget
+      </Typography.Link>
+    ),
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/pnl-widget-2_NEbh-d-O6.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/pnl-widget-1_q9ZHNXGdU.png',
+    ],
+  },
+  {
     date: '2021-05-18',
     tab: 'Realized P&L',
     title: 'Plot Income, Interest Along With Realized P&L',
