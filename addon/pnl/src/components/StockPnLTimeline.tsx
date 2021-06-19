@@ -264,11 +264,13 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         shape: 'squarepin',
         width: 16,
       },
-      ...['buy', 'sell', 'income', 'dividend', 'distribution', 'tax', 'fee'].map((type) => getFlags(type)),
+      ...['buy', 'sell', 'income', 'dividend', 'distribution', 'tax', 'fee']
+        .map((type) => getFlags(type))
+        .filter((series) => !!series.data?.length),
     ];
   }
 
-  function getFlags(type: string): any {
+  function getFlags(type: string): Highcharts.SeriesFlagsOptions {
     const isBuySell = ['buy', 'sell'].includes(type);
 
     return {
@@ -311,7 +313,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           return {
             transaction,
             x: transaction.date.valueOf(),
-            title: isBuySell ? Math.round(transaction.shares!) : type.charAt(0).toUpperCase(),
+            title: isBuySell ? Math.round(transaction.shares!).toLocaleString() : type.charAt(0).toUpperCase(),
             text: isBuySell
               ? `${_.startCase(type)}: ${transaction.shares}@${formatMoney(transaction.price)}`
               : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,

@@ -203,6 +203,16 @@ class StockTimeline extends Component<Props, State> {
       }
     });
 
+    const flags = [
+      this.getFlags('buy'),
+      this.getFlags('sell'),
+      this.getFlags('income', true),
+      this.getFlags('dividend', true),
+      this.getFlags('distribution', true),
+      this.getFlags('tax', true),
+      this.getFlags('fee', true),
+    ].filter((series) => !!series.data?.length);
+
     return [
       {
         id: 'dataseries',
@@ -243,17 +253,11 @@ class StockTimeline extends Component<Props, State> {
           color: 'white',
         },
       },
-      this.getFlags('buy'),
-      this.getFlags('sell'),
-      this.getFlags('income', true),
-      this.getFlags('dividend', true),
-      this.getFlags('distribution', true),
-      this.getFlags('tax', true),
-      this.getFlags('fee', true),
+      ...flags,
     ];
   }
 
-  getFlags = (type: string, onSeries?: boolean): any => {
+  getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
     const isBuySell = ['buy', 'sell'].includes(type);
 
     return {
@@ -266,7 +270,6 @@ class StockTimeline extends Component<Props, State> {
       tooltip: {
         pointFormat: '<b>{point.text}</b>',
         valueDecimals: 2,
-        split: true,
       },
 
       data: this.props.position.transactions
@@ -299,7 +302,7 @@ class StockTimeline extends Component<Props, State> {
           return {
             transaction,
             x: transaction.date.valueOf(),
-            title: isBuySell ? Math.round(transaction.shares!) : type.charAt(0).toUpperCase(),
+            title: isBuySell ? Math.round(transaction.shares!).toLocaleString() : type.charAt(0).toUpperCase(),
             text: isBuySell
               ? `${_.startCase(type)}: ${transaction.shares}@${transaction.price}`
               : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
