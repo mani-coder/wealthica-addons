@@ -154,6 +154,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
         const match = transaction.description.match(/@([0-9]+):([0-9]+)/);
         if (match && match[1]) {
           splitRatio = parseInt(match[2]) / parseInt(match[1]);
+          console.log(transaction.description, splitRatio, match);
         }
       }
 
