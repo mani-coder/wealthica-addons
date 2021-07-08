@@ -108,7 +108,16 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
       if (['deposit'].includes(type)) {
         portfolioData.deposit += amount;
       } else if (type === 'transfer') {
+        //
+        // Ignore security transfers...
+        // When the securities are transfered from one account to another, we will get to know the value of the
+        // security at the time of the transfer. So counting that into deposits will scrwe up the deposits calculation.
+        //
+        // https://github.com/mani-coder/wealthica-addons/pull/5#issuecomment-876010402
+        //
+        if (!transaction.symbol) {
           portfolioData.deposit += amount;
+        }
       } else if (['fee', 'interest', 'tax'].includes(type)) {
         portfolioData.interest += Math.abs(amount);
       } else if (['income', 'dividend', 'distribution'].includes(type)) {
