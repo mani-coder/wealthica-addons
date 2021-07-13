@@ -149,7 +149,6 @@ function News({ positions }: { positions: Position[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positions]);
 
-  const sidebarContainerRef = useRef<HTMLDivElement>();
   const newsContainerRef = useRef<HTMLDivElement>();
 
   const selectedNews = useMemo(() => {
@@ -181,72 +180,61 @@ function News({ positions }: { positions: Position[] }) {
         </Radio.Group>
       </Flex>
 
-      {loading ? (
-        <Spin size="large" />
-      ) : (
-        <Flex width={1}>
-          <Flex flexDirection="column" alignItems="flex-end" px={2} width={1 / 4}>
-            <Box width={1} ref={sidebarContainerRef}>
-              <Radio.Group
-                style={{ width: '100%' }}
-                onChange={(e) => {
-                  const _symbol = e.target.value;
-                  setSymbol(_symbol);
-                  if (_symbol !== 'All' && !news[_symbol]) {
-                    setTimeout(() => {
-                      fetchNews([_symbol.endsWith('.TO') ? `TSE:${_symbol.replace('.TO', '')}` : _symbol]);
-                    }, 50);
-                  }
+      <Flex width={1}>
+        <Flex flexDirection="column" alignItems="flex-end" px={2} width={1 / 4}>
+          <Box width={1}>
+            <Radio.Group
+              style={{ width: '100%' }}
+              onChange={(e) => {
+                const _symbol = e.target.value;
+                setSymbol(_symbol);
+                if (_symbol !== 'All' && !news[_symbol]) {
+                  setTimeout(() => {
+                    fetchNews([_symbol.endsWith('.TO') ? `TSE:${_symbol.replace('.TO', '')}` : _symbol]);
+                  }, 50);
+                }
 
-                  window.scroll({ top: 0, left: 0, behavior: 'smooth' });
-                  if (newsContainerRef?.current) {
-                    newsContainerRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                  }
-                }}
-                value={symbol}
-                buttonStyle="solid"
-                optionType="button"
-              >
-                {symbols.map((symbol) => (
-                  <Radio.Button
-                    key={symbol}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      height: '50px',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      lineHeight: '30px',
-                    }}
-                    value={symbol}
-                  >
-                    {symbol}
-                  </Radio.Button>
-                ))}
-              </Radio.Group>
-            </Box>
-          </Flex>
-
-          {!!selectedNews.length ? (
-            <Box
-              ref={newsContainerRef}
-              width={3 / 4}
-              px={2}
-              height={sidebarContainerRef?.current && sidebarContainerRef.current.clientHeight}
-              minHeight="65vh"
-              style={{ overflow: 'scroll' }}
+                window.scroll({ top: 0, left: 0, behavior: 'smooth' });
+                if (newsContainerRef?.current) {
+                  newsContainerRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                }
+              }}
+              value={symbol}
+              buttonStyle="solid"
+              optionType="button"
             >
-              {selectedNews.map((_news, index) => (
-                <NewsItem key={`${symbol}-${index}`} news={_news} />
+              {symbols.map((symbol) => (
+                <Radio.Button
+                  key={symbol}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    height: '50px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    lineHeight: '30px',
+                  }}
+                  value={symbol}
+                >
+                  {symbol}
+                </Radio.Button>
               ))}
-            </Box>
-          ) : (
-            <Flex justifyContent="center" width={3 / 4} py={3}>
-              <Empty description="No News Articles Found!" />
-            </Flex>
-          )}
+            </Radio.Group>
+          </Box>
         </Flex>
-      )}
+
+        {!!selectedNews.length ? (
+          <Box ref={newsContainerRef} width={3 / 4} px={2} height="70vh" style={{ overflow: 'scroll' }}>
+            {selectedNews.map((_news, index) => (
+              <NewsItem key={`${symbol}-${index}`} news={_news} />
+            ))}
+          </Box>
+        ) : (
+          <Flex justifyContent="center" width={3 / 4} py={3}>
+            {loading ? <Spin size="large" /> : <Empty description="No News Articles Found!" />}
+          </Flex>
+        )}
+      </Flex>
     </Flex>
   );
 }
