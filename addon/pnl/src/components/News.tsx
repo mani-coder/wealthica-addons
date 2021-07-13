@@ -123,7 +123,7 @@ function News({ positions }: { positions: Position[] }) {
 
               return hash;
             },
-            symbols.length === 1 ? { [symbols[0]]: [] } : {},
+            symbols.length === 1 ? { [getSymbolFromNasdaqTicker(symbols[0])]: [] } : {},
           );
           setNews({ ...news, ..._news });
         }
