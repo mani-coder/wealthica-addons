@@ -5,11 +5,11 @@ import Typography from 'antd/es/typography';
 import Radio from 'antd/lib/radio';
 import Spin from 'antd/lib/spin';
 import moment, { Moment } from 'moment';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Position } from '../types';
-import { buildCorsFreeUrl, getNasdaqTicker, getSymbolFromNasdaqTicker } from '../utils';
+import { buildCorsFreeUrl, getNasdaqTicker, getSymbol, getSymbolFromNasdaqTicker } from '../utils';
 
 type NewsResult = {
   timestamp: Moment;
@@ -57,24 +57,25 @@ function NewsItem({ news }: { news: NewsResult }) {
 }
 
 function News({ positions }: { positions: Position[] }) {
-  const [news, setNews] = useState<NewsResult[]>([]);
+  const [news, setNews] = useState<{ [K: string]: NewsResult[] }>({});
   const [loading, setLoading] = useState(false);
-  const [symbols, setSymbols] = useState<string[]>([]);
   const [symbol, setSymbol] = useState<string>('All');
   const [sentiment, setSentiment] = useState<'positive' | 'negative' | 'all'>('all');
 
-  useEffect(() => {
-    const _symbols = positions
-      .filter((position) => {
-        const symbol = position.security.symbol || position.security.name;
-        return !(symbol.includes('-') || position.security.type === 'crypto');
-      })
-      .map((position) => getNasdaqTicker(position.security))
-      .join(',');
-    if (!_symbols.length) {
-      return;
-    }
+  const symbols = useMemo(() => {
+    return ['All'].concat(
+      Array.from(
+        new Set(
+          positions
+            .filter((position) => position.security.type !== 'crypto')
+            .map((position) => getSymbol(position.security)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    );
+  }, [positions]);
 
+  function fetchNews(symbols: string[]) {
+    const _symbols = symbols.join(',');
     const url = buildCorsFreeUrl(`https://portfolio.nasdaq.com/api/portfolio/getPortfolioNews/?tickers=${_symbols}`);
     setLoading(true);
 
@@ -89,47 +90,73 @@ function News({ positions }: { positions: Position[] }) {
       .then((response) => {
         if (response) {
           const validSymbols = new Set<string>();
-          setNews(
-            // addedOn: "2021-04-09T21:25:20.63"
-            // articleTimestamp: "2021-04-09T16:16:09"
-            // companyName: "Apple"
-            // date: "2021-04-09T00:00:00"
-            // publishTimeFull: "2021-04-09T16:16:09-04:00"
-            // sentiment: "neutral"
-            // siteName: "Reuters"
-            // stockType: "stock"
-            // ticker: "AAPL"
-            // title: "US STOCKS-S&P 500, Dow climb for third day and close at records"
-            // url: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
-            // urlString: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
-            response.map((news) => {
-              const symbol = getSymbolFromNasdaqTicker(news.ticker);
+          // addedOn: "2021-04-09T21:25:20.63"
+          // articleTimestamp: "2021-04-09T16:16:09"
+          // companyName: "Apple"
+          // date: "2021-04-09T00:00:00"
+          // publishTimeFull: "2021-04-09T16:16:09-04:00"
+          // sentiment: "neutral"
+          // siteName: "Reuters"
+          // stockType: "stock"
+          // ticker: "AAPL"
+          // title: "US STOCKS-S&P 500, Dow climb for third day and close at records"
+          // url: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
+          // urlString: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
+          const _news = response.reduce(
+            (hash, newsRecord) => {
+              const symbol = getSymbolFromNasdaqTicker(newsRecord.ticker);
               validSymbols.add(symbol);
-              return {
-                timestamp: moment(news.articleTimestamp || news.addedOn),
-                name: news.companyName,
+              const newsResult = {
+                timestamp: moment(newsRecord.articleTimestamp || newsRecord.addedOn),
+                name: newsRecord.companyName,
                 symbol,
-                sentiment: news.sentiment,
-                title: news.title,
-                url: news.url,
-                source: news.siteName,
+                sentiment: newsRecord.sentiment,
+                title: newsRecord.title,
+                url: newsRecord.url,
+                source: newsRecord.siteName,
               };
-            }),
-          );
 
-          setSymbols(Array.from(validSymbols).sort((a, b) => a.localeCompare(b)));
+              if (!hash[symbol]) {
+                hash[symbol] = [];
+              }
+              hash[symbol].push(newsResult);
+
+              return hash;
+            },
+            symbols.length === 1 ? { [symbols[0]]: [] } : {},
+          );
+          setNews({ ...news, ..._news });
         }
       })
       .catch((error) => console.info('Failed to load news articles.', error))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    const _symbols = positions
+      .filter((position) => {
+        const symbol = position.security.symbol || position.security.name;
+        return !(symbol.includes('-') || position.security.type === 'crypto');
+      })
+      .map((position) => getNasdaqTicker(position.security));
+    if (!_symbols.length) {
+      return;
+    }
+
+    setSymbol('All');
+    setTimeout(() => fetchNews(_symbols), 100);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positions]);
 
   const sidebarContainerRef = useRef<HTMLDivElement>();
   const newsContainerRef = useRef<HTMLDivElement>();
 
-  const selectedNews = news.filter(
-    (_news) => (sentiment === 'all' || _news.sentiment === sentiment) && (symbol === 'All' || _news.symbol === symbol),
-  );
+  const selectedNews = useMemo(() => {
+    const results = symbol === 'All' ? Object.values(news).flat() : news[symbol] || [];
+    return sentiment === 'all' ? results : results.filter((result) => result.sentiment === sentiment);
+  }, [news, symbol, sentiment]);
+
   return (
     <Flex flexDirection="column" mb={3} alignItems="center">
       <Flex width={1} justifyContent="center" mb={3}>
@@ -153,14 +180,24 @@ function News({ positions }: { positions: Position[] }) {
           </Radio.Button>
         </Radio.Group>
       </Flex>
-      {!!news.length ? (
+
+      {loading ? (
+        <Spin size="large" />
+      ) : (
         <Flex width={1}>
           <Flex flexDirection="column" alignItems="flex-end" px={2} width={1 / 4}>
             <Box width={1} ref={sidebarContainerRef}>
               <Radio.Group
                 style={{ width: '100%' }}
                 onChange={(e) => {
-                  setSymbol(e.target.value);
+                  const _symbol = e.target.value;
+                  setSymbol(_symbol);
+                  if (_symbol !== 'All' && !news[_symbol]) {
+                    setTimeout(() => {
+                      fetchNews([_symbol.endsWith('.TO') ? `TSE:${_symbol.replace('.TO', '')}` : _symbol]);
+                    }, 50);
+                  }
+
                   window.scroll({ top: 0, left: 0, behavior: 'smooth' });
                   if (newsContainerRef?.current) {
                     newsContainerRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -170,8 +207,9 @@ function News({ positions }: { positions: Position[] }) {
                 buttonStyle="solid"
                 optionType="button"
               >
-                {['All', ...symbols].map((symbol) => (
+                {symbols.map((symbol) => (
                   <Radio.Button
+                    key={symbol}
                     style={{
                       width: '100%',
                       display: 'flex',
@@ -195,6 +233,7 @@ function News({ positions }: { positions: Position[] }) {
               width={3 / 4}
               px={2}
               height={sidebarContainerRef?.current && sidebarContainerRef.current.clientHeight}
+              minHeight="65vh"
               style={{ overflow: 'scroll' }}
             >
               {selectedNews.map((_news, index) => (
@@ -207,10 +246,6 @@ function News({ positions }: { positions: Position[] }) {
             </Flex>
           )}
         </Flex>
-      ) : loading ? (
-        <Spin size="large" />
-      ) : (
-        <Empty description="No News Articles Found!" />
       )}
     </Flex>
   );
