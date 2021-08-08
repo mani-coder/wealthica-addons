@@ -4,7 +4,7 @@
   import { default as addDays } from 'date-fns/add';
   import { parsePositionsResponse } from './api';
   import Events from './components/Earnings.svelte';
-  import Loading from './components/Loading.svelte';
+  import Loading from './components/ui/Loading.svelte';
   import { DATA } from './mocks/positions';
   import Tailwindcss from './styles/Tailwindcss.svelte';
   import type { Position } from './types';

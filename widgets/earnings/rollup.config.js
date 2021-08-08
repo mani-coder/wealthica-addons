@@ -52,7 +52,8 @@ export default {
 			}),
 			include: [
 				'src/**/*.svelte',
-				'src/*.svelte'
+				'src/*.svelte',
+				'node_modules/**/*.svelte'
 			],
 			compilerOptions: {
 				// enable run-time checks when not in production
@@ -71,7 +72,6 @@ export default {
 		resolve({
 			browser: true,
 			dedupe: ['svelte']
-
 		}),
 		commonjs(),
 		typescript({ inlineSources: !production }),
