@@ -54,7 +54,7 @@
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-600 font-medium text-sm">{formatWeek(event)}</span>
     </div>
-    <Arrow class="w-4 text-gray-700" onClick={toNext} disabled={currentEventIdx === earnings.length - 1} />
+    <Arrow class="w-4 text-gray-700" onClick={toNext} />
   </div>
 
   <div class="flex flex-col space-y-1 pt-2 w-full">
