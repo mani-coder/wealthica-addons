@@ -6,17 +6,20 @@
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
+  export let onDateChange: (date: Date) => void;
+  export let selectedDate: Date;
   export let earnings: { date: Date; symbols: string[] }[];
+
   const TODAY = getDayOfYear(new Date());
 
-  let currentEventIdx = 0;
+  $: currentEventIdx = earnings.findIndex((earning) => earning.date.getTime() === selectedDate!.getTime());
   $: event = earnings[currentEventIdx];
-  function toNext() {
-    currentEventIdx = currentEventIdx < earnings.length - 1 ? currentEventIdx + 1 : 0;
-  }
 
+  function toNext() {
+    onDateChange(earnings[currentEventIdx < earnings.length - 1 ? currentEventIdx + 1 : 0].date);
+  }
   function toPrev() {
-    currentEventIdx = currentEventIdx === 0 ? earnings.length - 1 : currentEventIdx - 1;
+    onDateChange(earnings[currentEventIdx === 0 ? earnings.length - 1 : currentEventIdx - 1].date);
   }
 
   function formatDay(date: Date) {

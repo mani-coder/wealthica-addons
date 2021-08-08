@@ -9,10 +9,14 @@
   import { getRandomInt } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
+  import type { Timeline } from 'types';
 
   const THIS_WEEK = getWeek(new Date());
 
   type Earning = { date: Date; symbols: string[] };
+
+  export let onDateChange: (date: Date, changeTimeline?: Timeline) => void;
+  export let selectedDate: Date;
   export let earnings: Earning[];
 
   const earningsByWeekNumber = earnings.reduce((hash, earning) => {
@@ -28,14 +32,18 @@
     .map((week) => ({ week: parseInt(week), earnings: earningsByWeekNumber[parseInt(week)] }))
     .sort((a, b) => a.week - b.week);
 
-  let currentEventIdx = 0;
+  $: selectedDateWeek = getWeek(selectedDate);
+  $: currentEventIdx = weeklyEarnings.findIndex((earning) => earning.week === selectedDateWeek);
   $: event = weeklyEarnings[currentEventIdx];
-  function toNext() {
-    currentEventIdx = currentEventIdx < weeklyEarnings.length - 1 ? currentEventIdx + 1 : 0;
-  }
 
+  function handleDateChange(idx) {
+    onDateChange(weeklyEarnings[idx].earnings[0].date);
+  }
+  function toNext() {
+    handleDateChange(currentEventIdx < weeklyEarnings.length - 1 ? currentEventIdx + 1 : 0);
+  }
   function toPrev() {
-    currentEventIdx = currentEventIdx === 0 ? weeklyEarnings.length - 1 : currentEventIdx - 1;
+    handleDateChange(currentEventIdx === 0 ? weeklyEarnings.length - 1 : currentEventIdx - 1);
   }
 
   function formatWeek(event: { week: number; earnings: Earning[] }) {
@@ -63,8 +71,10 @@
     {#each event.earnings as earning}
       <div class="flex space-x-1">
         <div class="mr-1 pb-1">
-          <Badge color="gray">
-            <div class="font-medium text-sm">{format(earning.date, 'dd')}</div>
+          <Badge color="gray" onClick={() => onDateChange(earning.date, 'day')}>
+            <div class="font-medium text-sm">
+              {format(earning.date, 'dd')}
+            </div>
           </Badge>
         </div>
         <div class="flex overflow-scroll no-scrollbar">

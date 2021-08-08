@@ -33,6 +33,7 @@
   "dependencies": {
     "@wealthica/wealthica.js": "0.0.16",
     "autoprefixer": "^10.2.5",
+    "calendarize": "^1.1.1",
     "moment": "^2.29.1",
     "postcss": "^8.2.15",
     "sirv-cli": "^1.0.0",

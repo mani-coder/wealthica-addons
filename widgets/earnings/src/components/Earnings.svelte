@@ -36,6 +36,14 @@
   function onTimelineSelect(value: string) {
     timeline = value as Timeline;
   }
+
+  let selectedDate: Date = earnings.length ? earnings[0].date : new Date();
+  function onDateChange(date: Date, changeTimeline?: Timeline) {
+    selectedDate = date;
+    if (changeTimeline) {
+      onTimelineSelect(changeTimeline);
+    }
+  }
 </script>
 
 <div class="w-full h-full overflow-scroll no-scrollbar">
@@ -45,13 +53,19 @@
     {/if}
   </h3>
 
-  <ButtonGroup value={timeline} options={TIMELINE_OPTIONS} onClick={onTimelineSelect} />
+  {#if earnings.length}
+    <ButtonGroup value={timeline} options={TIMELINE_OPTIONS} onClick={onTimelineSelect} />
 
-  <div class="py-0.5" />
+    <div class="py-0.5" />
 
-  {#if timeline === 'day'}
-    <DailyEarnings {earnings} />
+    {#if timeline === 'day'}
+      <DailyEarnings {earnings} {onDateChange} {selectedDate} />
+    {:else}
+      <WeeklyEarnings {earnings} {onDateChange} {selectedDate} />
+    {/if}
   {:else}
-    <WeeklyEarnings {earnings} />
+    <div class="flex items-center justify-center py-10 text-sm font-semibold text-center">
+      No upcoming earnings for your positions in recent times.
+    </div>
   {/if}
 </div>
