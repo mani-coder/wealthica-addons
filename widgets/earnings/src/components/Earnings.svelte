@@ -2,7 +2,7 @@
   import { TIMELINE_OPTIONS } from '../constants';
   import type { Earning, Position, Timeline } from '../types';
   import DailyEarnings from './DailyEarnings.svelte';
-  import MonthlyEarnings from './MonthlyEarnings.svelte';
+  import MonthlyEarnings from './monthly-earnings/MonthlyEarnings.svelte';
   import ButtonGroup from './ui/ButtonGroup.svelte';
   import WeeklyEarnings from './WeeklyEarnings.svelte';
 
@@ -29,7 +29,7 @@
     })
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  let timeline: Timeline = 'month';
+  let timeline: Timeline = 'day';
   function onTimelineSelect(value: string) {
     timeline = value as Timeline;
   }
