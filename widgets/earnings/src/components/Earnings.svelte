@@ -52,11 +52,13 @@
     </div>
     <Arrow on:click={toNext} />
   </div>
-  <div class="flex pt-3 space-x-1 w-full flex-wrap">
+  <div class="flex pt-3 w-full flex-wrap">
     {#each event.tickers as ticker}
-      <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
-        <div class="font-medium text-sm">{ticker}</div>
-      </Badge>
+      <div class="mr-1 pb-1">
+        <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
+          <div class="font-medium text-sm">{ticker}</div>
+        </Badge>
+      </div>
     {/each}
   </div>
 </div>
