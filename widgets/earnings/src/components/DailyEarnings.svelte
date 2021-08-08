@@ -1,6 +1,7 @@
 <script lang="ts">
   import format from 'date-fns/format';
   import getDayOfYear from 'date-fns/getDayOfYear';
+  import type { Earning } from 'types';
   import { COLORS } from '../constants';
   import { getRandomInt } from '../utils';
   import Arrow from './ui/Arrow.svelte';
@@ -8,7 +9,7 @@
 
   export let onDateChange: (date: Date) => void;
   export let selectedDate: Date;
-  export let earnings: { date: Date; symbols: string[] }[];
+  export let earnings: Earning[];
 
   const TODAY = getDayOfYear(new Date());
 

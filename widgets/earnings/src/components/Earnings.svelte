@@ -1,16 +1,13 @@
 <script lang="ts">
-  import type { Position, Timeline } from '../types';
+  import { TIMELINE_OPTIONS } from '../constants';
+  import type { Earning, Position, Timeline } from '../types';
   import DailyEarnings from './DailyEarnings.svelte';
+  import MonthlyEarnings from './MonthlyEarnings.svelte';
   import ButtonGroup from './ui/ButtonGroup.svelte';
   import WeeklyEarnings from './WeeklyEarnings.svelte';
 
   export let positions: Position[];
   export let prod: boolean;
-
-  const TIMELINE_OPTIONS: { label: string; value: string }[] = [
-    { label: 'DAY', value: 'day' },
-    { label: 'WEEK', value: 'week' },
-  ];
 
   const earningsByDate = positions.reduce((hash, position) => {
     if (position.events && position.events.length > 0) {
@@ -24,7 +21,7 @@
     return hash;
   }, {} as { [K: string]: string[] });
 
-  const earnings = Object.keys(earningsByDate)
+  const earnings: Earning[] = Object.keys(earningsByDate)
     .map((date) => {
       const _date = new Date(date);
       _date.setHours(0, 0, 0, 0);
@@ -32,7 +29,7 @@
     })
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  let timeline: Timeline = 'day';
+  let timeline: Timeline = 'month';
   function onTimelineSelect(value: string) {
     timeline = value as Timeline;
   }
@@ -60,8 +57,10 @@
 
     {#if timeline === 'day'}
       <DailyEarnings {earnings} {onDateChange} {selectedDate} />
-    {:else}
+    {:else if timeline === 'week'}
       <WeeklyEarnings {earnings} {onDateChange} {selectedDate} />
+    {:else}
+      <MonthlyEarnings {earnings} {onDateChange} {selectedDate} />
     {/if}
   {:else}
     <div class="flex items-center justify-center py-10 text-sm font-semibold text-center">

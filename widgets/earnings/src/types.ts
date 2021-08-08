@@ -13,7 +13,7 @@ export type Position = {
   events: Event[];
 };
 
-export type Timeline = 'day' | 'week';
+export type Timeline = 'day' | 'week' | 'month';
 
 export type Color =
   | 'blue'
@@ -27,3 +27,5 @@ export type Color =
   | 'red'
   | 'teal'
   | 'yellow';
+
+export type Earning = { date: Date; symbols: string[] };

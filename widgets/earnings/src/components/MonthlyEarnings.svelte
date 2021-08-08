@@ -1,57 +1,52 @@
 <script lang="ts">
-  import addDays from 'date-fns/addDays';
-  import endOfWeek from 'date-fns/endOfWeek';
   import { default as format } from 'date-fns/format';
-  import getWeek from 'date-fns/getWeek';
-  import startOfWeek from 'date-fns/startOfWeek';
-  import subDays from 'date-fns/subDays';
   import type { Earning, Timeline } from 'types';
   import { COLORS } from '../constants';
   import { getRandomInt } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
+  import Calendar from './ui/Calendar.svelte';
 
-  const THIS_WEEK = getWeek(new Date());
+  const THIS_MONTH = new Date().getMonth();
 
   export let onDateChange: (date: Date, changeTimeline?: Timeline) => void;
   export let selectedDate: Date;
   export let earnings: Earning[];
 
-  const earningsByWeekNumber = earnings.reduce((hash, earning) => {
-    const week = getWeek(earning.date);
-    if (!hash[week]) {
-      hash[week] = [];
+  const earningsByMonth = earnings.reduce((hash, earning) => {
+    const month = earning.date.getMonth();
+    if (!hash[month]) {
+      hash[month] = [];
     }
-    hash[week].push(earning);
+    hash[month].push(earning);
     return hash;
   }, {} as { [K: number]: Earning[] });
 
-  const weeklyEarnings = Object.keys(earningsByWeekNumber)
-    .map((week) => ({ week: parseInt(week), earnings: earningsByWeekNumber[parseInt(week)] }))
-    .sort((a, b) => a.week - b.week);
+  const monthlyEarnings = Object.keys(earningsByMonth)
+    .map((month) => ({ month: parseInt(month), earnings: earningsByMonth[parseInt(month)] }))
+    .sort((a, b) => a.month - b.month);
 
-  $: selectedDateWeek = getWeek(selectedDate);
-  $: currentEventIdx = weeklyEarnings.findIndex((earning) => earning.week === selectedDateWeek);
-  $: event = weeklyEarnings[currentEventIdx];
+  $: currentEventIdx = monthlyEarnings.findIndex((earning) => earning.month === selectedDate.getMonth());
+  $: event = monthlyEarnings[currentEventIdx];
 
   function handleDateChange(idx) {
-    onDateChange(weeklyEarnings[idx].earnings[0].date);
+    onDateChange(monthlyEarnings[idx].earnings[0].date);
   }
   function toNext() {
-    handleDateChange(currentEventIdx < weeklyEarnings.length - 1 ? currentEventIdx + 1 : 0);
+    handleDateChange(currentEventIdx < monthlyEarnings.length - 1 ? currentEventIdx + 1 : 0);
   }
   function toPrev() {
-    handleDateChange(currentEventIdx === 0 ? weeklyEarnings.length - 1 : currentEventIdx - 1);
+    handleDateChange(currentEventIdx === 0 ? monthlyEarnings.length - 1 : currentEventIdx - 1);
   }
 
-  function formatWeek(event: { week: number; earnings: Earning[] }) {
-    if (THIS_WEEK === event.week) {
-      return 'This Week';
-    } else if (THIS_WEEK + 1 === event.week) {
-      return 'Next Week';
+  function formatWeek(event: { month: number; earnings: Earning[] }) {
+    const date = event.earnings[0].date;
+    if (THIS_MONTH === event.month) {
+      return `This Month (${format(date, 'MMM')})`;
+    } else if (THIS_MONTH + 1 === event.month) {
+      return `Next Month (${format(date, 'MMM')})`;
     } else {
-      const date = event.earnings[0].date;
-      return `${format(addDays(startOfWeek(date), 1), 'MMM dd')} - ${format(subDays(endOfWeek(date), 1), 'MMM dd')}`;
+      return format(date, 'MMM yyyy');
     }
   }
 </script>
@@ -65,11 +60,13 @@
     <Arrow class="w-4" onClick={toNext} />
   </div>
 
+  <Calendar />
+
   <div class="flex flex-col space-y-1 pt-2 w-full">
     {#each event.earnings as earning}
       <div class="flex space-x-1">
         <div class="mr-1 pb-1">
-          <Badge color="gray" onClick={() => onDateChange(earning.date, 'day')}>
+          <Badge color="gray" onClick={() => onDateChange(earning.date, 'week')}>
             <div class="font-medium text-sm">
               {format(earning.date, 'dd')}
             </div>

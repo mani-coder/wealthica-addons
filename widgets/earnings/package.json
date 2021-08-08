@@ -31,6 +31,7 @@
   "dependencies": {
     "@wealthica/wealthica.js": "0.0.16",
     "autoprefixer": "^10.2.5",
+    "calendarize": "^1.1.1",
     "clsx": "^1.1.1",
     "date-fns": "^2.21.3",
     "postcss": "^8.2.15",
