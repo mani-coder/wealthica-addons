@@ -1,14 +1,14 @@
 <script lang="ts">
   import { default as format } from 'date-fns/format';
   import { getRandomInt } from 'utils';
-  import type { Color, Position } from '../types';
+  import type { Position } from '../types';
   import Arrow from './Arrow.svelte';
   import Badge from './Badge.svelte';
 
   export let positions: Position[];
   export let prod: boolean;
 
-  const COLORS: Color[] = ['purple', 'pink', 'green', 'blue', 'orange'];
+  const COLORS: string[] = ['bg-purple-200', 'bg-pink-200', 'bg-green-200', 'bg-blue-200', 'bg-orange-200'];
 
   const earningsByDate = positions.reduce((hash, position) => {
     if (position.events && position.events.length > 0) {

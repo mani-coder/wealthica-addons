@@ -15,12 +15,12 @@ do
   cd addon/$DIR
   npm install
   npm run build
+  cd ../../
 
 done
 
-cd ../../
 
-for DIR in 'pnl'
+for DIR in 'pnl' 'earnings'
 do
   echo "${stars// /*}"
   echo "Building $DIR Widget"
@@ -29,6 +29,7 @@ do
   cd widgets/$DIR
   npm install
   npm run build
+  cd ../../
 
 done
 

@@ -13,6 +13,4 @@ export type Position = {
   events: Event[];
 };
 
-export type Color = 'white' | 'gray' | 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | 'orange' | 'indigo';
-
 export type Timeline = 'month' | 'week';
