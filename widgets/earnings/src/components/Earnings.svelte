@@ -44,7 +44,7 @@
     {/if}
   </h3>
 
-  <div class="flex border-gray-200 border w-full px-1 py-2 rounded-lg items-center justify-between">
+  <div class="flex border-gray-200 border w-full p-1 rounded-lg items-center justify-between">
     <Arrow left on:click={toPrev} />
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-600 font-medium text-sm">{format(event.date, 'MMM dd, yyyy')}</span>
