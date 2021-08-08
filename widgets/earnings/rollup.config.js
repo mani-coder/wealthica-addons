@@ -34,10 +34,10 @@ function serve() {
 export default {
 	input: 'src/main.ts',
 	output: {
-		sourcemap: true,
-		format: 'iife',
+		sourcemap: false,
+		format: 'es',
 		name: 'app',
-		file: 'public/assets/bundle.js',
+		dir: 'public/assets/',
 	},
 	plugins: [
 		svelte({

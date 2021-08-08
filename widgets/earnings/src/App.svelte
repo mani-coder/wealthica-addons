@@ -47,8 +47,6 @@
     loading = true;
     const [positionsData] = await Promise.all([loadPositions(options)]);
     computeData(positionsData);
-    loading = false;
-
     console.debug('Done with loading data', { positions });
   }
 
@@ -79,9 +77,8 @@
   }
 
   async function computeData(positionsData: Position[]) {
-    await fetchEvents(positionsData);
     positions = positionsData;
-    loading = false;
+    await fetchEvents(positionsData);
   }
 
   function fetchEvents(positions: Position[]) {
