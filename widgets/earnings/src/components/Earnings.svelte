@@ -33,7 +33,7 @@
   };
 
   const toPrev = () => {
-    currentEventIdx = currentEventIdx === 0 ? upcomingEarnings.length + 1 : currentEventIdx - 1;
+    currentEventIdx = currentEventIdx === 0 ? upcomingEarnings.length - 1 : currentEventIdx - 1;
   };
 </script>
 
@@ -45,12 +45,12 @@
   </h3>
 
   <div class="flex border-gray-200 border w-full p-1 rounded-lg items-center justify-between">
-    <Arrow left on:click={toPrev} />
+    <Arrow disabled={!currentEventIdx} left on:click={toPrev} />
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-600 font-medium text-sm">{format(event.date, 'MMM dd, yyyy')}</span>
       <span class="text-gray-500 font-normal text-xs">{format(event.date, 'EEEE')}</span>
     </div>
-    <Arrow on:click={toNext} />
+    <Arrow disabled={currentEventIdx === upcomingEarnings.length - 1} on:click={toNext} />
   </div>
   <div class="flex pt-3 w-full flex-wrap">
     {#each event.tickers as ticker}
