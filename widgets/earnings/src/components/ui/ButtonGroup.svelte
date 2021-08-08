@@ -11,7 +11,7 @@
 <div class="flex">
   {#each options as option}
     <Button
-      class={clsx(option.value === value ? 'font-medium' : 'opacity-50 bg-gray-100')}
+      class={clsx(option.value === value ? 'font-medium' : 'opacity-50 bg-gray-100', 'border border-gray-50')}
       buttonGroup
       onClick={() => onClick(option.value)}
       active={option.value === value}

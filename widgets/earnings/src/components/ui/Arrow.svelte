@@ -1,4 +1,5 @@
 <script lang="ts">
+  import clsx from 'clsx';
   import ChevronLeft from 'svelte-icons/fa/FaChevronLeft.svelte';
   import ChevronRight from 'svelte-icons/fa/FaChevronRight.svelte';
 
@@ -9,7 +10,7 @@
 
 <div
   class:disabled
-  class="p-1 cursor-pointer opacity-90 text-gray-500 w-8 h-full rounded-md items-center bg-gray-50"
+  class={clsx($$props.class, 'p-1 cursor-pointer text-gray-500 h-full rounded-md items-center bg-gray-50')}
   on:click={onClick}
 >
   {#if left}

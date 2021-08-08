@@ -30,12 +30,12 @@
 
 <div class="w-full">
   <div class="flex border-gray-200 border w-full p-1 rounded-lg items-center justify-between">
-    <Arrow onClick={toPrev} left disabled={!currentEventIdx} />
+    <Arrow class="w-8 opacity-90" onClick={toPrev} left disabled={!currentEventIdx} />
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-600 font-medium text-sm">{format(event.date, 'MMM dd, yyyy')}</span>
       <span class="text-gray-500 font-normal text-xs">{formatDay(event.date)}</span>
     </div>
-    <Arrow onClick={toNext} disabled={currentEventIdx === earnings.length - 1} />
+    <Arrow class="w-8 opacity-90" onClick={toNext} disabled={currentEventIdx === earnings.length - 1} />
   </div>
 
   <div class="flex pt-3 w-full flex-wrap overflow-visible no-scrollbar">
