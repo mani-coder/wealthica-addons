@@ -1,7 +1,7 @@
 export const DATA = [
   {
     market_value: 155.27075406768117,
-    currency: 'cad',
+    currency: 'usd',
     gain_percent: 0.28,
     class: 'equity',
     category: 'US Stocks',
@@ -13,7 +13,7 @@ export const DATA = [
     security: {
       high_price: 103.25234883200001,
       low_price: 79.51,
-      symbol: 'MSFT',
+      symbol: 'BRP',
       last_price: 102.4,
       currency: 'usd',
       low_date: '2018-10-11T00:00:00.000Z',
@@ -44,7 +44,7 @@ export const DATA = [
   },
   {
     market_value: 1131.96368065341,
-    currency: 'cad',
+    currency: 'usd',
     gain_percent: 0.0246,
     class: 'equity',
     category: 'US Stocks',
@@ -56,7 +56,7 @@ export const DATA = [
     security: {
       high_price: 148.69,
       low_price: 0.1194,
-      symbol: 'SQ',
+      symbol: 'BALY',
       last_price: 138.06,
       currency: 'usd',
       low_date: '2018-05-30T13:10:07.783Z',
@@ -87,7 +87,7 @@ export const DATA = [
   },
   {
     market_value: 1400.7435963952462,
-    currency: 'cad',
+    currency: 'usd',
     gain_percent: 0.1015,
     class: 'equity',
     category: 'Canadian Stocks',
@@ -99,9 +99,9 @@ export const DATA = [
     security: {
       high_price: 53.63,
       low_price: 0.03185,
-      symbol: 'SHOP',
+      symbol: 'PLSE',
       last_price: 36.31,
-      currency: 'cad',
+      currency: 'usd',
       low_date: '2018-12-10T00:00:00.000Z',
       id: 'UOT8KEAQA5E6YECC7VGT',
       high_date: '2018-06-22T00:00:00.000Z',
@@ -130,7 +130,7 @@ export const DATA = [
   },
   {
     market_value: 35.57921620720222,
-    currency: 'cad',
+    currency: 'usd',
     gain_percent: -0.0383,
     class: 'equity',
     category: 'Canadian Stocks',
@@ -142,9 +142,9 @@ export const DATA = [
     security: {
       high_price: 25.150000000000002,
       low_price: 0.02069,
-      symbol: 'ENB',
+      symbol: 'ADV',
       last_price: 22.15,
-      currency: 'cad',
+      currency: 'usd',
       low_date: '2019-02-05T08:09:32.519Z',
       id: 'XF4NLA6HHP9QQA075OQV',
       high_date: '2018-06-23T00:00:00.000Z',
@@ -283,7 +283,7 @@ export const DATA = [
     security: {
       high_price: 217.5,
       low_price: 122.0399976,
-      symbol: 'FB',
+      symbol: 'GOLD',
       last_price: 169.59999999999997,
       currency: 'usd',
       low_date: '2018-12-25T13:53:36.649Z',
@@ -1328,7 +1328,7 @@ export const DATA = [
     security: {
       high_price: 12.1,
       low_price: 4.28056387044,
-      symbol: 'D4',
+      symbol: 'CBU',
       last_price: 5.52,
       currency: 'usd',
       low_date: '2019-01-02T05:30:12.375Z',

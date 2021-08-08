@@ -38,7 +38,7 @@
     <Arrow onClick={toNext} disabled={currentEventIdx === earnings.length - 1} />
   </div>
 
-  <div class="flex pt-3 w-full flex-wrap">
+  <div class="flex pt-3 w-full flex-wrap overflow-visible no-scrollbar">
     {#each event.symbols as symbol}
       <div class="mr-1 pb-1">
         <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>

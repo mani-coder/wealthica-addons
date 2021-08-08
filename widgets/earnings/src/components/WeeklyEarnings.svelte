@@ -48,7 +48,7 @@
   }
 </script>
 
-<div class="w-full h-full">
+<div class="w-full">
   <div class="flex border-gray-200 border w-full p-1 rounded-lg items-center justify-between">
     <Arrow onClick={toPrev} left disabled={!currentEventIdx} />
     <div class="flex flex-col justify-center w-full items-center">
@@ -65,13 +65,15 @@
             <div class="font-medium text-sm">{format(earning.date, 'dd')}</div>
           </Badge>
         </div>
-        {#each earning.symbols as symbol}
-          <div class="mr-1 pb-1">
-            <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
-              <div class="font-medium text-sm">{symbol}</div>
-            </Badge>
-          </div>
-        {/each}
+        <div class="flex overflow-scroll no-scrollbar">
+          {#each earning.symbols as symbol}
+            <div class="mr-1 pb-1">
+              <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
+                <div class="font-medium text-sm">{symbol}</div>
+              </Badge>
+            </div>
+          {/each}
+        </div>
       </div>
     {/each}
   </div>

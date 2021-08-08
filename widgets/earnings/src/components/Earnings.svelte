@@ -32,7 +32,7 @@
     })
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  let timeline: Timeline = 'week';
+  let timeline: Timeline = 'day';
   function onTimelineSelect(value: string) {
     timeline = value as Timeline;
   }
