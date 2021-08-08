@@ -1285,7 +1285,7 @@ export const DATA = [
     security: {
       high_price: 86.69343894166667,
       low_price: 37.989999999999995,
-      symbol: 'YCG1',
+      symbol: 'TLS',
       last_price: 78.3136106643,
       currency: 'usd',
       low_date: '2018-03-19T00:00:00.000Z',

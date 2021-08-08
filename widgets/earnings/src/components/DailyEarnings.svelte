@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { default as format } from 'date-fns/format';
+  import format from 'date-fns/format';
+  import getDayOfYear from 'date-fns/getDayOfYear';
   import { COLORS } from '../constants';
   import { getRandomInt } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
   export let earnings: { date: Date; symbols: string[] }[];
-  const TODAY = new Date();
-  TODAY.setHours(0, 0, 0, 0);
+  const TODAY = getDayOfYear(new Date());
 
   let currentEventIdx = 0;
   $: event = earnings[currentEventIdx];
@@ -20,8 +20,10 @@
   }
 
   function formatDay(date: Date) {
-    if (TODAY.getTime() === date.getTime()) {
+    if (TODAY === getDayOfYear(date)) {
       return 'Today';
+    } else if (TODAY + 1 === getDayOfYear(date)) {
+      return 'Tomorrow';
     } else {
       return format(date, 'EEEE');
     }

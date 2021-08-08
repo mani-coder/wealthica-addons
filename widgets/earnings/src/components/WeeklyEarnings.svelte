@@ -40,7 +40,9 @@
 
   function formatWeek(event: { week: number; earnings: Earning[] }) {
     if (THIS_WEEK === event.week) {
-      return 'This Weekend';
+      return 'This Week';
+    } else if (THIS_WEEK + 1 === event.week) {
+      return 'Next Week';
     } else {
       const date = event.earnings[0].date;
       return `${format(addDays(startOfWeek(date), 1), 'MMM dd')} - ${format(subDays(endOfWeek(date), 1), 'MMM dd')}`;
