@@ -38,18 +38,21 @@
 </script>
 
 <div class="w-full h-full overflow-scroll no-scrollbar">
-  <h4 class="my-0 mb-1 text-sm text-center text-gray-500">
+  <h3 class="my-0 mb-1 text-sm text-center text-gray-500">
     {#if !prod}
-      <div class="font-semibold">EARNINGS</div>
+      <div class="font-semibold py-1">EARNINGS</div>
     {/if}
-  </h4>
+  </h3>
 
-  <div class="flex border-gray-100 border w-full p-1 rounded-lg items-center justify-between">
+  <div class="flex border-gray-200 border w-full px-1 py-2 rounded-lg items-center justify-between">
     <Arrow left on:click={toPrev} />
-    <h6>{format(event.date, 'MMM dd, yyyy')}</h6>
+    <div class="flex flex-col justify-center w-full items-center">
+      <span class="text-gray-600 font-medium text-sm">{format(event.date, 'MMM dd, yyyy')}</span>
+      <span class="text-gray-500 font-normal text-xs">{format(event.date, 'EEEE')}</span>
+    </div>
     <Arrow on:click={toNext} />
   </div>
-  <div class="flex py-2 space-x-1 w-full">
+  <div class="flex pt-3 space-x-1 w-full">
     {#each event.tickers as ticker}
       <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
         <div class="font-medium text-sm">{ticker}</div>

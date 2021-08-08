@@ -16,7 +16,7 @@
   let prod = !(window.location.search || '').includes('?developer');
 
   try {
-    addon = new Addon({});
+    addon = new Addon(prod ? { id: 'mani-coder/wealthica-portfolio-addon/widgets/earnings' } : {});
     addon.on('init', (options) => {
       console.debug('[earnings-widget] Addon initialization', options);
       debouncedLoad(options);

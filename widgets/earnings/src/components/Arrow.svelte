@@ -13,9 +13,9 @@
 
 <style>
   svg {
-    width: 2rem;
-    height: 2rem;
-    padding: 2px;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 1px;
     cursor: pointer;
   }
 
