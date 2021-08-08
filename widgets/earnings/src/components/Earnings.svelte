@@ -52,7 +52,7 @@
     </div>
     <Arrow on:click={toNext} />
   </div>
-  <div class="flex pt-3 space-x-1 w-full">
+  <div class="flex pt-3 space-x-1 w-full flex-wrap">
     {#each event.tickers as ticker}
       <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
         <div class="font-medium text-sm">{ticker}</div>
