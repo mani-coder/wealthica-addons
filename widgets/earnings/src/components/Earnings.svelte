@@ -8,8 +8,8 @@
   export let prod: boolean;
 
   const TIMELINE_OPTIONS: { label: string; value: string }[] = [
-    { label: 'Day', value: 'day' },
-    { label: 'Week', value: 'week' },
+    { label: 'DAY', value: 'day' },
+    { label: 'WEEK', value: 'week' },
   ];
 
   const earningsByDate = positions.reduce((hash, position) => {
@@ -47,7 +47,7 @@
 
   <ButtonGroup value={timeline} options={TIMELINE_OPTIONS} onClick={onTimelineSelect} />
 
-  <div class="p-1" />
+  <div class="py-0.5" />
 
   {#if timeline === 'day'}
     <DailyEarnings {earnings} />

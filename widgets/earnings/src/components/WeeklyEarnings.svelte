@@ -51,12 +51,12 @@
 </script>
 
 <div class="w-full">
-  <div class="flex border-gray-200 border w-full p-1 rounded-lg items-center justify-between">
-    <Arrow class="w-4 text-gray-700" onClick={toPrev} left disabled={!currentEventIdx} />
+  <div class="flex border-gray-200 bg-gray-50 p-0.5 border w-full rounded-lg items-center justify-between">
+    <Arrow class="w-4" onClick={toPrev} left disabled={!currentEventIdx} />
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-600 font-medium text-sm">{formatWeek(event)}</span>
     </div>
-    <Arrow class="w-4 text-gray-700" onClick={toNext} />
+    <Arrow class="w-4" onClick={toNext} />
   </div>
 
   <div class="flex flex-col space-y-1 pt-2 w-full">

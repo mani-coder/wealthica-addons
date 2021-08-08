@@ -10,7 +10,7 @@
 
 <div
   class:disabled
-  class={clsx($$props.class, 'p-1 cursor-pointer text-gray-500 h-full rounded-md items-center bg-gray-50')}
+  class={clsx($$props.class, 'px-1 cursor-pointer bg-gray-100 text-gray-800 flex items-center rounded-md')}
   on:click={onClick}
 >
   {#if left}
