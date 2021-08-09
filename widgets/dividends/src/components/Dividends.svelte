@@ -5,6 +5,8 @@
   import MonthlyDividends from './monthly-earnings/MonthlyDividends.svelte';
   import ButtonGroup from './ui/ButtonGroup.svelte';
   import WeeklyDividends from './WeeklyDividends.svelte';
+  const TODAY = new Date();
+  TODAY.setHours(0, 0, 0, 0);
 
   export let positions: Position[];
   export let prod: boolean;
@@ -27,6 +29,7 @@
       _date.setHours(0, 0, 0, 0);
       return { date: _date, symbols: dividendsByDate[date] };
     })
+    .filter((dividend) => dividend.date.getTime() >= TODAY.getTime())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   let timeline: Timeline = 'day';

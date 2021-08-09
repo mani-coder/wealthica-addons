@@ -1,7 +1,8 @@
 <script lang="ts">
   import { Addon } from '@wealthica/wealthica.js/index';
-  import { format } from 'date-fns';
   import { default as addDays } from 'date-fns/add';
+  import format from 'date-fns/format';
+  import { default as subDays } from 'date-fns/sub';
   import { parsePositionsResponse } from './api';
   import Dividends from './components/Dividends.svelte';
   import Loading from './components/ui/Loading.svelte';
@@ -82,7 +83,7 @@
   }
 
   function fetchEvents(positions: Position[]) {
-    const startDate = new Date();
+    const startDate = subDays(new Date(), { months: 1 });
     const endDate = addDays(new Date(), { months: 4 });
     const _symbols = positions
       .filter((position) => {
