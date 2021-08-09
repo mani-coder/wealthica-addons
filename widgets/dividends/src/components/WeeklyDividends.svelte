@@ -6,7 +6,7 @@
   import startOfWeek from 'date-fns/startOfWeek';
   import subDays from 'date-fns/subDays';
   import type { Dividend, Timeline } from 'types';
-  import { getColorForSymbol } from '../utils';
+  import { getColorForSymbol, getDisplaySymbol } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
@@ -78,7 +78,7 @@
           {#each dividend.symbols as symbol}
             <div class="mr-1 pb-1">
               <Badge color={getColorForSymbol(symbol.symbol)}>
-                <div class="font-medium text-sm">{symbol.symbol}</div>
+                <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
               </Badge>
             </div>
           {/each}

@@ -1,4 +1,4 @@
-import type { Color } from 'types';
+import type { Color, DividendEventSymbol } from 'types';
 import { COLORS } from './constants';
 
 export const getSymbolFromNASDAQTicker = (ticker: string) =>
@@ -12,4 +12,8 @@ export function getColorForSymbol(symbol: string) {
     colorCache[symbol] = COLORS[lastUsedColorIdx % COLORS.length];
   }
   return colorCache[symbol];
+}
+
+export function getDisplaySymbol(symbol: DividendEventSymbol) {
+  return `${symbol.type === 'ex-dividend' ? 'EX' : symbol.type === 'pay-dividend' ? 'PD' : 'RD'}: ${symbol.symbol}`;
 }
