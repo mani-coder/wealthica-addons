@@ -1,4 +1,4 @@
-type EventType = 'ex-dividend' | 'pay-dividend' | 'record-dividend';
+export type EventType = 'ex-dividend' | 'pay-dividend' | 'record-dividend';
 
 type Event = {
   type: EventType;

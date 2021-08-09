@@ -1,7 +1,7 @@
 <script lang="ts">
   import clsx from 'clsx';
   import type { Dividend } from 'types';
-  import { getColorForSymbol } from 'utils';
+  import { getColorForEvent } from 'utils';
   import Dot from '../ui/Dot.svelte';
 
   export let day: number;
@@ -24,7 +24,7 @@
   {#if symbols.length}
     <div class="flex justify-end">
       {#each symbols.slice(0, 3) as symbol}
-        <Dot color={getColorForSymbol(symbol.symbol)} />
+        <Dot color={getColorForEvent(symbol.type)} />
       {/each}
     </div>
   {/if}

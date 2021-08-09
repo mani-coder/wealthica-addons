@@ -2,7 +2,7 @@
   import format from 'date-fns/format';
   import getDayOfYear from 'date-fns/getDayOfYear';
   import type { Dividend } from 'types';
-  import { getColorForSymbol, getDisplaySymbol } from '../utils';
+  import { getColorForEvent, getDisplaySymbol } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
@@ -46,7 +46,7 @@
   <div class="flex pt-3 w-full flex-wrap overflow-visible no-scrollbar">
     {#each event.symbols as symbol}
       <div class="mr-1 pb-1">
-        <Badge color={getColorForSymbol(symbol.symbol)}>
+        <Badge color={getColorForEvent(symbol.type)}>
           <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
         </Badge>
       </div>

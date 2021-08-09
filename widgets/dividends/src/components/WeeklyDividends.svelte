@@ -6,7 +6,7 @@
   import startOfWeek from 'date-fns/startOfWeek';
   import subDays from 'date-fns/subDays';
   import type { Dividend, Timeline } from 'types';
-  import { getColorForSymbol, getDisplaySymbol } from '../utils';
+  import { getColorForEvent, getDisplaySymbol } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
@@ -77,7 +77,7 @@
         <div class="flex overflow-scroll no-scrollbar">
           {#each dividend.symbols as symbol}
             <div class="mr-1 pb-1">
-              <Badge color={getColorForSymbol(symbol.symbol)}>
+              <Badge color={getColorForEvent(symbol.type)}>
                 <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
               </Badge>
             </div>
