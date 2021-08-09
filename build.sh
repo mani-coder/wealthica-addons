@@ -20,7 +20,7 @@ do
 done
 
 
-for DIR in 'pnl' 'earnings'
+for DIR in 'pnl' 'earnings' 'dividends'
 do
   echo "${stars// /*}"
   echo "Building $DIR Widget"
