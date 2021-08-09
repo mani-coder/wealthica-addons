@@ -6,8 +6,7 @@
   import startOfWeek from 'date-fns/startOfWeek';
   import subDays from 'date-fns/subDays';
   import type { Earning, Timeline } from 'types';
-  import { COLORS } from '../constants';
-  import { getRandomInt } from '../utils';
+  import { getColorForSymbol } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
@@ -78,7 +77,7 @@
         <div class="flex overflow-scroll no-scrollbar">
           {#each earning.symbols as symbol}
             <div class="mr-1 pb-1">
-              <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
+              <Badge color={getColorForSymbol(symbol)}>
                 <div class="font-medium text-sm">{symbol}</div>
               </Badge>
             </div>

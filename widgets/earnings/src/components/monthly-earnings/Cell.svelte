@@ -1,10 +1,8 @@
 <script lang="ts">
   import clsx from 'clsx';
-  import type { Color, Earning } from 'types';
-  import { getRandomInt } from 'utils';
+  import type { Earning } from 'types';
+  import { getColorForSymbol } from 'utils';
   import Dot from '../ui/Dot.svelte';
-
-  const COLORS: Color[] = ['pink', 'green', 'red', 'blue'];
 
   export let day: number;
   export let current: boolean = false;
@@ -25,8 +23,8 @@
   </span>
   {#if symbols.length}
     <div class="flex justify-end">
-      {#each symbols.slice(0, 3) as earning}
-        <Dot color={COLORS[getRandomInt(0, COLORS.length - 1)]} />
+      {#each symbols.slice(0, 3) as symbol}
+        <Dot color={getColorForSymbol(symbol)} />
       {/each}
     </div>
   {/if}

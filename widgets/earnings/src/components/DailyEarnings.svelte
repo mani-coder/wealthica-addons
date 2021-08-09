@@ -2,8 +2,7 @@
   import format from 'date-fns/format';
   import getDayOfYear from 'date-fns/getDayOfYear';
   import type { Earning } from 'types';
-  import { COLORS } from '../constants';
-  import { getRandomInt } from '../utils';
+  import { getColorForSymbol } from '../utils';
   import Arrow from './ui/Arrow.svelte';
   import Badge from './ui/Badge.svelte';
 
@@ -47,7 +46,7 @@
   <div class="flex pt-3 w-full flex-wrap overflow-visible no-scrollbar">
     {#each event.symbols as symbol}
       <div class="mr-1 pb-1">
-        <Badge color={COLORS[getRandomInt(0, COLORS.length - 1)]}>
+        <Badge color={getColorForSymbol(symbol)}>
           <div class="font-medium text-sm">{symbol}</div>
         </Badge>
       </div>
