@@ -119,7 +119,7 @@
           response.earnings.map((earning) => {
             const position = positionByTicker[earning.ticker];
             if (position && earning.date) {
-              position.events.push({ type: 'earning', date: earning.date });
+              position.earningDates.push(earning.date);
             }
           });
         }

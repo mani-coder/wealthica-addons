@@ -10,14 +10,12 @@
   export let prod: boolean;
 
   const earningsByDate = positions.reduce((hash, position) => {
-    if (position.events && position.events.length > 0) {
-      position.events.forEach((event) => {
-        if (!hash[event.date]) {
-          hash[event.date] = [];
-        }
-        hash[event.date].push(position.symbol);
-      });
-    }
+    position.earningDates.forEach((earningDate) => {
+      if (!hash[earningDate]) {
+        hash[earningDate] = [];
+      }
+      hash[earningDate].push(position.symbol);
+    });
     return hash;
   }, {} as { [K: string]: string[] });
 
