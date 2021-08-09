@@ -20,7 +20,7 @@
   )}
   on:click={() => (onDateSelect && earning ? onDateSelect(earning.date) : null)}
 >
-  <span class={clsx('h06 text-xs font-semibold', !current && 'opacity-20')}>
+  <span class={clsx('text-xs font-semibold', !current && 'opacity-20')}>
     {day}
   </span>
   {#if symbols.length}
