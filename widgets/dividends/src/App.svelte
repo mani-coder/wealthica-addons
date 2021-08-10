@@ -6,7 +6,6 @@
   import { parsePositionsResponse } from './api';
   import Dividends from './components/Dividends.svelte';
   import Loading from './components/ui/Loading.svelte';
-  import { DATA } from './mocks/positions';
   import Tailwindcss from './styles/Tailwindcss.svelte';
   import type { Position } from './types';
 
@@ -51,9 +50,10 @@
     console.debug('Done with loading data', { positions });
   }
 
-  function loadStaticPortfolioData() {
+  async function loadStaticPortfolioData() {
     loading = true;
-    computeData(parsePositionsResponse(DATA));
+    const [positionsData] = await Promise.all([import('./mocks/positions').then((response) => response.DATA)]);
+    computeData(parsePositionsResponse(positionsData));
   }
 
   function loadPositions(options: any): Position[] {
@@ -94,6 +94,7 @@
       .join(',');
 
     if (!_symbols.length) {
+      loading = false;
       return;
     }
 
