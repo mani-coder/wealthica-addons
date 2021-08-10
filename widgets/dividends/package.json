@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rm -rf public/assets; rollup -c && mkdir -p ../../public/mani-coder/wealthica-portfolio-addon/widgets/dividends/ && rm -rf ../../public/mani-coder/wealthica-portfolio-addon/widgets/dividends/* && cp -vR public/* ../../public/mani-coder/wealthica-portfolio-addon/widgets/dividends/",
+    "build": "rm -rf public/assets; rollup -c && mkdir -p ../../public/mani-coder/wealthica-events-addon/widgets/dividends/ && rm -rf ../../public/mani-coder/wealthica-events-addon/widgets/dividends/* && cp -vR public/* ../../public/mani-coder/wealthica-portfolio-addon/widgets/dividends/",
     "dev": "rollup -c -w",
     "start": "sirv public",
     "validate": "svelte-check",
