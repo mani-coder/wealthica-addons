@@ -1,4 +1,4 @@
-import type { Color, Timeline } from 'types';
+import type { Color, EventType, Timeline } from 'types';
 
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const COLORS: Color[] = ['pink', 'green', 'blue', 'red', 'indigo', 'yellow'];
@@ -8,4 +8,6 @@ export const TIMELINE_OPTIONS: { label: string; value: Timeline }[] = [
   { label: 'MONTH', value: 'month' },
 ];
 
-export let DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+export const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+export const EVENT_TYPES: EventType[] = ['earning', 'ex-dividend', 'record-dividend', 'pay-dividend'];

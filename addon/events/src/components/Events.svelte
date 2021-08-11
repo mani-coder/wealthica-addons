@@ -5,12 +5,14 @@
   import getWeek from 'date-fns/getWeek';
   import startOfWeek from 'date-fns/startOfWeek';
   import subDays from 'date-fns/subDays';
-  import type { Event, EventSymbol, Position, Timeline } from '../types';
+  import FaCalendarAlt from 'svelte-icons/fa/FaCalendarAlt.svelte';
+  import { EVENT_TYPES } from '../constants';
+  import type { Event, EventSymbol, EventType, Position, Timeline } from '../types';
+  import EventOptions from './EventOptions.svelte';
   import Legend from './Legend.svelte';
   import MonthlyEvents from './monthly-events/MonthlyEvents.svelte';
   import Arrow from './ui/Arrow.svelte';
   import Divider from './ui/Divider.svelte';
-  import FaCalendarAlt from 'svelte-icons/fa/FaCalendarAlt.svelte';
   import WeeklyEvents from './WeeklyEvents.svelte';
 
   const TODAY = new Date();
@@ -18,6 +20,11 @@
   const THIS_WEEK = getWeek(new Date());
 
   export let positions: Position[];
+
+  let types: EventType[] = EVENT_TYPES;
+  function changeTypes(newTypes: EventType[]) {
+    types = newTypes;
+  }
 
   const eventsByDate = positions.reduce((hash, position) => {
     if (position.events && position.events.length > 0) {
@@ -40,7 +47,6 @@
     .filter((event) => event.date.getTime() >= TODAY.getTime())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  console.log('mani is cool', events);
   const eventsByWeekNumber = events.reduce((hash, event) => {
     const week = getWeek(event.date);
     if (!hash[week]) {
@@ -88,7 +94,10 @@
       return 'Next Week';
     } else {
       const date = event.events[0].date;
-      return `${format(addDays(startOfWeek(date), 1), 'MMM dd')} - ${format(subDays(endOfWeek(date), 1), 'MMM dd')}`;
+      return `${format(addDays(startOfWeek(date), 1), 'MMM dd')} - ${format(
+        subDays(endOfWeek(date), 1),
+        'MMM dd, yyyy',
+      )}`;
     }
   }
 </script>
@@ -111,18 +120,19 @@
             left
             disabled={!currentEventIdx}
           />
-          <div class="flex mx-2 w-64 px-4 py-3 items-center justify-center bg-gray-100 rounded-lg">
+          <div class="flex mx-2 w-72 px-4 py-3 items-center justify-center bg-gray-100 rounded-lg">
             <span class="font-normal px-8 text-lg">{formatWeek(event)}</span>
           </div>
           <Arrow class="border pl-1.5 w-6 rounded-md border-gray-300" onClick={toNext} />
         </div>
-        <div class="py-2" />
-        <WeeklyEvents events={event.events} />
+
+        <EventOptions {types} onChange={changeTypes} />
+        <WeeklyEvents events={event.events} {types} />
       </div>
 
       <div class="flex flex-col w-1/4">
         <MonthlyEvents {events} {onDateChange} {selectedDate} />
-        <Divider />
+        <div class="p-2" />
         <Legend />
       </div>
     </div>

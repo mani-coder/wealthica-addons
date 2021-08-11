@@ -8,6 +8,7 @@
   export let current: boolean = false;
   export let event: Event | undefined = undefined;
   export let onDateSelect: ((date: Date) => void) | undefined = undefined;
+
   $: symbols = event ? event.symbols.slice(0, 3) : [];
 </script>
 
