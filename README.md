@@ -7,11 +7,19 @@ Currently we have [one addon](https://github.com/mani-coder/wealthica-addons/tre
 
 Samples:
 
-[Wealthica PnL Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/
+[Wealthica PnL Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/?developer
 
 
-[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer
 
+
+[Wealthica Events Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer
+
+
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/earnings/?developer
+
+
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/dividends/?developer
 
 
 ___Deprecated Repos:___
