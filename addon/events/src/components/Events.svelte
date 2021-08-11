@@ -11,6 +11,7 @@
   import Arrow from './ui/Arrow.svelte';
   import Divider from './ui/Divider.svelte';
   import FaCalendarAlt from 'svelte-icons/fa/FaCalendarAlt.svelte';
+  import WeeklyEvents from './WeeklyEvents.svelte';
 
   const TODAY = new Date();
   TODAY.setHours(0, 0, 0, 0);
@@ -39,6 +40,7 @@
     .filter((event) => event.date.getTime() >= TODAY.getTime())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
+  console.log('mani is cool', events);
   const eventsByWeekNumber = events.reduce((hash, event) => {
     const week = getWeek(event.date);
     if (!hash[week]) {
@@ -101,19 +103,21 @@
 
   {#if events.length}
     <div class="p-1 md:p-2 flex w-full">
-      <div class="flex w-3/4 mr-8">
-        <div class="flex justify-center w-full h-fit-content">
+      <div class="flex flex-col w-3/4 mr-8">
+        <div class="flex justify-center w-full h-fit">
           <Arrow
             class="border w-6 pr-1.5 rounded-md border-gray-300"
             onClick={toPrev}
             left
             disabled={!currentEventIdx}
           />
-          <div class="flex mx-2 px-4 py-3 items-center justify-center bg-gray-100 rounded-lg">
+          <div class="flex mx-2 w-64 px-4 py-3 items-center justify-center bg-gray-100 rounded-lg">
             <span class="font-normal px-8 text-lg">{formatWeek(event)}</span>
           </div>
           <Arrow class="border pl-1.5 w-6 rounded-md border-gray-300" onClick={toNext} />
         </div>
+        <div class="py-2" />
+        <WeeklyEvents events={event.events} />
       </div>
 
       <div class="flex flex-col w-1/4">

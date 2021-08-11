@@ -15,7 +15,13 @@ export const getSymbolFromNASDAQTicker = (ticker: string) =>
   ticker.startsWith('TSE:') ? `${ticker.replace('TSE:', '')}.TO` : ticker;
 
 export function getColorForEvent(event: EventType): Color {
-  return event === 'ex-dividend' ? 'pink' : event === 'pay-dividend' ? 'green' : 'blue';
+  return event === 'earning'
+    ? 'pink'
+    : event === 'ex-dividend'
+    ? 'blue'
+    : event === 'pay-dividend'
+    ? 'green'
+    : 'indigo';
 }
 
 export function getDisplaySymbol(symbol: EventSymbol) {
@@ -24,12 +30,12 @@ export function getDisplaySymbol(symbol: EventSymbol) {
       return symbol.symbol;
 
     case 'ex-dividend':
-      return `EX:${symbol.symbol}`;
+      return `EX: ${symbol.symbol}`;
 
     case 'record-dividend':
-      return `RD:${symbol.symbol}`;
+      return `RD: ${symbol.symbol}`;
 
     case 'pay-dividend':
-      return `PD:${symbol.symbol}`;
+      return `PD: ${symbol.symbol}`;
   }
 }

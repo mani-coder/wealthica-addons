@@ -108,11 +108,11 @@
     @apply my-4;
   }
 
-  .h-fit-content {
+  .h-fit {
     height: fit-content;
   }
 
-  .w-fit-content {
+  .w-fit {
     width: fit-content;
   }
 

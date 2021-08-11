@@ -44,7 +44,7 @@
 </script>
 
 <div class="w-full p-2 border border-gray-200 bg-gray-50 rounded-lg">
-  <div class="flex w-full items-center">
+  <div class="flex w-full items-center py-1">
     <Arrow class="w-5" onClick={toPrev} left disabled={!currentEventIdx} />
     <div class="flex flex-col justify-center w-full items-center">
       <span class="text-gray-700 font-bold text-base">{formatWeek(event)}</span>
