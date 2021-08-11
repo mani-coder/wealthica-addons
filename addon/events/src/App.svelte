@@ -156,7 +156,7 @@
 
 <main>
   <div class={!addon ? 'flex w-max my-4 mx-auto p-2' : ''}>
-    <div class="container" style={`--width:${addon ? '100%' : '1100px'};`}>
+    <div class="container" style={`--width:${addon ? '100%' : '1200px'};`}>
       {#if loading}
         <div class="flex justify-center w-full">
           <Loading />
@@ -173,5 +173,6 @@
 <style>
   .container {
     width: var(--width);
+    max-width: '100%';
   }
 </style>
