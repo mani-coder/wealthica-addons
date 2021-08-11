@@ -6,7 +6,7 @@ stars=$(printf '%*s' 30 '')
 echo "Deleting build files ..."
 rm -rf public/mani-coder
 
-for DIR in 'pnl'
+for DIR in 'pnl' 'events'
 do
   echo "${stars// /*}"
   echo "Building $DIR Addon"
