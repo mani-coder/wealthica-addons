@@ -16,7 +16,7 @@ const colors = [
   "yellow",
 ];
 
-const weights = [100, 200, 300, 600, 800];
+const weights = [100, 200, 300, 400, 500, 600, 700, 800];
 
 const colorClasses = colors.flatMap((color) =>
   weights

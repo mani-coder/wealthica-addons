@@ -11,7 +11,7 @@
   class={clsx(
     $$props.class,
     'px-2 py-1 rounded-md flex items-center',
-    outline ? `bg-white border border-${color}-700 text-${color}-700` : `bg-${color}-200 text-black`,
+    outline ? `bg-white border text-gray-600 border-gray-300` : `border border-${color}-200 bg-${color}-200 text-black`,
     onClick && 'cursor-pointer',
   )}
   on:click={onClick}
