@@ -13,6 +13,14 @@ Samples:
 [Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/
 
 
+[Wealthica Events Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer
+
+
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/earnings/?developer
+
+
+[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/dividends/?developer
+
 
 ___Deprecated Repos:___
 
