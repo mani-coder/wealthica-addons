@@ -13,7 +13,12 @@
   $: weekEvents = [0, 1, 2, 3, 4, 5, 6].map((day) => {
     const date = addDays(sunday, day);
     const _event = events.find((event) => event.date.getTime() === date.getTime());
-    return { date, symbols: _event ? _event.symbols.sort((a, b) => a.type.localeCompare(b.type)) : [] };
+    return {
+      date,
+      symbols: _event
+        ? _event.symbols.filter((event) => types.includes(event.type)).sort((a, b) => a.type.localeCompare(b.type))
+        : [],
+    };
   });
 </script>
 
@@ -29,13 +34,11 @@
 
       <div class="flex flex-col px-2 py-3 space-y-2 w-full flex-wrap overflow-visible no-scrollbar">
         {#each event.symbols as symbol}
-          {#if types.includes(symbol.type)}
-            <div class="mr-1 pb-1">
-              <Badge color={getColorForEvent(symbol.type)} class="w-fit">
-                <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
-              </Badge>
-            </div>
-          {/if}
+          <div class="mr-1 pb-1">
+            <Badge color={getColorForEvent(symbol.type)} class="w-fit">
+              <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
+            </Badge>
+          </div>
         {/each}
       </div>
     </div>
