@@ -8,7 +8,7 @@ export type Position = {
   events: { type: EventType; date: string }[];
 };
 
-export type Timeline = 'day' | 'week' | 'month';
+export type Timeline = 'week' | 'month';
 
 export type Color = 'blue' | 'gray' | 'green' | 'indigo' | 'pink' | 'purple' | 'red' | 'yellow';
 

@@ -68,7 +68,7 @@
     {#each event.events as event}
       <div class="flex space-x-1">
         <div class="mr-1 pb-1">
-          <Badge color="gray" onClick={() => onDateChange(event.date, 'day')}>
+          <Badge color="gray" onClick={() => onDateChange(event.date, 'week')}>
             <div class="font-medium text-sm">
               {format(event.date, 'dd')}
             </div>

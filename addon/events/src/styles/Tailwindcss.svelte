@@ -108,6 +108,14 @@
     @apply my-4;
   }
 
+  .h-fit-content {
+    height: fit-content;
+  }
+
+  .w-fit-content {
+    width: fit-content;
+  }
+
   @layer utilities {
     @variants responsive {
       /* Chrome, Safari and Opera */

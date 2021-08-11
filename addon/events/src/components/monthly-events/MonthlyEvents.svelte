@@ -43,14 +43,16 @@
   }
 </script>
 
-<div class="w-full">
-  <div class="flex border-gray-200 bg-gray-50 p-0.5 border w-full rounded-lg items-center justify-between">
-    <Arrow class="w-4" onClick={toPrev} left disabled={!currentEventIdx} />
+<div class="w-full p-2 border border-gray-200 bg-gray-50 rounded-lg">
+  <div class="flex w-full items-center">
+    <Arrow class="w-5" onClick={toPrev} left disabled={!currentEventIdx} />
     <div class="flex flex-col justify-center w-full items-center">
-      <span class="text-gray-600 font-medium text-sm">{formatWeek(event)}</span>
+      <span class="text-gray-700 font-bold text-base">{formatWeek(event)}</span>
     </div>
-    <Arrow class="w-4" onClick={toNext} />
+    <Arrow class="w-5" onClick={toNext} />
   </div>
 
-  <EventsCalendar date={selectedDate} {eventsByDateNumber} onDateSelect={(date) => onDateChange(date, 'day')} />
+  <div class="py-2" />
+
+  <EventsCalendar date={selectedDate} {eventsByDateNumber} onDateSelect={(date) => onDateChange(date, 'week')} />
 </div>

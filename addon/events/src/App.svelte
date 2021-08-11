@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Addon } from '@wealthica/wealthica.js/index';
-  import Events from 'components/Events.svelte';
   import { default as addDays } from 'date-fns/add';
   import format from 'date-fns/format';
   import { default as subDays } from 'date-fns/sub';
   import { parsePositionsResponse } from './api';
+  import Events from './components/Events.svelte';
   import Loading from './components/ui/Loading.svelte';
   import Tailwindcss from './styles/Tailwindcss.svelte';
   import type { Position } from './types';
@@ -155,10 +155,10 @@
 </svelte:head>
 
 <main>
-  <div class={!addon ? 'flex border w-max my-4 mx-auto p-2 rounded-lg' : ''}>
+  <div class={!addon ? 'flex w-max my-4 mx-auto p-2' : ''}>
     <div class="container" style={`--width:${addon ? '100%' : '1100px'};`}>
       {#if loading}
-        <div class="flex justify-center w-full h-full">
+        <div class="flex justify-center w-full">
           <Loading />
         </div>
       {:else if positions}
@@ -173,6 +173,5 @@
 <style>
   .container {
     width: var(--width);
-    height: 240px;
   }
 </style>

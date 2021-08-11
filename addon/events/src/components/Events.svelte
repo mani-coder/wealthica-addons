@@ -6,9 +6,11 @@
   import startOfWeek from 'date-fns/startOfWeek';
   import subDays from 'date-fns/subDays';
   import type { Event, EventSymbol, Position, Timeline } from '../types';
+  import Legend from './Legend.svelte';
   import MonthlyEvents from './monthly-events/MonthlyEvents.svelte';
   import Arrow from './ui/Arrow.svelte';
   import Divider from './ui/Divider.svelte';
+  import FaCalendarAlt from 'svelte-icons/fa/FaCalendarAlt.svelte';
 
   const TODAY = new Date();
   TODAY.setHours(0, 0, 0, 0);
@@ -89,31 +91,36 @@
   }
 </script>
 
-<div class="w-full h-full overflow-scroll no-scrollbar">
-  <h3 class="my-0 mb-1 text-sm text-center text-gray-500">
-    <div class="font-semibold">Earnings & events</div>
-  </h3>
-  <Divider />
+<div class="w-full pt-2">
+  <div class="flex items-end space-x-2">
+    <div class="w-6 text-purple-500"><FaCalendarAlt /></div>
+    <h4 class="px-1 md:px-2 m-0">Earnings & Dividends</h4>
+  </div>
+
+  <Divider disablePadding class="mt-4 mb-8" />
 
   {#if events.length}
-    <div class="flex w-3/4 items-center">
-      <div class="flex justify-between w-full">
-        <h3>{format(selectedDate, 'MMM, yyyy')}</h3>
-
-        <div class="flex border-gray-200 bg-gray-50 border w-full p-0.5 rounded-lg items-stretch justify-between">
-          <Arrow class="w-5" onClick={toPrev} left disabled={!currentEventIdx} />
-          <div class="flex flex-col justify-center w-full items-center">
-            <span class="text-gray-600 font-medium text-sm">{formatWeek(event)}</span>
+    <div class="p-1 md:p-2 flex w-full">
+      <div class="flex w-3/4 mr-8">
+        <div class="flex justify-center w-full h-fit-content">
+          <Arrow
+            class="border w-6 pr-1.5 rounded-md border-gray-300"
+            onClick={toPrev}
+            left
+            disabled={!currentEventIdx}
+          />
+          <div class="flex mx-2 px-4 py-3 items-center justify-center bg-gray-100 rounded-lg">
+            <span class="font-normal px-8 text-lg">{formatWeek(event)}</span>
           </div>
-          <Arrow class="w-5" onClick={toNext} />
+          <Arrow class="border pl-1.5 w-6 rounded-md border-gray-300" onClick={toNext} />
         </div>
       </div>
-    </div>
 
-    <div class="flex flex-col w-1/4">
-      <MonthlyEvents {events} {onDateChange} {selectedDate} />
-      <Divider />
-      <MonthlyEvents {events} {onDateChange} {selectedDate} />
+      <div class="flex flex-col w-1/4">
+        <MonthlyEvents {events} {onDateChange} {selectedDate} />
+        <Divider />
+        <Legend />
+      </div>
     </div>
   {:else}
     <div class="flex items-center justify-center py-10 text-sm font-semibold text-center">
