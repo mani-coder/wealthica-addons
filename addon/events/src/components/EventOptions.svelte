@@ -12,8 +12,10 @@
   }
 </script>
 
-<div class="py-2 mt-2 flex justify-center space-x-2">
+<div class="py-2 mt-2 flex flex-wrap justify-center">
   {#each EVENT_TYPES as eventType}
-    <EventLabel {eventType} onClick={() => onClick(eventType)} outline={!types.includes(eventType)} />
+    <div class="mr-2 mb-2">
+      <EventLabel {eventType} onClick={() => onClick(eventType)} outline={!types.includes(eventType)} />
+    </div>
   {/each}
 </div>

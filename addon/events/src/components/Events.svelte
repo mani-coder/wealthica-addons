@@ -111,8 +111,8 @@
   <Divider disablePadding class="mt-4 mb-8" />
 
   {#if events.length}
-    <div class="p-1 md:p-2 flex w-full">
-      <div class="flex flex-col w-3/4 mr-8">
+    <div class="p-1 md:p-2 flex flex-col lg:flex-row w-full space-y-4">
+      <div class="flex flex-col w-full lg:w-3/4 mr-8">
         <div class="flex justify-center w-full h-fit">
           <Arrow
             class="border w-6 pr-1.5 rounded-md border-gray-300"
@@ -130,7 +130,7 @@
         <WeeklyEvents events={event.events} {types} />
       </div>
 
-      <div class="flex flex-col w-1/4">
+      <div class="flex flex-col w-full lg:w-1/4">
         <MonthlyEvents {events} {onDateChange} {selectedDate} />
         <div class="p-2" />
         <Legend />

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Addon } from '@wealthica/wealthica.js/index';
+  import clsx from 'clsx';
   import { default as addDays } from 'date-fns/add';
   import format from 'date-fns/format';
   import { default as subDays } from 'date-fns/sub';
@@ -155,8 +156,8 @@
 </svelte:head>
 
 <main>
-  <div class={!addon ? 'flex w-max my-4 mx-auto p-2' : ''}>
-    <div class="container" style={`--width:${addon ? '100%' : '1200px'};`}>
+  <div class={!addon ? 'flex my-4 w-full p-2 justify-center' : ''}>
+    <div class={clsx('container', !addon && 'flex')} style={`--width:${addon ? '100%' : '1200px'};`}>
       {#if loading}
         <div class="flex justify-center w-full">
           <Loading />
@@ -172,7 +173,7 @@
 
 <style>
   .container {
-    width: var(--width);
-    max-width: 100%;
+    width: 100%;
+    max-width: var(--width);
   }
 </style>

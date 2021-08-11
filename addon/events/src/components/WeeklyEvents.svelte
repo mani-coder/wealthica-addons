@@ -17,7 +17,7 @@
   });
 </script>
 
-<div class="w-full flex justify-between rounded-3xl h-full mt-2">
+<div class="w-full hidden md:flex justify-between rounded-3xl h-full mt-2">
   {#each weekEvents as event}
     <div
       class="flex flex-col flex-grow border-gray-200 border-t border-b last:border-r border-l first:rounded-l-3xl last:rounded-r-3xl"
@@ -39,6 +39,31 @@
         {/each}
       </div>
     </div>
+  {/each}
+</div>
+
+<div class="flex md:hidden flex-col space-y-1 p-2 w-full border border-gray-200 bg-gray-50 rounded-lg">
+  {#each weekEvents as event}
+    {#if event.symbols.length}
+      <div class="flex space-x-1">
+        <div class="mr-1 pb-1">
+          <Badge color="gray">
+            <div class="font-medium text-sm">
+              {format(event.date, 'ccc, MMM dd')}
+            </div>
+          </Badge>
+        </div>
+        <div class="flex overflow-scroll no-scrollbar">
+          {#each event.symbols as symbol}
+            <div class="mr-1 pb-1">
+              <Badge color={getColorForEvent(symbol.type)}>
+                <div class="font-medium text-sm">{getDisplaySymbol(symbol)}</div>
+              </Badge>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/each}
 </div>
 
