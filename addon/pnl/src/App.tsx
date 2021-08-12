@@ -20,6 +20,7 @@ import {
   parseTransactionsResponse,
 } from './api';
 import './App.less';
+import BuyMeACoffee from './components/BuyMeACoffee';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
@@ -528,6 +529,9 @@ class App extends Component<Props, State> {
 
           <br />
           <hr />
+
+          <BuyMeACoffee />
+
           <Typography.Title level={4} type="secondary">
             Disclaimer
           </Typography.Title>
