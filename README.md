@@ -5,25 +5,18 @@ This is the new consolidated repo containing all the addons and widgets develope
 Currently we have [one addon](https://github.com/mani-coder/wealthica-addons/tree/master/addon/pnl) which primarily focuses on the PnL related charting and also provides useful stock market analysis tools for your day-to-day trading. We also have [a widget](https://github.com/mani-coder/wealthica-addons/tree/master/widgets/pnl) shows the PnL change over different periods of time as-in 1 day PnL, WTD PnL, 1 month PnL etc.,
 
 
-Samples:
+Addons & Widgets:
 
-[Wealthica PnL Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/?developer
+[PnL Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/?developer)
 
+[PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer)
 
-[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer
+[Events Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer)
 
+[Earnings Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer)
 
-[Wealthica Events Addon](https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/?developer
+[Dividends Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer)
 
+---
+<a href="https://www.buymeacoffee.com/youngkbell" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=❤️&slug=youngkbell&button_colour=BD5FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00"></a>
 
-[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/earnings/?developer
-
-
-[Wealthica PnL Widget](https://wealthica.mani-coder.dev/mani-coder/wealthica-portfolio-addon/widgets/pnl/?developer) -- https://wealthica.mani-coder.dev/mani-coder/wealthica-events-addon/widgets/dividends/?developer
-
-
-___Deprecated Repos:___
-
-[mani-coder/wealthica-portfolio-addon](https://github.com/mani-coder/wealthica-portfolio-addon)
-
-[mani-coder/wealthica-pnl-widget](https://github.com/mani-coder/wealthica-pnl-widget)
