@@ -12,6 +12,7 @@ import { trackEvent } from '../analytics';
 import { CHANGE_LOG_DATE_CACHE_KEY } from '../constants';
 import AutoReSizer from '../hooks/useResizeHook';
 import { getLocalCache, setLocalCache } from '../utils';
+import BuyMeACoffee from './BuyMeACoffee';
 
 const LOGS: {
   title: string;
