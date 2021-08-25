@@ -34,7 +34,6 @@
   ],
   "homepage": "mani-coder/wealthica-portfolio-addon",
   "devDependencies": {
-    "prettier": "^2.3.2",
     "@babel/helper-builder-react-jsx": "^7.10.4",
     "@babel/helper-call-delegate": "^7.12.1",
     "@babel/helper-regex": "^7.10.5",
@@ -48,6 +47,7 @@
     "@types/rebass": "^4.0.3",
     "craco-less": "^1.17.1",
     "gh-pages": "^2.1.1",
+    "prettier": "^2.3.2",
     "typescript": "^3.7.3"
   }
 }
