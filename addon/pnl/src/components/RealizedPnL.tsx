@@ -359,7 +359,7 @@ export default function RealizedPnL({
   isPrivateMode,
   fromDate,
 }: Props) {
-  const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('month');
+  const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
   const { expenseTransactions, totalExpense } = useMemo(() => {
     const expenseTransactions = accountTransactions.filter(
       (transaction) => ['interest', 'fee'].includes(transaction.type) && transaction.date.isSameOrAfter(fromDate),

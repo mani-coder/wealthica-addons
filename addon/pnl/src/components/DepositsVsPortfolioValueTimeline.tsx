@@ -116,8 +116,11 @@ function DepositVsPortfolioValueTimeline(props: Props) {
       },
 
       rangeSelector: {
+        allButtonsEnabled: false,
+        inputBoxHeight: 0,
+        inputBoxWidth: 0,
         selected: 1,
-        enabled: (process.env.NODE_ENV === 'development') as any,
+        enabled: false as any,
         inputEnabled: false,
       },
       navigator: { enabled: true },
@@ -174,9 +177,6 @@ function DepositVsPortfolioValueTimeline(props: Props) {
           },
         ],
       },
-      // legend: {
-      //   enabled: true,
-      // },
       series: getSeries(),
     };
   }
