@@ -238,11 +238,11 @@ const ExpensesTable = React.memo(
           width: 250,
         },
         {
-          key: 'interest',
-          title: 'Interest (CAD)',
+          key: 'expense',
+          title: 'Expense (CAD)',
           dataIndex: 'amount',
-          render: (interest) =>
-            isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(interest)}</Typography.Text>,
+          render: (expense) =>
+            isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(Math.abs(expense))}</Typography.Text>,
           align: 'right',
           sorter: (a, b) => a.amount - b.amount,
           width: 200,
@@ -384,7 +384,7 @@ export default function RealizedPnL({
     );
     return {
       expenseTransactions,
-      totalExpense: expenseTransactions.reduce((expense, t) => expense + t.amount, 0),
+      totalExpense: expenseTransactions.reduce((expense, t) => expense + Math.abs(t.amount), 0),
     };
   }, [transactions, fromDate]);
 
