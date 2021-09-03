@@ -123,10 +123,12 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
         ) {
           portfolioData.deposit += amount;
         }
-      } else if (['fee', 'interest', 'tax'].includes(type)) {
-        portfolioData.interest += Math.abs(amount);
-      } else if (['income', 'dividend', 'distribution'].includes(type)) {
-        portfolioData.income += amount;
+      } else if (['fee', 'interest', 'tax', 'income', 'dividend', 'distribution'].includes(type)) {
+        if (amount > 0) {
+          portfolioData.interest += amount;
+        } else {
+          portfolioData.interest += Math.abs(amount);
+        }
       } else if (type === 'withdrawal') {
         portfolioData.withdrawal += Math.abs(amount);
       } else {
@@ -202,7 +204,7 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
       return {
         date,
         account: transaction.investment,
-        amount: Math.abs(amount),
+        amount,
         type: transaction.type,
         description: transaction.description,
       };

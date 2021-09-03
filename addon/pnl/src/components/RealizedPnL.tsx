@@ -32,6 +32,11 @@ type Props = {
   currencyCache: { [K: string]: number };
 };
 
+type IncomeTransaction = AccountTransaction & {
+  symbol?: string;
+  currency?: string;
+};
+
 type ClosedPosition = {
   date: Moment;
   symbol: string;
@@ -271,10 +276,10 @@ const IncomeTable = React.memo(
     isPrivateMode,
   }: {
     accountById: { [K: string]: Account };
-    transactions: Transaction[];
+    transactions: IncomeTransaction[];
     isPrivateMode: boolean;
   }) => {
-    function getColumns(): ColumnProps<Transaction>[] {
+    function getColumns(): ColumnProps<IncomeTransaction>[] {
       return [
         {
           key: 'date',
@@ -295,27 +300,33 @@ const IncomeTable = React.memo(
           key: 'symbol',
           title: 'Symbol',
           dataIndex: 'symbol',
-          render: (text, transaction) => (
-            <>
-              <Typography.Link
-                rel="noreferrer noopener"
-                href={`https://finance.yahoo.com/quote/${text}`}
-                target="_blank"
-              >
-                {text}
-              </Typography.Link>
-              <div style={{ fontSize: 10 }}>{transaction.currency === 'usd' ? 'USD' : 'CAD'}</div>
-            </>
-          ),
+          render: (text, transaction) =>
+            transaction.symbol ? (
+              <>
+                <Typography.Link
+                  rel="noreferrer noopener"
+                  href={`https://finance.yahoo.com/quote/${text}`}
+                  target="_blank"
+                >
+                  {text}
+                </Typography.Link>
+                {transaction.currency && (
+                  <div style={{ fontSize: 10 }}>{transaction.currency === 'usd' ? 'USD' : 'CAD'}</div>
+                )}
+              </>
+            ) : (
+              '--'
+            ),
           width: 125,
           filters: Array.from(new Set(transactions.map((t) => t.symbol)))
+            .filter((value) => !!value)
             .map((value) => ({
               text: value,
-              value,
+              value: value || '',
             }))
             .sort((a, b) => a.value.localeCompare(b.value)),
-          onFilter: (value, transaction) => transaction.symbol.indexOf(value as any) === 0,
-          sorter: (a, b) => a.symbol.localeCompare(b.symbol),
+          onFilter: (value, transaction) => !!transaction.symbol && transaction.symbol.indexOf(value as any) === 0,
+          sorter: (a, b) => (a.symbol || '--').localeCompare(b.symbol || '--'),
         },
         {
           key: 'type',
@@ -342,7 +353,11 @@ const IncomeTable = React.memo(
     return (
       <div className="zero-padding">
         <Collapsible title="Income History" closed>
-          <Table<Transaction> pagination={{ pageSize: 5 }} dataSource={transactions.reverse()} columns={getColumns()} />
+          <Table<IncomeTransaction>
+            pagination={{ pageSize: 5 }}
+            dataSource={transactions.reverse()}
+            columns={getColumns()}
+          />
         </Collapsible>
       </div>
     );
@@ -362,7 +377,10 @@ export default function RealizedPnL({
   const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
   const { expenseTransactions, totalExpense } = useMemo(() => {
     const expenseTransactions = accountTransactions.filter(
-      (transaction) => ['interest', 'fee'].includes(transaction.type) && transaction.date.isSameOrAfter(fromDate),
+      (transaction) =>
+        ['interest', 'fee', 'tax'].includes(transaction.type) &&
+        transaction.amount < 0 &&
+        transaction.date.isSameOrAfter(fromDate),
     );
     return {
       expenseTransactions,
@@ -371,15 +389,29 @@ export default function RealizedPnL({
   }, [transactions, fromDate]);
 
   const { incomeTransactions, totalIncome } = useMemo(() => {
-    const incomeTransactions = transactions.filter(
-      (transaction) =>
-        ['income', 'dividend', 'distribution'].includes(transaction.type) && transaction.date.isSameOrAfter(fromDate),
-    );
+    const incomeTransactions: IncomeTransaction[] = accountTransactions
+      .filter(
+        (transaction) =>
+          ['interest', 'fee', 'tax'].includes(transaction.type) &&
+          transaction.amount > 0 &&
+          transaction.date.isSameOrAfter(fromDate),
+      )
+      .concat(
+        transactions.filter(
+          (transaction) =>
+            ['income', 'dividend', 'distribution'].includes(transaction.type) &&
+            transaction.amount > 0 &&
+            transaction.date.isSameOrAfter(fromDate),
+        ),
+      )
+      .sort((a, b) => a.date.unix() - b.date.unix());
+
     return {
       incomeTransactions,
       totalIncome: incomeTransactions.reduce((expense, t) => expense + t.amount, 0),
     };
   }, [transactions, fromDate]);
+
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('type');
 
   const accountById = useMemo(() => {
