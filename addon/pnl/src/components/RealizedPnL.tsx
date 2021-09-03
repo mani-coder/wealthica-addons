@@ -238,6 +238,12 @@ const ExpensesTable = React.memo(
           width: 250,
         },
         {
+          key: 'type',
+          title: 'Type',
+          dataIndex: 'type',
+          render: (type) => <Typography.Text strong>{_.startCase(type || '-')}</Typography.Text>,
+        },
+        {
           key: 'expense',
           title: 'Expense (CAD)',
           dataIndex: 'amount',
