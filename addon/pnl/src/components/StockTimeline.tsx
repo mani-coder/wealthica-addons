@@ -211,6 +211,7 @@ class StockTimeline extends Component<Props, State> {
       this.getFlags('distribution', true),
       this.getFlags('tax', true),
       this.getFlags('fee', true),
+      this.getFlags('reinvest'),
     ].filter((series) => !!series.data?.length);
 
     return [
@@ -258,7 +259,7 @@ class StockTimeline extends Component<Props, State> {
   }
 
   getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
-    const isBuySell = ['buy', 'sell'].includes(type);
+    const isBuySell = ['buy', 'sell', 'reinvest'].includes(type);
 
     return {
       name: _.startCase(type),

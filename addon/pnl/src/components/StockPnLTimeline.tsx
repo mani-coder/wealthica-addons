@@ -264,14 +264,14 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         shape: 'squarepin',
         width: 16,
       },
-      ...['buy', 'sell', 'income', 'dividend', 'distribution', 'tax', 'fee']
+      ...['buy', 'sell', 'income', 'dividend', 'distribution', 'tax', 'fee', 'reinvest']
         .map((type) => getFlags(type))
         .filter((series) => !!series.data?.length),
     ];
   }
 
   function getFlags(type: string): Highcharts.SeriesFlagsOptions {
-    const isBuySell = ['buy', 'sell'].includes(type);
+    const isBuySell = ['buy', 'sell', 'reinvest'].includes(type);
 
     return {
       name: _.startCase(type),

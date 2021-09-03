@@ -79,6 +79,7 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
       if (['sell', 'buy', 'unknown', 'split', 'reinvest'].includes(type)) {
         return hash;
       }
+
       let date = getDate(transaction.date);
       if (['deposit', 'transfer', 'withdrawal'].includes(type)) {
         // adjust the date of transaction, so that portfolio isn't screw'd up.
