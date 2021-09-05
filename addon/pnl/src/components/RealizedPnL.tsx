@@ -248,7 +248,7 @@ const ExpensesTable = React.memo(
           title: 'Expense (CAD)',
           dataIndex: 'amount',
           render: (expense) =>
-            isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(Math.abs(expense))}</Typography.Text>,
+            isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(expense)}</Typography.Text>,
           align: 'right',
           sorter: (a, b) => a.amount - b.amount,
           width: 200,
@@ -382,15 +382,18 @@ export default function RealizedPnL({
 }: Props) {
   const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
   const { expenseTransactions, totalExpense } = useMemo(() => {
-    const expenseTransactions = accountTransactions.filter(
-      (transaction) =>
-        ['interest', 'fee', 'tax'].includes(transaction.type) &&
-        transaction.amount < 0 &&
-        transaction.date.isSameOrAfter(fromDate),
-    );
+    const expenseTransactions = accountTransactions
+      .filter(
+        (transaction) =>
+          ['interest', 'fee', 'tax'].includes(transaction.type) &&
+          transaction.amount < 0 &&
+          transaction.date.isSameOrAfter(fromDate),
+      )
+      .map((transaction) => ({ ...transaction, amount: Math.abs(transaction.amount) }));
+
     return {
       expenseTransactions,
-      totalExpense: expenseTransactions.reduce((expense, t) => expense + Math.abs(t.amount), 0),
+      totalExpense: expenseTransactions.reduce((expense, t) => expense + t.amount, 0),
     };
   }, [transactions, fromDate]);
 
@@ -406,7 +409,6 @@ export default function RealizedPnL({
         transactions.filter(
           (transaction) =>
             ['income', 'dividend', 'distribution'].includes(transaction.type) &&
-            transaction.amount > 0 &&
             transaction.date.isSameOrAfter(fromDate),
         ),
       )
