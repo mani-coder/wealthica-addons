@@ -283,12 +283,15 @@ class StockTimeline extends Component<Props, State> {
               transaction.shares && lastTransaction.shares
                 ? lastTransaction.shares + transaction.shares
                 : lastTransaction.shares;
-            const amount = transaction.amount + lastTransaction.amount;
+
             array.push({
               ...lastTransaction,
               shares,
-              amount,
-              price: shares && amount ? Number(Math.abs(amount / shares).toFixed(3)) : lastTransaction.price,
+              amount: transaction.amount + lastTransaction.amount,
+              price:
+                lastTransaction.price && lastTransaction.shares && transaction.price && transaction.shares
+                  ? (lastTransaction.price * lastTransaction.shares + transaction.price * transaction.shares) / shares
+                  : lastTransaction.price,
             });
           } else {
             if (lastTransaction) {
@@ -351,7 +354,7 @@ class StockTimeline extends Component<Props, State> {
       },
 
       rangeSelector: { selected: 1, enabled: true as any, inputEnabled: false },
-      navigator: { enabled: false },
+      navigator: { enabled: true },
       scrollbar: { enabled: false },
 
       yAxis: [
