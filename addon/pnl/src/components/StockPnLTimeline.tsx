@@ -298,7 +298,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
               ...lastTransaction,
               shares,
               amount,
-              price: shares && amount ? Number(Math.abs(shares / amount).toFixed(3)) : lastTransaction.price,
+              price: shares && amount ? Number(Math.abs(amount / shares).toFixed(3)) : lastTransaction.price,
             });
           } else {
             if (lastTransaction) {

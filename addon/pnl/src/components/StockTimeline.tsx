@@ -288,7 +288,7 @@ class StockTimeline extends Component<Props, State> {
               ...lastTransaction,
               shares,
               amount,
-              price: shares && amount ? Number(Math.abs(shares / amount).toFixed(3)) : lastTransaction.price,
+              price: shares && amount ? Number(Math.abs(amount / shares).toFixed(3)) : lastTransaction.price,
             });
           } else {
             if (lastTransaction) {
