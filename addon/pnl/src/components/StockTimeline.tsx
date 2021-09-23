@@ -279,17 +279,16 @@ class StockTimeline extends Component<Props, State> {
         .reduce((array, transaction) => {
           const lastTransaction = array.pop();
           if (lastTransaction && lastTransaction.date.valueOf() === transaction.date.valueOf()) {
+            const shares =
+              transaction.shares && lastTransaction.shares
+                ? lastTransaction.shares + transaction.shares
+                : lastTransaction.shares;
+            const amount = transaction.amount + lastTransaction.amount;
             array.push({
               ...lastTransaction,
-              shares:
-                transaction.shares && lastTransaction.shares
-                  ? lastTransaction.shares + transaction.shares
-                  : lastTransaction.shares,
-              amount: transaction.amount + lastTransaction.amount,
-              price:
-                transaction.price && lastTransaction.price
-                  ? (Number(transaction.price) + Number(lastTransaction.price)) / 2
-                  : lastTransaction.price,
+              shares,
+              amount,
+              price: shares && amount ? Number(Math.abs(shares / amount).toFixed(3)) : lastTransaction.price,
             });
           } else {
             if (lastTransaction) {
@@ -300,12 +299,13 @@ class StockTimeline extends Component<Props, State> {
           return array;
         }, [] as Transaction[])
         .map((transaction) => {
+          const shares = transaction.shares ? Math.abs(transaction.shares) : 0;
           return {
             transaction,
             x: transaction.date.valueOf(),
-            title: isBuySell ? Math.round(transaction.shares!).toLocaleString() : type.charAt(0).toUpperCase(),
+            title: isBuySell ? Math.round(shares).toLocaleString() : type.charAt(0).toUpperCase(),
             text: isBuySell
-              ? `${_.startCase(type)}: ${transaction.shares}@${transaction.price}`
+              ? `${_.startCase(type)}: ${shares}@${transaction.price}`
               : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
           };
         }),
