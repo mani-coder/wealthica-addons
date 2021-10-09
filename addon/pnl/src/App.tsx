@@ -442,7 +442,7 @@ class App extends Component<Props, State> {
               >
                 <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key="pnl">
                   <PnLStatistics
-                    portfolios={this.state.portfolios}
+                    portfolios={this.state.allPortfolios}
                     privateMode={this.state.privateMode}
                     positions={this.state.positions}
                   />
