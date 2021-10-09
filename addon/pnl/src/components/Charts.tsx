@@ -10,6 +10,16 @@ import React from 'react';
 // HC_ExportData(Highcharts);
 HC_DrillDown(Highcharts);
 
+const TZ_OFFSET = new Date().getTimezoneOffset();
+
+Highcharts.setOptions({
+  time: {
+    getTimezoneOffset: function (timestamp) {
+      return TZ_OFFSET;
+    },
+  },
+});
+
 type Props = {
   options: Highcharts.Options;
   constructorType?: keyof typeof Highcharts;
