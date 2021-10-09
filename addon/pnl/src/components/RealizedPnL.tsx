@@ -183,7 +183,9 @@ const RealizedPnLTable = React.memo(
         <Collapsible title="Realized P&L History" closed>
           <Table<ClosedPosition>
             pagination={{ pageSize: 5 }}
-            dataSource={closedPositions}
+            dataSource={closedPositions.filter(
+              (position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2),
+            )}
             summary={(positions) => {
               const totalPnL = positions.reduce((pnl, position) => pnl + position.pnl, 0);
 
