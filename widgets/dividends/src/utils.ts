@@ -11,3 +11,7 @@ export function getColorForEvent(event: EventType): Color {
 export function getDisplaySymbol(symbol: DividendEventSymbol) {
   return `${symbol.type === 'ex-dividend' ? 'EX' : symbol.type === 'pay-dividend' ? 'PD' : 'RD'}: ${symbol.symbol}`;
 }
+
+export function buildCorsFreeUrl(target: string): string {
+  return `https://us-central1-mani-coder.cloudfunctions.net/cors-bypass/${target.replace('//', '/')}`;
+}

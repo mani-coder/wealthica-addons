@@ -4,6 +4,7 @@
   import { default as addDays } from 'date-fns/add';
   import format from 'date-fns/format';
   import { default as subDays } from 'date-fns/sub';
+  import { buildCorsFreeUrl } from 'utils';
   import { parsePositionsResponse } from './api';
   import Events from './components/Events.svelte';
   import Loading from './components/ui/Loading.svelte';
@@ -100,10 +101,12 @@
       return;
     }
 
-    const url = `https://cors.bridged.cc/https://portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
-      startDate,
-      'yyyy-MM-dd',
-    )}&toDate=${format(endDate, 'yyyy-MM-dd')}&tickers=${_symbols}`;
+    const url = buildCorsFreeUrl(
+      `https:/portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
+        startDate,
+        'yyyy-MM-dd',
+      )}&toDate=${format(endDate, 'yyyy-MM-dd')}&tickers=${_symbols}`,
+    );
 
     const positionByTicker = positions.reduce((hash, position) => {
       hash[position.ticker] = position;

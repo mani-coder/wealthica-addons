@@ -98,7 +98,7 @@ export const getURLParams = (values: { [id: string]: string }): string => {
 };
 
 export function buildCorsFreeUrl(target: string): string {
-  return `https://cors.bridged.cc/${target}`;
+  return `https://us-central1-mani-coder.cloudfunctions.net/cors-bypass/${target.replace('//', '/')}`;
 }
 
 export function getPreviousWeekday(date) {

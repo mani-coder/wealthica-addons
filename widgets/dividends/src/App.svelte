@@ -8,6 +8,7 @@
   import Loading from './components/ui/Loading.svelte';
   import Tailwindcss from './styles/Tailwindcss.svelte';
   import type { Position } from './types';
+  import { buildCorsFreeUrl } from './utils';
 
   let addon: any;
   let loading: boolean = true;
@@ -98,10 +99,12 @@
       return;
     }
 
-    const url = `https://cors.bridged.cc/https://portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
-      startDate,
-      'yyyy-MM-dd',
-    )}&toDate=${format(endDate, 'yyyy-MM-dd')}&tickers=${_symbols}`;
+    const url = buildCorsFreeUrl(
+      `https://portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
+        startDate,
+        'yyyy-MM-dd',
+      )}&toDate=${format(endDate, 'yyyy-MM-dd')}&tickers=${_symbols}`,
+    );
 
     const positionByTicker = positions.reduce((hash, position) => {
       hash[position.ticker] = position;
