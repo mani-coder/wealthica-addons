@@ -4,9 +4,12 @@ set -e
 stars=$(printf '%*s' 30 '')
 
 unset npm_config_prefix
+
 export NVM_DIR=$HOME/.nvm;
-source $NVM_DIR/nvm.sh;
-nvm use
+if [ -f "$NVM_DIR/nvm.sh" ]; then
+  source $NVM_DIR/nvm.sh;
+  nvm use
+fi
 
 echo "Deleting build files ..."
 rm -rf public/mani-coder
