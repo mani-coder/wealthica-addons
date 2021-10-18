@@ -28,5 +28,5 @@ export function getColorForSymbol(symbol: string) {
 }
 
 export function buildCorsFreeUrl(target: string): string {
-  return `https://us-central1-mani-coder.cloudfunctions.net/cors-bypass/${target.replace('//', '/')}`;
+  return `https://cors.mani-coder.dev/${target.replace('//', '/')}`;
 }
