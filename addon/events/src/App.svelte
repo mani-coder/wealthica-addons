@@ -102,7 +102,7 @@
     }
 
     const url = buildCorsFreeUrl(
-      `https:/portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
+      `https://portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${format(
         startDate,
         'yyyy-MM-dd',
       )}&toDate=${format(endDate, 'yyyy-MM-dd')}&tickers=${_symbols}`,
