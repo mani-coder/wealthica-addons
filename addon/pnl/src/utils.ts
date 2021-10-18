@@ -98,7 +98,15 @@ export const getURLParams = (values: { [id: string]: string }): string => {
 };
 
 export function buildCorsFreeUrl(target: string): string {
-  return `https://cors.mani-coder.dev/${target.replace('//', '/')}`;
+  let url = target;
+  if (url.startsWith('https://')) {
+    const parsedUrl = new URL(url);
+    target = target.replace('https://', '').replace(parsedUrl.hostname, `${parsedUrl.hostname}:443`);
+  } else if (url.startsWith('http://')) {
+    target = target.replace('http://', '');
+  }
+
+  return `https://cors.mani-coder.dev/${target}`;
 }
 
 export function getPreviousWeekday(date) {
