@@ -16,10 +16,11 @@ function ProfitLossPercentageTimeline(props: Props) {
     const data = props.portfolios.map((portfolio) => {
       return {
         x: moment(portfolio.date).valueOf(),
-        y: ((portfolio.value - portfolio.deposits) / portfolio.deposits) * 100,
+        y: ((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100,
         pnlValue: props.isPrivateMode ? '-' : formatCurrency(portfolio.value - portfolio.deposits, 2).toLocaleString(),
       };
     });
+
     return [
       {
         id: 'dataseries',

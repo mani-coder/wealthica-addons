@@ -197,8 +197,8 @@ function YoYPnLChart(props: Props) {
         const startPnl = value.startPortfolio.value - value.startPortfolio.deposits;
         const endPnl = value.endPortfolio.value - value.endPortfolio.deposits;
 
-        const startRatio = (startPnl / value.startPortfolio.deposits) * 100;
-        const endRatio = (endPnl / value.endPortfolio.deposits) * 100;
+        const startRatio = (startPnl / Math.abs(value.startPortfolio.deposits)) * 100;
+        const endRatio = (endPnl / Math.abs(value.endPortfolio.deposits)) * 100;
 
         const changeValue = endPnl - startPnl;
         const changeRatio = endRatio - startRatio;

@@ -18,7 +18,7 @@ function ProfitLossTimeline(props: Props) {
           return {
             x: moment(portfolio.date).valueOf(),
             y: portfolio.value - portfolio.deposits,
-            pnlRatio: ((portfolio.value - portfolio.deposits) / portfolio.deposits) * 100,
+            pnlRatio: ((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100,
             displayValue: props.isPrivateMode
               ? '-'
               : Number((portfolio.value - portfolio.deposits).toFixed(2)).toLocaleString(),
