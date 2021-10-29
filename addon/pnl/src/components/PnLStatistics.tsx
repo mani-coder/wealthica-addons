@@ -38,7 +38,7 @@ function PnLStatistics({
         <StatisticBox
           title="Overall P&L %"
           valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
-          value={((portfolio.value - portfolio.deposits) / portfolio.deposits) * 100}
+          value={(portfolio.value - portfolio.deposits / Math.abs(portfolio.deposits)) * 100}
           precision={2}
           suffix="%"
           prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
