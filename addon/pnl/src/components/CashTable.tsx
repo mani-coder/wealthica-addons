@@ -41,6 +41,14 @@ function CashTable(props: Props) {
         title: 'Name',
         dataIndex: 'name',
         sorter: (a, b) => a.name.localeCompare(b.name),
+        filters: Array.from(new Set(accounts.map((acc) => acc.name)))
+          .filter((value) => !!value)
+          .map((value) => ({
+            text: value,
+            value: value || '',
+          }))
+          .sort((a, b) => a.value.localeCompare(b.value)),
+        onFilter: (value, account) => !!account.name && account.name.indexOf(value as any) === 0,
       },
       {
         key: 'currency',
