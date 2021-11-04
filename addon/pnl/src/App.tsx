@@ -21,6 +21,7 @@ import {
 } from './api';
 import './App.less';
 import BuyMeACoffee from './components/BuyMeACoffee';
+import CashTable from './components/CashTable';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
@@ -469,6 +470,12 @@ class App extends Component<Props, State> {
                         accounts={this.state.accounts}
                         isPrivateMode={this.state.privateMode}
                         addon={this.state.addon}
+                      />
+
+                      <CashTable
+                        accounts={this.state.accounts}
+                        currencyCache={this.state.currencyCache || {}}
+                        isPrivateMode={this.state.privateMode}
                       />
 
                       <PortfolioVisualizer positions={this.state.positions} />
