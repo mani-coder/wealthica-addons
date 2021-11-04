@@ -105,10 +105,7 @@ function CashTable(props: Props) {
 
             const totalUSD = accounts
               .filter((a) => a.currency === 'usd')
-              .reduce(
-                (total, account) => total + getCurrencyInCAD(lastCurrencyDate, account.cash, props.currencyCache),
-                0,
-              );
+              .reduce((total, account) => total + account.cash, 0);
 
             const total = totalCAD + getCurrencyInCAD(lastCurrencyDate, totalUSD, props.currencyCache);
 
