@@ -22,6 +22,17 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2021-11-04',
+    tab: 'Holdings',
+    title: 'Cash Table',
+    description:
+      'We have added a cash table to the Holdings tab. The new cash table will help to go through the remaining cash in all your accounts and run some quick filters and sort for analysis.',
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Cash_Table__2_9emdIR-pJ5L.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Cash_Table__1__sTSEOzMQdn.png',
+    ],
+  },
+  {
     date: '2021-06-17',
     tab: 'Dashboard Widgets',
     title: 'P&L % Change Widget',

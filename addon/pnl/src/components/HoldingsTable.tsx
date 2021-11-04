@@ -126,7 +126,7 @@ function HoldingsTable(props: Props) {
 
   return (
     <div className="zero-padding">
-      <Collapsible title="Holdings Table">
+      <Collapsible title="Holdings Table" closed>
         <VirtualTable scroll={{ y: 600 }} dataSource={props.positions} columns={getColumns() as any} />
       </Collapsible>
     </div>
