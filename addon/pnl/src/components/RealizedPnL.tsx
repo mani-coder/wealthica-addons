@@ -182,7 +182,7 @@ const RealizedPnLTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Realized P&L History" closed>
           <Table<ClosedPosition>
-            pagination={{ pageSize: 5 }}
+            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={closedPositions.filter(
               (position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2),
             )}
@@ -267,7 +267,7 @@ const ExpensesTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Expenses History" closed>
           <Table<AccountTransaction>
-            pagination={{ pageSize: 5 }}
+            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={transactions.reverse()}
             columns={getColumns()}
           />
@@ -362,7 +362,7 @@ const IncomeTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Income History" closed>
           <Table<IncomeTransaction>
-            pagination={{ pageSize: 5 }}
+            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={transactions.reverse()}
             columns={getColumns()}
           />
