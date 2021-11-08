@@ -463,27 +463,28 @@ class App extends Component<Props, State> {
 
                 <Tabs.TabPane forceRender tab="Holdings Analyzer" key="holdings">
                   {!!this.state.positions.length ? (
-                    <>
-                      <HoldingsCharts
-                        currencyCache={this.state.currencyCache || {}}
-                        positions={this.state.positions}
-                        accounts={this.state.accounts}
-                        isPrivateMode={this.state.privateMode}
-                        addon={this.state.addon}
-                      />
-
-                      <CashTable
-                        accounts={this.state.accounts}
-                        currencyCache={this.state.currencyCache || {}}
-                        isPrivateMode={this.state.privateMode}
-                      />
-
-                      <PortfolioVisualizer positions={this.state.positions} />
-
-                      <HoldingsTable positions={this.state.positions} isPrivateMode={this.state.privateMode} />
-                    </>
+                    <HoldingsCharts
+                      currencyCache={this.state.currencyCache || {}}
+                      positions={this.state.positions}
+                      accounts={this.state.accounts}
+                      isPrivateMode={this.state.privateMode}
+                      addon={this.state.addon}
+                    />
                   ) : (
                     <Empty description="No Holdings" />
+                  )}
+
+                  <CashTable
+                    accounts={this.state.accounts}
+                    currencyCache={this.state.currencyCache || {}}
+                    isPrivateMode={this.state.privateMode}
+                  />
+
+                  {!!this.state.positions.length && (
+                    <>
+                      <PortfolioVisualizer positions={this.state.positions} />
+                      <HoldingsTable positions={this.state.positions} isPrivateMode={this.state.privateMode} />
+                    </>
                   )}
                 </Tabs.TabPane>
 
