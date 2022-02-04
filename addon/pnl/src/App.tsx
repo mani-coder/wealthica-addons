@@ -448,7 +448,8 @@ class App extends Component<Props, State> {
                     portfolios={this.state.allPortfolios}
                     privateMode={this.state.privateMode}
                     positions={this.state.positions}
-                    
+                    fromDate={this.state.fromDate}
+                    toDate={this.state.toDate}
                   />
 
                   <DepositVsPortfolioValueTimeline

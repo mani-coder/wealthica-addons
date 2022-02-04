@@ -1,15 +1,30 @@
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
+import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
+import { Divider, Tooltip, Typography } from 'antd';
 import Card from 'antd/lib/card';
 import Statistic, { StatisticProps } from 'antd/lib/statistic';
+import moment from 'moment';
 import React from 'react';
 import { Box, Flex } from 'rebass';
+import { DATE_FORMAT } from '../constants';
 import { Portfolio, Position } from '../types';
 
-function StatisticBox(props: StatisticProps) {
+function StatisticBox(props: StatisticProps & { tooltip?: string }) {
   return (
-    <Box p={1}>
-      <Statistic {...props} />
+    <Box p={1} mr={3}>
+      <Statistic
+        {...props}
+        title={
+          props.tooltip ? (
+            <Tooltip title={props.tooltip}>
+              {props.title} <QuestionCircleOutlined color="#8c8c8c" />
+            </Tooltip>
+          ) : (
+            props.title
+          )
+        }
+      />
     </Box>
   );
 }
@@ -30,10 +45,37 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
   const unrealizePnLValue = marketValue - bookValue;
   const unrealizedPnLRatio = unrealizePnLValue ? (unrealizePnLValue / bookValue) * 100 : 0;
 
+  const oneDayBeforeStartDate = moment(fromDate).subtract(1, 'day').format(DATE_FORMAT);
+  const startPortfolio = portfolios.find((portfolio) => portfolio.date === oneDayBeforeStartDate);
+
+  let timelineDeposits,
+    timelinePnlChangeValue,
+    timelinePnlChangeRatio = 0;
+  if (startPortfolio) {
+    const endPortfolio = portfolio;
+    timelineDeposits = portfolio.deposits - startPortfolio.deposits;
+    const startPnl = startPortfolio.value - startPortfolio.deposits;
+    const endPnl = endPortfolio.value - endPortfolio.deposits;
+
+    const startRatio = (startPnl / Math.abs(startPortfolio.deposits)) * 100;
+    const endRatio = (endPnl / Math.abs(endPortfolio.deposits)) * 100;
+
+    timelinePnlChangeValue = endPnl - startPnl;
+    timelinePnlChangeRatio = endRatio - startRatio;
+  }
+
+  const fromDateDisplay = moment(fromDate).format('MMM DD, YY');
+  const toDateDisplay = moment(toDate).format('MMM DD, YY');
+
   return (
     <Card bodyStyle={{ backgroundColor: '#f9f0ff' }} style={{ borderRadius: 6, borderColor: '#efdbff' }}>
       <Flex width={1} justifyContent="space-between" flexWrap="wrap">
-        <StatisticBox title="Portfolio Value" value={privateMode ? '--' : portfolio.value} precision={2} prefix="$" />
+        <StatisticBox
+          title="Current Portfolio Value"
+          value={privateMode ? '--' : portfolio.value}
+          precision={2}
+          prefix="$"
+        />
         <StatisticBox
           title="All Time Deposits"
           value={privateMode ? '--' : portfolio.deposits}
@@ -70,21 +112,43 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
           suffix={noHoldings ? undefined : '%'}
           prefix={noHoldings ? undefined : unrealizedPnLRatio >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />
-        <StatisticBox
-          title="Timeline P&L %"
-          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
-          value={((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100}
-          precision={2}
-          suffix="%"
-          prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-        />
-        <StatisticBox
-          title="Timeline P&L Value"
-          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
-          value={privateMode ? '--' : portfolio.value - portfolio.deposits}
-          precision={privateMode ? undefined : 2}
-          prefix="$"
-        />
+
+        {startPortfolio && (
+          <>
+            <Divider style={{ marginTop: 12, marginBottom: 12 }} />
+
+            <Flex width={1} mb={2} justifyContent="center">
+              <Typography.Text strong>
+                {fromDateDisplay} - {toDateDisplay}
+              </Typography.Text>
+            </Flex>
+
+            <StatisticBox
+              title="Deposits"
+              tooltip={`Net new (deposits - withdrawals) between ${fromDateDisplay} & ${toDateDisplay}`}
+              value={privateMode ? '--' : timelineDeposits}
+              precision={2}
+              prefix="$"
+            />
+            <StatisticBox
+              title="P/L % Change"
+              tooltip={`P/L Ratio change from ${fromDateDisplay} to ${toDateDisplay}`}
+              valueStyle={{ color: timelinePnlChangeRatio >= 0 ? 'green' : 'red' }}
+              value={timelinePnlChangeRatio}
+              precision={2}
+              suffix="%"
+              prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+            />
+            <StatisticBox
+              title="P/L $ Change"
+              tooltip={`P/L Value change from ${fromDateDisplay} to ${toDateDisplay}`}
+              valueStyle={{ color: timelinePnlChangeValue >= 0 ? 'green' : 'red' }}
+              value={privateMode ? '--' : timelinePnlChangeValue}
+              precision={privateMode ? undefined : 2}
+              prefix="$"
+            />
+          </>
+        )}
       </Flex>
     </Card>
   );
