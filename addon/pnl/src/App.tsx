@@ -51,6 +51,7 @@ type State = {
   isLoaded: boolean;
   privateMode: boolean;
   fromDate: string;
+  toDate: string;
 
   options?: any;
   isLoadingOnUpdate?: boolean;
@@ -74,6 +75,7 @@ class App extends Component<Props, State> {
       isLoaded: false,
       privateMode: false,
       fromDate: TRANSACTIONS_FROM_DATE,
+      toDate: moment().format('YYYY-MM-DD'),
     };
   }
 
@@ -166,7 +168,7 @@ class App extends Component<Props, State> {
 
   async loadData(options) {
     options = this.mergeOptions(options);
-    this.setState({ privateMode: options.privateMode, fromDate: options.fromDate });
+    this.setState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
 
     const [positions, portfolioByDate, transactions, accounts, currencyCache] = await Promise.all([
       this.loadPositions(options),
@@ -446,6 +448,7 @@ class App extends Component<Props, State> {
                     portfolios={this.state.allPortfolios}
                     privateMode={this.state.privateMode}
                     positions={this.state.positions}
+                    
                   />
 
                   <DepositVsPortfolioValueTimeline

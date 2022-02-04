@@ -14,15 +14,15 @@ function StatisticBox(props: StatisticProps) {
   );
 }
 
-function PnLStatistics({
-  portfolios,
-  privateMode,
-  positions,
-}: {
+type Props = {
   portfolios: Portfolio[];
   positions: Position[];
   privateMode: boolean;
-}) {
+  fromDate: string;
+  toDate: string;
+};
+
+function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }: Props) {
   const portfolio = portfolios[portfolios.length - 1];
   const marketValue = positions.reduce((value, position) => value + position.market_value, 0);
   const bookValue = positions.reduce((value, position) => value + position.book_value, 0);
@@ -34,9 +34,14 @@ function PnLStatistics({
     <Card bodyStyle={{ backgroundColor: '#f9f0ff' }} style={{ borderRadius: 6, borderColor: '#efdbff' }}>
       <Flex width={1} justifyContent="space-between" flexWrap="wrap">
         <StatisticBox title="Portfolio Value" value={privateMode ? '--' : portfolio.value} precision={2} prefix="$" />
-        <StatisticBox title="Deposits" value={privateMode ? '--' : portfolio.deposits} precision={2} prefix="$" />
         <StatisticBox
-          title="Overall P&L %"
+          title="All Time Deposits"
+          value={privateMode ? '--' : portfolio.deposits}
+          precision={2}
+          prefix="$"
+        />
+        <StatisticBox
+          title="All Time P&L %"
           valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
           value={((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100}
           precision={2}
@@ -44,7 +49,7 @@ function PnLStatistics({
           prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />
         <StatisticBox
-          title="Overall P&L Value"
+          title="All Time P&L Value"
           valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
           value={privateMode ? '--' : portfolio.value - portfolio.deposits}
           precision={privateMode ? undefined : 2}
@@ -64,6 +69,21 @@ function PnLStatistics({
           precision={privateMode ? undefined : 2}
           suffix={noHoldings ? undefined : '%'}
           prefix={noHoldings ? undefined : unrealizedPnLRatio >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+        />
+        <StatisticBox
+          title="Timeline P&L %"
+          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
+          value={((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100}
+          precision={2}
+          suffix="%"
+          prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+        />
+        <StatisticBox
+          title="Timeline P&L Value"
+          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
+          value={privateMode ? '--' : portfolio.value - portfolio.deposits}
+          precision={privateMode ? undefined : 2}
+          prefix="$"
         />
       </Flex>
     </Card>
