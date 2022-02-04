@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Addon } from '@wealthica/wealthica.js/index';
+  import { initTracking, trackEvent } from 'analytics';
   import {
     parseCurrencyReponse,
     parseInstitutionsResponse,
@@ -26,6 +27,7 @@
     addon.on('init', (options) => {
       console.debug('[pnl-widget] Addon initialization', options);
       debounced(options);
+      initTracking(options.authUser && options.authUser.id);
     });
 
     addon.on('reload', () => {
@@ -37,6 +39,7 @@
       // Update according to the received options
       console.debug('[pnl-widget] Addon update - options: ', options);
       debounced(options);
+      trackEvent('update');
     });
   } catch (error) {
     prod = false;
