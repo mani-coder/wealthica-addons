@@ -7,7 +7,6 @@ import Statistic, { StatisticProps } from 'antd/lib/statistic';
 import moment from 'moment';
 import React from 'react';
 import { Box, Flex } from 'rebass';
-import { DATE_FORMAT } from '../constants';
 import { Portfolio, Position } from '../types';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
