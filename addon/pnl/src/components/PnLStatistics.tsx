@@ -67,6 +67,8 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
   const fromDateDisplay = moment(fromDate).format('MMM DD, YY');
   const toDateDisplay = moment(toDate).format('MMM DD, YY');
 
+  console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, oneDayBeforeStartDate, portfolios });
+
   return (
     <Card bodyStyle={{ backgroundColor: '#f9f0ff' }} style={{ borderRadius: 6, borderColor: '#efdbff' }}>
       <Flex width={1} justifyContent="space-between" flexWrap="wrap">
