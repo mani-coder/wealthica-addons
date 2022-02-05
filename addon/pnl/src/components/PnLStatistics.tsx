@@ -45,8 +45,8 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
   const unrealizePnLValue = marketValue - bookValue;
   const unrealizedPnLRatio = unrealizePnLValue ? (unrealizePnLValue / bookValue) * 100 : 0;
 
-  const oneDayBeforeStartDate = moment(fromDate).subtract(1, 'day').format(DATE_FORMAT);
-  const startPortfolio = portfolios.find((portfolio) => portfolio.date === oneDayBeforeStartDate);
+  // const oneDayBeforeStartDate = moment(fromDate).subtract(1, 'day').format(DATE_FORMAT);
+  const startPortfolio = portfolios.find((portfolio) => portfolio.date === fromDate);
 
   let timelineDeposits,
     timelinePnlChangeValue,
@@ -67,7 +67,7 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
   const fromDateDisplay = moment(fromDate).format('MMM DD, YY');
   const toDateDisplay = moment(toDate).format('MMM DD, YY');
 
-  console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, oneDayBeforeStartDate, portfolios });
+  console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, portfolios });
 
   return (
     <Card bodyStyle={{ backgroundColor: '#f9f0ff' }} style={{ borderRadius: 6, borderColor: '#efdbff' }}>
