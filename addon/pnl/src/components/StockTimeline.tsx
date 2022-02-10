@@ -212,6 +212,7 @@ class StockTimeline extends Component<Props, State> {
       this.getFlags('tax', true),
       this.getFlags('fee', true),
       this.getFlags('reinvest'),
+      this.getFlags('transfer'),
     ].filter((series) => !!series.data?.length);
 
     return [
@@ -260,6 +261,7 @@ class StockTimeline extends Component<Props, State> {
 
   getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
     const isBuySell = ['buy', 'sell', 'reinvest'].includes(type);
+    const _type = type === 'transfer' ? 'buy' : type;
 
     return {
       name: _.startCase(type),
@@ -274,7 +276,13 @@ class StockTimeline extends Component<Props, State> {
       },
 
       data: this.props.position.transactions
-        .filter((t) => t.type === type)
+        .filter(
+          (t) =>
+            t.type === _type &&
+            (!['buy', 'sell'].includes(t.type) ||
+              (type !== 'transfer' && !(t.description || '').toLowerCase().includes('transfer')) ||
+              (type === 'transfer' && (t.description || '').toLowerCase().includes('transfer'))),
+        )
         .sort((a, b) => a.date.valueOf() - b.date.valueOf())
         .reduce((array, transaction) => {
           const lastTransaction = array.pop();

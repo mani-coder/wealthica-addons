@@ -264,14 +264,15 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         shape: 'squarepin',
         width: 16,
       },
-      ...['buy', 'sell', 'income', 'dividend', 'distribution', 'tax', 'fee', 'reinvest']
+      ...['buy', 'sell', 'transfer', 'income', 'dividend', 'distribution', 'tax', 'fee', 'reinvest']
         .map((type) => getFlags(type))
         .filter((series) => !!series.data?.length),
     ];
   }
 
   function getFlags(type: string): Highcharts.SeriesFlagsOptions {
-    const isBuySell = ['buy', 'sell', 'reinvest'].includes(type);
+    const isBuySell = ['buy', 'sell', 'reinvest', 'transfer'].includes(type);
+    const _type = type === 'transfer' ? 'buy' : type;
 
     return {
       name: _.startCase(type),
@@ -284,7 +285,13 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       },
 
       data: position.transactions
-        .filter((t) => t.type === type)
+        .filter(
+          (t) =>
+            t.type === _type &&
+            (!['buy', 'sell'].includes(t.type) ||
+              (type !== 'transfer' && !(t.description || '').toLowerCase().includes('transfer')) ||
+              (type === 'transfer' && (t.description || '').toLowerCase().includes('transfer'))),
+        )
         .sort((a, b) => a.date.valueOf() - b.date.valueOf())
         .reduce((array, transaction) => {
           const lastTransaction = array.pop();
