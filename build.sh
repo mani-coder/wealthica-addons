@@ -14,7 +14,7 @@ fi
 echo "Deleting build files ..."
 rm -rf public/mani-coder
 
-for DIR in 'pnl' 'events'
+for DIR in 'pnl'
 do
   echo "${stars// /*}"
   echo "Building $DIR Addon"
@@ -28,7 +28,7 @@ do
 done
 
 
-for DIR in 'pnl' 'earnings' 'dividends'
+for DIR in 'pnl'
 do
   echo "${stars// /*}"
   echo "Building $DIR Widget"
