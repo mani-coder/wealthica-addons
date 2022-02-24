@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
 import QuestionCircleTwoTone from '@ant-design/icons/QuestionCircleTwoTone';
@@ -13,7 +12,7 @@ import * as Highcharts from 'highcharts';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
 import 'moment-precise-range-plugin';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT } from '../constants';
@@ -29,6 +28,7 @@ type Props = {
   accounts: Account[];
   isPrivateMode: boolean;
   fromDate: string;
+  toDate: string;
   currencyCache: { [K: string]: number };
 };
 
@@ -374,53 +374,45 @@ const IncomeTable = React.memo(
 
 type TransactionType = 'income' | 'pnl' | 'expense';
 
-export default function RealizedPnL({
-  currencyCache,
-  accountTransactions,
-  transactions,
-  accounts,
-  isPrivateMode,
-  fromDate,
-}: Props) {
+export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ...props }: Props) {
   const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
+
+  const { transactions, accountTransactions, fromDate, toDate } = useMemo(() => {
+    const fromDate = moment(props.fromDate);
+    const toDate = moment(props.toDate);
+    return {
+      transactions: props.transactions.filter((t) => t.date.isSameOrAfter(fromDate) && t.date.isSameOrBefore(toDate)),
+      accountTransactions: props.accountTransactions.filter(
+        (t) => t.date.isSameOrAfter(fromDate) && t.date.isSameOrBefore(toDate),
+      ),
+      fromDate,
+      toDate,
+    };
+  }, [props.transactions, props.fromDate, props.toDate, props.accountTransactions]);
+  console.log('mani is cool', { transactions, accountTransactions, fromDate, toDate });
+
   const { expenseTransactions, totalExpense } = useMemo(() => {
     const expenseTransactions = accountTransactions
-      .filter(
-        (transaction) =>
-          ['interest', 'fee', 'tax'].includes(transaction.type) &&
-          transaction.amount < 0 &&
-          transaction.date.isSameOrAfter(fromDate),
-      )
+      .filter((transaction) => ['interest', 'fee', 'tax'].includes(transaction.type) && transaction.amount < 0)
       .map((transaction) => ({ ...transaction, amount: Math.abs(transaction.amount) }));
 
     return {
       expenseTransactions,
       totalExpense: expenseTransactions.reduce((expense, t) => expense + t.amount, 0),
     };
-  }, [transactions, fromDate]);
+  }, [accountTransactions]);
 
   const { incomeTransactions, totalIncome } = useMemo(() => {
     const incomeTransactions: IncomeTransaction[] = accountTransactions
-      .filter(
-        (transaction) =>
-          ['interest', 'fee', 'tax'].includes(transaction.type) &&
-          transaction.amount > 0 &&
-          transaction.date.isSameOrAfter(fromDate),
-      )
-      .concat(
-        transactions.filter(
-          (transaction) =>
-            ['income', 'dividend', 'distribution'].includes(transaction.type) &&
-            transaction.date.isSameOrAfter(fromDate),
-        ),
-      )
+      .filter((transaction) => ['interest', 'fee', 'tax'].includes(transaction.type) && transaction.amount > 0)
+      .concat(transactions.filter((transaction) => ['income', 'dividend', 'distribution'].includes(transaction.type)))
       .sort((a, b) => a.date.unix() - b.date.unix());
 
     return {
       incomeTransactions,
       totalIncome: incomeTransactions.reduce((expense, t) => expense + t.amount, 0),
     };
-  }, [transactions, fromDate]);
+  }, [accountTransactions, transactions]);
 
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('type');
 
@@ -431,74 +423,74 @@ export default function RealizedPnL({
     }, {} as { [K: string]: Account });
   }, [accounts]);
 
-  function closePosition(position: CurrentPosition, transaction: Transaction) {
-    const closedShares = Math.min(Math.abs(position.shares), Math.abs(transaction.shares));
-    const buyRecord = transaction.type === 'buy' ? transaction : position;
-    const sellRecord = transaction.type === 'sell' ? transaction : position;
+  const computeClosedPositions = useCallback((): ClosedPosition[] => {
+    function closePosition(position: CurrentPosition, transaction: Transaction) {
+      const closedShares = Math.min(Math.abs(position.shares), Math.abs(transaction.shares));
+      const buyRecord = transaction.type === 'buy' ? transaction : position;
+      const sellRecord = transaction.type === 'sell' ? transaction : position;
 
-    const buyValue = closedShares * buyRecord.price;
-    const sellValue = closedShares * sellRecord.price;
+      const buyValue = closedShares * buyRecord.price;
+      const sellValue = closedShares * sellRecord.price;
 
-    const pnl = sellValue - buyValue;
-    const pnlRatio = (pnl / buyValue) * 100;
+      const pnl = sellValue - buyValue;
+      const pnlRatio = (pnl / buyValue) * 100;
 
-    const closedPosition = {
-      date: transaction.date,
-      account: accountById[transaction.account],
-      symbol: transaction.symbol,
-      currency: transaction.currency,
-      shares: closedShares,
+      const closedPosition = {
+        date: transaction.date,
+        account: accountById[transaction.account],
+        symbol: transaction.symbol,
+        currency: transaction.currency,
+        shares: closedShares,
 
-      buyDate: buyRecord.date,
-      buyPrice: buyRecord.price,
+        buyDate: buyRecord.date,
+        buyPrice: buyRecord.price,
 
-      sellDate: sellRecord.date,
-      sellPrice: sellRecord.price,
+        sellDate: sellRecord.date,
+        sellPrice: sellRecord.price,
 
-      pnl:
-        transaction.currency === 'usd' && transaction.securityType !== 'crypto'
-          ? getCurrencyInCAD(transaction.date, pnl, currencyCache)
-          : pnl,
-      pnlRatio,
-    };
+        pnl:
+          transaction.currency === 'usd' && transaction.securityType !== 'crypto'
+            ? getCurrencyInCAD(transaction.date, pnl, currencyCache)
+            : pnl,
+        pnlRatio,
+      };
 
-    const openShares = position.shares + transaction.shares;
-    position.shares = openShares;
-    if (openShares > 0) {
-      position.price = buyRecord.price;
-      position.date = buyRecord.date;
-    } else if (openShares < 0) {
-      position.price = sellRecord.price;
-      position.date = sellRecord.date;
-    } else {
-      position.price = 0;
+      const openShares = position.shares + transaction.shares;
+      position.shares = openShares;
+      if (openShares > 0) {
+        position.price = buyRecord.price;
+        position.date = buyRecord.date;
+      } else if (openShares < 0) {
+        position.price = sellRecord.price;
+        position.date = sellRecord.date;
+      } else {
+        position.price = 0;
+      }
+
+      return closedPosition;
     }
 
-    return closedPosition;
-  }
-
-  function openPosition(position: CurrentPosition, transaction: Transaction) {
-    const shares = position.shares + transaction.shares;
-    if (position.shares === 0) {
-      position.date = transaction.date;
+    function openPosition(position: CurrentPosition, transaction: Transaction) {
+      const shares = position.shares + transaction.shares;
+      if (position.shares === 0) {
+        position.date = transaction.date;
+      }
+      position.price = (position.price * position.shares + transaction.price * transaction.shares) / shares;
+      position.shares = shares;
     }
-    position.price = (position.price * position.shares + transaction.price * transaction.shares) / shares;
-    position.shares = shares;
-  }
 
-  function handleSplit(position: CurrentPosition, transaction: Transaction) {
-    // there are two type of split transactions, one negates the full book and one adds the new shares.
-    // we are interested in the first one.
-    if (transaction.shares > 0) {
-      return;
+    function handleSplit(position: CurrentPosition, transaction: Transaction) {
+      // there are two type of split transactions, one negates the full book and one adds the new shares.
+      // we are interested in the first one.
+      if (transaction.shares > 0) {
+        return;
+      }
+      const splitRatio = transaction.splitRatio || 1;
+      const shares = Math.floor(position.shares / splitRatio);
+      position.shares = shares;
+      position.price = position.price * splitRatio;
     }
-    const splitRatio = transaction.splitRatio || 1;
-    const shares = Math.floor(position.shares / splitRatio);
-    position.shares = shares;
-    position.price = position.price * splitRatio;
-  }
 
-  function computeClosedPositions(): ClosedPosition[] {
     const closedPositions: ClosedPosition[] = [];
     const book: { [K: string]: CurrentPosition } = {};
     transactions.forEach((transaction) => {
@@ -529,260 +521,262 @@ export default function RealizedPnL({
       }
     });
 
-    const startDate = moment(fromDate);
-    return closedPositions.filter((position) => position.date.isSameOrAfter(startDate)).reverse();
-  }
-
-  const getOptions = ({
-    series,
-  }: {
-    series: Highcharts.SeriesColumnOptions[] | Highcharts.SeriesPieOptions[];
-  }): Highcharts.Options => {
-    return {
-      series,
-      legend: {
-        enabled: true,
-      },
-
-      tooltip: {
-        outside: true,
-
-        useHTML: true,
-        backgroundColor: '#FFF',
-        style: {
-          color: '#1F2A33',
-        },
-      },
-
-      title: {
-        text: undefined,
-      },
-      xAxis: {
-        type: 'category',
-        labels: {
-          style: {
-            fontSize: '13px',
-            fontFamily: 'Verdana, sans-serif',
-          },
-        },
-      },
-
-      yAxis: {
-        labels: {
-          enabled: !isPrivateMode,
-        },
-        title: {
-          text: '$ (CAD)',
-        },
-      },
-    };
-  };
-
-  const getBarLabel = (date: string) => {
-    const startDate = moment(date);
-
-    switch (timeline) {
-      case 'month':
-        return startDate.format('MMM YY');
-      case 'week':
-        return `${startDate.format('MMM DD')} - ${moment(date).endOf(timeline).format('MMM DD')}, ${startDate.format(
-          'YY',
-        )}`;
-      case 'year':
-        return startDate.format('YYYY');
-      case 'day':
-        return startDate.format('MMM DD, YYYY');
-    }
-  };
-
-  const getData = (closedPositions: ClosedPosition[]): Highcharts.SeriesColumnOptions[] => {
-    function getSeries(type: TransactionType | 'all', values: { [K: string]: number }) {
-      const data = Object.keys(values)
-        .map((date) => ({ date, label: getBarLabel(date), pnl: values[date] }))
-        .filter((value) => value.pnl)
-        .sort((a, b) => moment(a.date).valueOf() - moment(b.date).valueOf())
-        .map((value) => {
-          return {
-            date: value.date,
-            label: value.label,
-            pnl: value.pnl,
-            startDate: moment(value.date).startOf(timeline).format(DATE_DISPLAY_FORMAT),
-            endDate: moment(value.date).endOf(timeline).format(DATE_DISPLAY_FORMAT),
-          };
-        });
-
-      const name =
-        type === 'pnl'
-          ? 'Realized P&L'
-          : type === 'expense'
-          ? 'Expenses (Interest, Fee)'
-          : type === 'income'
-          ? 'Income (Dividends)'
-          : `${types.includes('pnl') ? `P&L  ${types.includes('income') ? '+' : ''} ` : ''}${
-              types.includes('income') ? 'Income' : ''
-            }${types.includes('expense') ? ' - Expenses' : ''}`;
-      const color =
-        type === 'pnl' ? '#b37feb' : type === 'expense' ? '#ff7875' : type === 'income' ? '#95de64' : '#5cdbd3';
-      const _series: Highcharts.SeriesColumnOptions = {
-        name,
-        type: 'column',
-        color,
-        data: data.map((value) => ({
-          key: value.label,
-          name: value.label,
-          label: value.label,
-          y: value.pnl,
-          pnl: !isPrivateMode ? formatMoney(value.pnl) : '-',
-          pnlHuman: !isPrivateMode ? formatCurrency(value.pnl, 2) : '-',
-          startDate: value.startDate,
-          endDate: value.endDate,
-        })),
-        tooltip: {
-          headerFormat: `<span style="font-size: 13px; font-weight: 700;">${name}</span>`,
-          pointFormat: `<hr /><span style="font-size: 12px;font-weight: 500;">{point.startDate} - {point.endDate}</span>
-          <br />
-          <b style="font-size: 13px; font-weight: 700">{point.pnl} CAD</b><br />`,
-        },
-        dataLabels: { enabled: true, format: '{point.pnlHuman}' },
-        showInLegend: true,
-      };
-      return _series;
-    }
-
-    const gains = {} as { [K: string]: number };
-    const pnls = {} as { [K: string]: number };
-    const expenses = {} as { [K: string]: number };
-    const incomes = {} as { [K: string]: number };
-
-    if (types.includes('pnl')) {
-      closedPositions.forEach((value) => {
-        const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
-        pnls[key] = pnls[key] ? pnls[key] + value.pnl : value.pnl;
-      });
-    }
-
-    if (types.includes('expense')) {
-      expenseTransactions.forEach((value) => {
-        const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
-        expenses[key] = expenses[key] ? expenses[key] + value.amount : value.amount;
-      });
-    }
-
-    if (types.includes('income')) {
-      incomeTransactions.forEach((value) => {
-        const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
-        incomes[key] = incomes[key] ? incomes[key] + value.amount : value.amount;
-      });
-    }
-
-    const allDates = new Set(Object.keys(expenses).concat(Object.keys(pnls)).concat(Object.keys(incomes)));
-    allDates.forEach((key) => {
-      gains[key] = (pnls[key] || 0) - (expenses[key] || 0) + (incomes[key] || 0);
-    });
-
-    const individualSeries: Highcharts.SeriesColumnOptions[] = [];
-    types.forEach((type) => {
-      const values = type === 'pnl' ? pnls : type === 'income' ? incomes : expenses;
-      if (Object.keys(values).length) {
-        individualSeries.push(getSeries(type, values));
-      }
-    });
-
-    return individualSeries.length === 1 ? individualSeries : [getSeries('all', gains)].concat(individualSeries);
-  };
-
-  const getClosedPnLByAccountSeries = (
-    closedPositions: ClosedPosition[],
-    closedPnL: number,
-    group: GroupType,
-  ): Highcharts.SeriesPieOptions[] => {
-    const pnls = {} as { [K: string]: { name: string; pnl: number } };
-    if (types.includes('pnl')) {
-      closedPositions.forEach((position) => {
-        const name = getGroupKey(group, position.account);
-        let mergedAccount = pnls[name];
-        if (!mergedAccount) {
-          mergedAccount = { name, pnl: 0 };
-          pnls[name] = mergedAccount;
-        }
-        mergedAccount.pnl += position.pnl;
-      });
-    }
-
-    if (types.includes('expense')) {
-      expenseTransactions.forEach((t) => {
-        const name = getGroupKey(group, accountById[t.account]);
-        let mergedAccount = pnls[name];
-        if (!mergedAccount) {
-          mergedAccount = { name, pnl: 0 };
-          pnls[name] = mergedAccount;
-        }
-        mergedAccount.pnl -= t.amount;
-      });
-    }
-
-    if (types.includes('income')) {
-      incomeTransactions.forEach((t) => {
-        const name = getGroupKey(group, accountById[t.account]);
-        let mergedAccount = pnls[name];
-        if (!mergedAccount) {
-          mergedAccount = { name, pnl: 0 };
-          pnls[name] = mergedAccount;
-        }
-        mergedAccount.pnl += t.amount;
-      });
-    }
-
-    const data = Object.values(pnls);
-    const accountsSeries: Highcharts.SeriesPieOptions = {
-      type: 'pie' as 'pie',
-      id: 'accounts',
-      name: 'Accounts',
-      dataLabels: {
-        enabled: true,
-        format:
-          '<b style="font-size: 12px;">{point.name}: <span style="color: {point.pnlColor};">{point.percentage:.1f}%</span></b>',
-        style: {
-          color: 'black',
-        },
-      },
-      data: data
-        .filter((account) => account.pnl)
-        .sort((a, b) => b.pnl - a.pnl)
-        .map((account) => {
-          return {
-            name: account.name,
-            y: Math.abs(account.pnl),
-            negative: account.pnl < 0,
-            displayValue: isPrivateMode ? '-' : account.pnl ? formatMoney(account.pnl) : account.pnl,
-            totalValue: isPrivateMode ? '-' : formatMoney(closedPnL),
-            pnlColor: account.pnl < 0 ? 'red' : 'green',
-          };
-        }),
-
-      tooltip: {
-        headerFormat: `<b>{point.key}<br />{point.percentage:.1f}%</b><hr />`,
-        pointFormatter() {
-          const point = this.options as any;
-          return `<table>
-          <tr><td>P/L</td><td class="position-tooltip-value">${point.displayValue} CAD</td></tr>
-          <tr><td>Total P/L</td><td class="position-tooltip-value">${point.totalValue} CAD</td></tr>
-        </table>`;
-        },
-      },
-    };
-
-    return [accountsSeries];
-  };
+    return closedPositions
+      .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
+      .reverse();
+  }, [transactions, fromDate, toDate, accountById, currencyCache]);
 
   const closedPositions = useMemo(() => {
     return computeClosedPositions();
-  }, [transactions, accounts, fromDate]);
+  }, [computeClosedPositions]);
 
   function getDefaultTypes(): TransactionType[] {
     return [closedPositions.length ? 'pnl' : incomeTransactions.length ? 'income' : 'expense'];
   }
   const [types, setTypes] = useState<TransactionType[]>(getDefaultTypes);
+
+  const getOptions = useCallback(
+    ({ series }: { series: Highcharts.SeriesColumnOptions[] | Highcharts.SeriesPieOptions[] }): Highcharts.Options => {
+      return {
+        series,
+        legend: {
+          enabled: true,
+        },
+
+        tooltip: {
+          outside: true,
+
+          useHTML: true,
+          backgroundColor: '#FFF',
+          style: {
+            color: '#1F2A33',
+          },
+        },
+
+        title: {
+          text: undefined,
+        },
+        xAxis: {
+          type: 'category',
+          labels: {
+            style: {
+              fontSize: '13px',
+              fontFamily: 'Verdana, sans-serif',
+            },
+          },
+        },
+
+        yAxis: {
+          labels: {
+            enabled: !isPrivateMode,
+          },
+          title: {
+            text: '$ (CAD)',
+          },
+        },
+      };
+    },
+    [isPrivateMode],
+  );
+
+  const getData = useCallback(
+    (closedPositions: ClosedPosition[]): Highcharts.SeriesColumnOptions[] => {
+      function getBarLabel(date: string) {
+        const startDate = moment(date);
+
+        switch (timeline) {
+          case 'month':
+            return startDate.format('MMM YY');
+          case 'week':
+            return `${startDate.format('MMM DD')} - ${moment(date)
+              .endOf(timeline)
+              .format('MMM DD')}, ${startDate.format('YY')}`;
+          case 'year':
+            return startDate.format('YYYY');
+          case 'day':
+            return startDate.format('MMM DD, YYYY');
+        }
+      }
+
+      function getSeries(type: TransactionType | 'all', values: { [K: string]: number }) {
+        const data = Object.keys(values)
+          .map((date) => ({ date, label: getBarLabel(date), pnl: values[date] }))
+          .filter((value) => value.pnl)
+          .sort((a, b) => moment(a.date).valueOf() - moment(b.date).valueOf())
+          .map((value) => {
+            return {
+              date: value.date,
+              label: value.label,
+              pnl: value.pnl,
+              startDate: moment(value.date).startOf(timeline).format(DATE_DISPLAY_FORMAT),
+              endDate: moment(value.date).endOf(timeline).format(DATE_DISPLAY_FORMAT),
+            };
+          });
+
+        const name =
+          type === 'pnl'
+            ? 'Realized P&L'
+            : type === 'expense'
+            ? 'Expenses (Interest, Fee)'
+            : type === 'income'
+            ? 'Income (Dividends)'
+            : `${types.includes('pnl') ? `P&L  ${types.includes('income') ? '+' : ''} ` : ''}${
+                types.includes('income') ? 'Income' : ''
+              }${types.includes('expense') ? ' - Expenses' : ''}`;
+        const color =
+          type === 'pnl' ? '#b37feb' : type === 'expense' ? '#ff7875' : type === 'income' ? '#95de64' : '#5cdbd3';
+        const _series: Highcharts.SeriesColumnOptions = {
+          name,
+          type: 'column',
+          color,
+          data: data.map((value) => ({
+            key: value.label,
+            name: value.label,
+            label: value.label,
+            y: value.pnl,
+            pnl: !isPrivateMode ? formatMoney(value.pnl) : '-',
+            pnlHuman: !isPrivateMode ? formatCurrency(value.pnl, 2) : '-',
+            startDate: value.startDate,
+            endDate: value.endDate,
+          })),
+          tooltip: {
+            headerFormat: `<span style="font-size: 13px; font-weight: 700;">${name}</span>`,
+            pointFormat: `<hr /><span style="font-size: 12px;font-weight: 500;">{point.startDate} - {point.endDate}</span>
+          <br />
+          <b style="font-size: 13px; font-weight: 700">{point.pnl} CAD</b><br />`,
+          },
+          dataLabels: { enabled: true, format: '{point.pnlHuman}' },
+          showInLegend: true,
+        };
+        return _series;
+      }
+
+      const gains = {} as { [K: string]: number };
+      const pnls = {} as { [K: string]: number };
+      const expenses = {} as { [K: string]: number };
+      const incomes = {} as { [K: string]: number };
+
+      if (types.includes('pnl')) {
+        closedPositions.forEach((value) => {
+          const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
+          pnls[key] = pnls[key] ? pnls[key] + value.pnl : value.pnl;
+        });
+      }
+
+      if (types.includes('expense')) {
+        expenseTransactions.forEach((value) => {
+          const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
+          expenses[key] = expenses[key] ? expenses[key] + value.amount : value.amount;
+        });
+      }
+
+      if (types.includes('income')) {
+        incomeTransactions.forEach((value) => {
+          const key = value.date.clone().startOf(timeline).format(DATE_FORMAT);
+          incomes[key] = incomes[key] ? incomes[key] + value.amount : value.amount;
+        });
+      }
+
+      const allDates = new Set(Object.keys(expenses).concat(Object.keys(pnls)).concat(Object.keys(incomes)));
+      allDates.forEach((key) => {
+        gains[key] = (pnls[key] || 0) - (expenses[key] || 0) + (incomes[key] || 0);
+      });
+
+      const individualSeries: Highcharts.SeriesColumnOptions[] = [];
+      types.forEach((type) => {
+        const values = type === 'pnl' ? pnls : type === 'income' ? incomes : expenses;
+        if (Object.keys(values).length) {
+          individualSeries.push(getSeries(type, values));
+        }
+      });
+
+      return individualSeries.length === 1 ? individualSeries : [getSeries('all', gains)].concat(individualSeries);
+    },
+    [expenseTransactions, incomeTransactions, isPrivateMode, timeline, types],
+  );
+
+  const getClosedPnLByAccountSeries = useCallback(
+    (closedPositions: ClosedPosition[], closedPnL: number, group: GroupType): Highcharts.SeriesPieOptions[] => {
+      const pnls = {} as { [K: string]: { name: string; pnl: number } };
+      if (types.includes('pnl')) {
+        closedPositions.forEach((position) => {
+          const name = getGroupKey(group, position.account);
+          let mergedAccount = pnls[name];
+          if (!mergedAccount) {
+            mergedAccount = { name, pnl: 0 };
+            pnls[name] = mergedAccount;
+          }
+          mergedAccount.pnl += position.pnl;
+        });
+      }
+
+      if (types.includes('expense')) {
+        expenseTransactions.forEach((t) => {
+          const name = getGroupKey(group, accountById[t.account]);
+          let mergedAccount = pnls[name];
+          if (!mergedAccount) {
+            mergedAccount = { name, pnl: 0 };
+            pnls[name] = mergedAccount;
+          }
+          mergedAccount.pnl -= t.amount;
+        });
+      }
+
+      if (types.includes('income')) {
+        incomeTransactions.forEach((t) => {
+          const name = getGroupKey(group, accountById[t.account]);
+          let mergedAccount = pnls[name];
+          if (!mergedAccount) {
+            mergedAccount = { name, pnl: 0 };
+            pnls[name] = mergedAccount;
+          }
+          mergedAccount.pnl += t.amount;
+        });
+      }
+
+      const data = Object.values(pnls);
+      const accountsSeries: Highcharts.SeriesPieOptions = {
+        type: 'pie' as 'pie',
+        id: 'accounts',
+        name: 'Accounts',
+        dataLabels: {
+          enabled: true,
+          format:
+            '<b style="font-size: 12px;">{point.name}: <span style="color: {point.pnlColor};">{point.percentage:.1f}%</span></b>',
+          style: {
+            color: 'black',
+          },
+        },
+        data: data
+          .filter((account) => account.pnl)
+          .sort((a, b) => b.pnl - a.pnl)
+          .map((account) => {
+            return {
+              name: account.name,
+              y: Math.abs(account.pnl),
+              negative: account.pnl < 0,
+              displayValue: isPrivateMode ? '-' : account.pnl ? formatMoney(account.pnl) : account.pnl,
+              totalValue: isPrivateMode ? '-' : formatMoney(closedPnL),
+              pnlColor: account.pnl < 0 ? 'red' : 'green',
+            };
+          }),
+
+        tooltip: {
+          headerFormat: `<b>{point.key}<br />{point.percentage:.1f}%</b><hr />`,
+          pointFormatter() {
+            const point = this.options as any;
+            return `<table>
+          <tr><td>P/L</td><td class="position-tooltip-value">${point.displayValue} CAD</td></tr>
+          <tr><td>Total P/L</td><td class="position-tooltip-value">${point.totalValue} CAD</td></tr>
+        </table>`;
+          },
+        },
+      };
+
+      return [accountsSeries];
+    },
+    [expenseTransactions, incomeTransactions, accountById, isPrivateMode, types],
+  );
 
   const { closedPnL, realizedPnL } = useMemo(() => {
     const realizedPnL = closedPositions.reduce((pnl, position) => pnl + position.pnl, 0);
@@ -795,11 +789,11 @@ export default function RealizedPnL({
 
   const options = useMemo(() => {
     return getOptions({ series: getData(closedPositions) });
-  }, [closedPositions, timeline, types]);
+  }, [closedPositions, getData, getOptions]);
 
   const accountSeriesOptions = useMemo(() => {
     return getOptions({ series: getClosedPnLByAccountSeries(closedPositions, closedPnL, compositionGroup) });
-  }, [closedPositions, closedPnL, compositionGroup, types]);
+  }, [closedPositions, closedPnL, compositionGroup, getOptions, getClosedPnLByAccountSeries]);
 
   const typesOptions = useMemo(() => {
     const options: { disabled?: boolean; label: string | React.ReactNode; value: TransactionType }[] = [];
@@ -844,7 +838,7 @@ export default function RealizedPnL({
     });
 
     return options;
-  }, [closedPositions, incomeTransactions, expenseTransactions]);
+  }, [closedPositions, incomeTransactions, expenseTransactions, realizedPnL, totalExpense, totalIncome]);
 
   const show = closedPositions.length > 0 || incomeTransactions.length > 0 || expenseTransactions.length > 0;
   return show ? (

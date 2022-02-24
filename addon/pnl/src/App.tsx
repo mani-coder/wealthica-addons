@@ -505,6 +505,7 @@ class App extends Component<Props, State> {
                   <RealizedPnL
                     currencyCache={this.state.currencyCache || {}}
                     fromDate={this.state.fromDate}
+                    toDate={this.state.toDate}
                     transactions={this.state.securityTransactions}
                     accountTransactions={this.state.accountTransactions}
                     accounts={this.state.accounts}
