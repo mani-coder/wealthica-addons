@@ -423,7 +423,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     }, {} as { [K: string]: Account });
   }, [accounts]);
 
-  const computeClosedPositions = useCallback((): ClosedPosition[] => {
+  const closedPositions = useMemo(() => {
     function closePosition(position: CurrentPosition, transaction: Transaction) {
       const closedShares = Math.min(Math.abs(position.shares), Math.abs(transaction.shares));
       const buyRecord = transaction.type === 'buy' ? transaction : position;
@@ -493,7 +493,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
     const closedPositions: ClosedPosition[] = [];
     const book: { [K: string]: CurrentPosition } = {};
-    transactions.forEach((transaction) => {
+    props.transactions.forEach((transaction) => {
       const key = `${transaction.account}-${transaction.symbol}`;
       let position = book[key];
       if (!position) {
@@ -524,11 +524,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     return closedPositions
       .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
       .reverse();
-  }, [transactions, fromDate, toDate, accountById, currencyCache]);
-
-  const closedPositions = useMemo(() => {
-    return computeClosedPositions();
-  }, [computeClosedPositions]);
+  }, [props.transactions, fromDate, toDate, accountById, currencyCache]);
 
   function getDefaultTypes(): TransactionType[] {
     return [closedPositions.length ? 'pnl' : incomeTransactions.length ? 'income' : 'expense'];
