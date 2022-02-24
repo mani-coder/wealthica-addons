@@ -17,7 +17,7 @@ import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT } from '../constants';
 import { Account, AccountTransaction, Transaction } from '../types';
-import { formatCurrency, formatMoney, getCurrencyInCAD } from '../utils';
+import { formatCurrency, formatMoney, formatMoneyWithCurrency, getCurrencyInCAD } from '../utils';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup, { getGroupKey, GroupType } from './CompositionGroup';
@@ -48,6 +48,9 @@ type ClosedPosition = {
   sellDate: Moment;
   sellPrice: number;
 
+  acb: number;
+  proceeds: number;
+
   pnl: number;
   pnlRatio: number;
   account?: Account;
@@ -61,6 +64,17 @@ type CurrentPosition = {
 
 const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 
+function renderSymbol(symbol: string, currency?: string) {
+  return (
+    <>
+      <Typography.Link rel="noreferrer noopener" href={`https://finance.yahoo.com/quote/${symbol}`} target="_blank">
+        {symbol}
+      </Typography.Link>
+      {currency && <div style={{ fontSize: 10 }}>{currency === 'usd' ? 'USD' : 'CAD'}</div>}
+    </>
+  );
+}
+
 const RealizedPnLTable = React.memo(
   ({ closedPositions, isPrivateMode }: { closedPositions: ClosedPosition[]; isPrivateMode: boolean }) => {
     function getColumns(): ColumnProps<ClosedPosition>[] {
@@ -71,7 +85,7 @@ const RealizedPnLTable = React.memo(
           dataIndex: 'date',
           render: (text) => text.format('YYYY-MM-DD'),
           sorter: (a, b) => a.date.valueOf() - b.date.valueOf(),
-          width: 150,
+          width: 125,
         },
         {
           key: 'account',
@@ -93,18 +107,7 @@ const RealizedPnLTable = React.memo(
           key: 'symbol',
           title: 'Symbol',
           dataIndex: 'symbol',
-          render: (text, position) => (
-            <>
-              <Typography.Link
-                rel="noreferrer noopener"
-                href={`https://finance.yahoo.com/quote/${text}`}
-                target="_blank"
-              >
-                {text}
-              </Typography.Link>
-              <div style={{ fontSize: 10 }}>{position.currency === 'usd' ? 'USD' : 'CAD'}</div>
-            </>
-          ),
+          render: (text, position) => renderSymbol(text, position.currency),
           width: 125,
           filters: Array.from(new Set(closedPositions.map((position) => position.symbol)))
             .map((value) => ({
@@ -126,22 +129,48 @@ const RealizedPnLTable = React.memo(
         {
           key: 'price',
           title: (
+            <Box>
+              <div>Buy Price /</div>
+              <div>
+                Sell Price{' '}
+                <Tooltip title="This is the Adjusted Cost Base (ACB) which includes the buy/sell transaction fees.">
+                  <QuestionCircleTwoTone twoToneColor="#bfbfbf" />
+                </Tooltip>
+              </div>
+            </Box>
+          ),
+          align: 'center',
+          width: 150,
+          render: (text, position) => (
             <>
-              Buy Price / Sell Price{' '}
+              {formatMoneyWithCurrency(position.buyPrice, position.currency)} /{' '}
+              <span style={{ whiteSpace: 'nowrap' }}>{formatMoney(position.sellPrice)}</span>
+            </>
+          ),
+        },
+        {
+          key: 'cost',
+          width: 150,
+          title: (
+            <Box>
+              <div>ACB /</div>
+              <div>Proceeds </div>
+              <Typography.Text style={{ fontSize: 12 }}>(CAD)</Typography.Text>{' '}
               <Tooltip title="This is the Adjusted Cost Base (ACB) which includes the buy/sell transaction fees.">
                 <QuestionCircleTwoTone twoToneColor="#bfbfbf" />
               </Tooltip>
-            </>
+            </Box>
           ),
           align: 'right',
           render: (text, position) => (
             <>
-              {formatMoney(position.buyPrice)} / {formatMoney(position.sellPrice)}
+              {formatMoney(position.acb)} / {formatMoney(position.proceeds)}
             </>
           ),
         },
         {
           key: 'gain',
+          width: 125,
           title: (
             <>
               P&L $%<div style={{ fontSize: 12 }}>(CAD)</div>
@@ -162,18 +191,28 @@ const RealizedPnLTable = React.memo(
           sorter: (a, b) => a.pnlRatio - b.pnlRatio,
         },
         {
-          key: 'openDate',
-          title: 'Open Date',
-          render: (text, position) =>
-            (position.buyDate.isAfter(position.sellDate) ? position.sellDate : position.buyDate).format('YYYY-MM-DD'),
-        },
-        {
           key: 'holding-period',
-          title: 'Holding Period',
-          render: (text, position) =>
-            position.buyDate.diff(position.sellDate)
-              ? moment.duration(position.buyDate.diff(position.sellDate)).humanize()
-              : 'Same Day',
+          width: 150,
+          title: (
+            <>
+              <div>Open Date</div>
+              <div>Holding Period</div>
+            </>
+          ),
+          render: (text, position) => (
+            <>
+              <div>
+                {(position.buyDate.isAfter(position.sellDate) ? position.sellDate : position.buyDate).format(
+                  'YYYY-MM-DD',
+                )}
+              </div>
+              <div>
+                {position.buyDate.diff(position.sellDate)
+                  ? moment.duration(position.buyDate.diff(position.sellDate)).humanize()
+                  : 'Same Day'}
+              </div>
+            </>
+          ),
         },
       ];
     }
@@ -308,23 +347,7 @@ const IncomeTable = React.memo(
           key: 'symbol',
           title: 'Symbol',
           dataIndex: 'symbol',
-          render: (text, transaction) =>
-            transaction.symbol ? (
-              <>
-                <Typography.Link
-                  rel="noreferrer noopener"
-                  href={`https://finance.yahoo.com/quote/${text}`}
-                  target="_blank"
-                >
-                  {text}
-                </Typography.Link>
-                {transaction.currency && (
-                  <div style={{ fontSize: 10 }}>{transaction.currency === 'usd' ? 'USD' : 'CAD'}</div>
-                )}
-              </>
-            ) : (
-              '--'
-            ),
+          render: (text, transaction) => (transaction.symbol ? renderSymbol(text, transaction.currency) : '--'),
           width: 125,
           filters: Array.from(new Set(transactions.map((t) => t.symbol)))
             .filter((value) => !!value)
@@ -389,7 +412,6 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       toDate,
     };
   }, [props.transactions, props.fromDate, props.toDate, props.accountTransactions]);
-  console.log('mani is cool', { transactions, accountTransactions, fromDate, toDate });
 
   const { expenseTransactions, totalExpense } = useMemo(() => {
     const expenseTransactions = accountTransactions
@@ -435,7 +457,9 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const pnl = sellValue - buyValue;
       const pnlRatio = (pnl / buyValue) * 100;
 
-      const closedPosition = {
+      const isUSD = transaction.currency === 'usd' && transaction.securityType !== 'crypto';
+
+      const closedPosition: ClosedPosition = {
         date: transaction.date,
         account: accountById[transaction.account],
         symbol: transaction.symbol,
@@ -448,10 +472,9 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         sellDate: sellRecord.date,
         sellPrice: sellRecord.price,
 
-        pnl:
-          transaction.currency === 'usd' && transaction.securityType !== 'crypto'
-            ? getCurrencyInCAD(transaction.date, pnl, currencyCache)
-            : pnl,
+        acb: isUSD ? getCurrencyInCAD(transaction.date, buyValue, currencyCache) : buyValue,
+        proceeds: isUSD ? getCurrencyInCAD(transaction.date, sellValue, currencyCache) : sellValue,
+        pnl: isUSD ? getCurrencyInCAD(transaction.date, pnl, currencyCache) : pnl,
         pnlRatio,
       };
 

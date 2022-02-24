@@ -31,6 +31,16 @@ export const formatMoney = (amount?: number, precision?: number): string => {
   });
 };
 
+export const formatMoneyWithCurrency = (amount: number, currency: string, precision?: number): string => {
+  precision = precision === undefined || precision === null ? 2 : precision;
+  return `${
+    currency.toUpperCase() === 'USD' ? 'U$' : currency.toUpperCase() === 'CAD' ? 'C$' : currency.toUpperCase()
+  }  ${amount.toLocaleString('en-US', {
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision,
+  })}`;
+};
+
 function getRandomInt(n) {
   return Math.floor(Math.random() * n);
 }
