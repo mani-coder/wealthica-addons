@@ -22,6 +22,14 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2022-03-01',
+    tab: 'Realized P&L',
+    title: 'ACB & Proceeds For Tax Filling',
+    description:
+      'We have now added the ACB & Proceeds values in Canadian currency in the Realized PnL table to ease the tax filling. You can simply copy over the values to the tax forms now without much hassle. Please note that this value adjusts the transaction fees and is the final cost incurred by you for the buy and sell transactions.',
+    images: ['https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Realized_PnL_ACB___Proceeds_IaWA9v43sse.png'],
+  },
+  {
     date: '2021-11-04',
     tab: 'Holdings',
     title: 'Cash Table',
