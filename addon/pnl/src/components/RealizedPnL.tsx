@@ -510,7 +510,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const pnlRatio = (pnl / buyValue) * 100;
 
       const crypto = transaction.securityType === 'crypto';
-      const transactions = position.transactions.concat([transaction]);
+      position.transactions.push([transaction]);
 
       const closedPosition: ClosedPosition = {
         key: transaction.id,
@@ -527,7 +527,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         sellPrice: sellRecord.price,
 
         pnl: transaction.currency === 'usd' && !crypto ? getCurrencyInCAD(transaction.date, pnl, currencyCache) : pnl,
-        transactions,
+        transactions: position.transactions.slice(),
         crypto,
         pnlRatio,
       };
