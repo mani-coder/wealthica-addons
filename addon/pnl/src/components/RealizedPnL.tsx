@@ -7,7 +7,7 @@ import Checkbox from 'antd/lib/checkbox';
 import Empty from 'antd/lib/empty';
 import Radio from 'antd/lib/radio';
 import Statistic from 'antd/lib/statistic';
-import Table, { ColumnProps } from 'antd/lib/table';
+import Table, { ColumnProps, ColumnType } from 'antd/lib/table';
 import * as Highcharts from 'highcharts';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
@@ -38,6 +38,7 @@ type IncomeTransaction = AccountTransaction & {
 };
 
 type ClosedPosition = {
+  key: string;
   date: Moment;
   symbol: string;
   currency: string;
@@ -52,12 +53,14 @@ type ClosedPosition = {
   pnl: number;
   pnlRatio: number;
   account?: Account;
+  transactions: Transaction[];
 };
 
 type CurrentPosition = {
   shares: number;
   price: number;
   date: Moment;
+  transactions: Transaction[];
 };
 
 const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
@@ -72,6 +75,32 @@ function renderSymbol(symbol: string, currency?: string) {
     </>
   );
 }
+
+const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
+  const columns: ColumnType<Transaction>[] = [
+    { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => moment(text).format('YYYY-MM-DD') },
+    { key: 'type', title: 'Type', dataIndex: 'type', render: (text) => text.toUpperCase() },
+    {
+      key: 'shares',
+      title: 'Shares',
+      dataIndex: 'shares',
+      render: (text, t) => `${Math.abs(t.shares)}@${formatMoney(t.price)}`,
+    },
+  ];
+
+  return (
+    <Flex width="450">
+      <Table<Transaction>
+        bordered
+        size="small"
+        rowKey="date"
+        pagination={false}
+        dataSource={transactions}
+        columns={columns}
+      />
+    </Flex>
+  );
+};
 
 const RealizedPnLTable = React.memo(
   ({
@@ -237,6 +266,13 @@ const RealizedPnLTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Realized P&L History" closed>
           <Table<ClosedPosition>
+            rowKey="key"
+            expandable={{
+              expandedRowRender: (record) => <TransactionTable transactions={record.transactions} />,
+              rowExpandable: (record) => !!record.symbol,
+              defaultExpandAllRows: false,
+              indentSize: 0,
+            }}
             pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={closedPositions.filter(
               (position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2),
@@ -474,8 +510,10 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const pnlRatio = (pnl / buyValue) * 100;
 
       const crypto = transaction.securityType === 'crypto';
+      const transactions = position.transactions.concat([transaction]);
 
       const closedPosition: ClosedPosition = {
+        key: `${transaction.symbol}-${transaction.date.format(DATE_FORMAT)}-${transaction.account}`,
         date: transaction.date,
         account: accountById[transaction.account],
         symbol: transaction.symbol,
@@ -489,20 +527,46 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         sellPrice: sellRecord.price,
 
         pnl: transaction.currency === 'usd' && !crypto ? getCurrencyInCAD(transaction.date, pnl, currencyCache) : pnl,
+        transactions,
         crypto,
         pnlRatio,
       };
 
       const openShares = position.shares + transaction.shares;
       position.shares = openShares;
+
+      if (openShares !== 0) {
+        const closingShares = Math.abs(transaction.shares);
+        const positionTransactions: Transaction[] = [];
+        let shares = 0;
+        position.transactions.forEach((t) => {
+          if (!!positionTransactions.length) {
+            positionTransactions.push(t);
+          } else {
+            shares += Math.abs(t.shares);
+            if (closingShares < shares) {
+              positionTransactions.push(t);
+            }
+          }
+        });
+        position.transactions = positionTransactions;
+      }
+
       if (openShares > 0) {
         position.price = buyRecord.price;
         position.date = buyRecord.date;
+        if (!position.transactions.length) {
+          position.transactions = [{ ...transaction, shares: openShares }];
+        }
       } else if (openShares < 0) {
         position.price = sellRecord.price;
         position.date = sellRecord.date;
+        if (!position.transactions.length) {
+          position.transactions = [{ ...transaction, shares: openShares }];
+        }
       } else {
         position.price = 0;
+        position.transactions = [];
       }
 
       return closedPosition;
@@ -515,6 +579,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       }
       position.price = (position.price * position.shares + transaction.price * transaction.shares) / shares;
       position.shares = shares;
+      position.transactions.push(transaction);
     }
 
     function handleSplit(position: CurrentPosition, transaction: Transaction) {
@@ -523,10 +588,12 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       if (transaction.shares > 0) {
         return;
       }
+
       const splitRatio = transaction.splitRatio || 1;
       const shares = Math.floor(position.shares / splitRatio);
       position.shares = shares;
       position.price = position.price * splitRatio;
+      position.transactions.push(transaction);
     }
 
     const closedPositions: ClosedPosition[] = [];
@@ -535,7 +602,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const key = `${transaction.account}-${transaction.symbol}`;
       let position = book[key];
       if (!position) {
-        position = { shares: 0, price: 0, date: transaction.date };
+        position = { shares: 0, price: 0, date: transaction.date, transactions: [] };
         book[key] = position;
       }
 

@@ -166,7 +166,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
         }
       }
 
-      return {
+      const _transaction: Transaction = {
         date,
         account: transaction.investment,
         symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,
@@ -183,7 +183,9 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
         splitRatio,
         securityType: transaction.security?.type,
       };
-    });
+      return _transaction;
+    })
+    .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 };
 
 export const parseAccountTransactionsResponse = (response: any, currencyCache: any): AccountTransaction[] => {
