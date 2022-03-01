@@ -50,6 +50,8 @@ type ClosedPosition = {
   sellDate: Moment;
   sellPrice: number;
 
+  buyCost: number;
+  sellCost: number;
   pnl: number;
   pnlRatio: number;
   account?: Account;
@@ -198,17 +200,9 @@ const RealizedPnLTable = React.memo(
           ),
           align: 'right',
           render: (text, position) => {
-            const isUSD = position.currency === 'usd' && !position.crypto;
-            const buyValue = position.shares * position.buyPrice;
-            const sellValue = position.shares * position.sellPrice;
-            const openDate = position.buyDate.isAfter(position.sellDate) ? position.sellDate : position.buyDate;
-            const acb = isUSD ? getCurrencyInCAD(openDate, buyValue, currencyCache) : buyValue;
-
-            const proceeds = isUSD ? getCurrencyInCAD(position.date, sellValue, currencyCache) : sellValue;
-
             return (
               <>
-                {formatMoney(acb)} / {formatMoney(proceeds)}
+                {formatMoney(position.buyCost)} / {formatMoney(position.sellCost)}
               </>
             );
           },
@@ -499,18 +493,24 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
   const closedPositions = useMemo(() => {
     function closePosition(position: CurrentPosition, transaction: Transaction) {
+      position.transactions.push(transaction);
+
       const closedShares = Math.min(Math.abs(position.shares), Math.abs(transaction.shares));
       const buyRecord = transaction.type === 'buy' ? transaction : position;
       const sellRecord = transaction.type === 'sell' ? transaction : position;
 
+      const crypto = transaction.securityType === 'crypto';
+
+      const isUSD = transaction.currency === 'usd' && !crypto;
       const buyValue = closedShares * buyRecord.price;
       const sellValue = closedShares * sellRecord.price;
+      const openDate = buyRecord.date.isAfter(sellRecord.date) ? sellRecord.date : buyRecord.date;
 
-      const pnl = sellValue - buyValue;
-      const pnlRatio = (pnl / buyValue) * 100;
+      const buyCost = isUSD ? getCurrencyInCAD(openDate, buyValue, currencyCache) : buyValue;
+      const sellCost = isUSD ? getCurrencyInCAD(position.date, sellValue, currencyCache) : sellValue;
 
-      const crypto = transaction.securityType === 'crypto';
-      position.transactions.push([transaction]);
+      const pnl = sellCost - buyCost;
+      const pnlRatio = (pnl / buyCost) * 100;
 
       const closedPosition: ClosedPosition = {
         key: transaction.id,
@@ -526,8 +526,11 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         sellDate: sellRecord.date,
         sellPrice: sellRecord.price,
 
-        pnl: transaction.currency === 'usd' && !crypto ? getCurrencyInCAD(transaction.date, pnl, currencyCache) : pnl,
         transactions: position.transactions.slice(),
+
+        buyCost,
+        sellCost,
+        pnl,
         crypto,
         pnlRatio,
       };
