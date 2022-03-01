@@ -167,6 +167,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
       }
 
       const _transaction: Transaction = {
+        id: transaction.id,
         date,
         account: transaction.investment,
         symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,

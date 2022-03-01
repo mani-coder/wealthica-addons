@@ -513,7 +513,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const transactions = position.transactions.concat([transaction]);
 
       const closedPosition: ClosedPosition = {
-        key: `${transaction.symbol}-${transaction.date.format(DATE_FORMAT)}-${transaction.account}`,
+        key: transaction.id,
         date: transaction.date,
         account: accountById[transaction.account],
         symbol: transaction.symbol,
