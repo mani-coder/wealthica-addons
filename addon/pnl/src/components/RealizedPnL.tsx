@@ -550,20 +550,17 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       //     }
       //   });
       //   position.transactions = positionTransactions;
+      //   if (!position.transactions.length) {
+      //      position.transactions = [{ ...transaction, shares: openShares }];
+      //   }
       // }
 
       if (openShares > 0) {
         position.price = buyRecord.price;
         position.date = buyRecord.date;
-        // if (!position.transactions.length) {
-        //   position.transactions = [{ ...transaction, shares: openShares }];
-        // }
       } else if (openShares < 0) {
         position.price = sellRecord.price;
         position.date = sellRecord.date;
-        // if (!position.transactions.length) {
-        //   position.transactions = [{ ...transaction, shares: openShares }];
-        // }
       } else {
         position.price = 0;
         position.transactions = [];
