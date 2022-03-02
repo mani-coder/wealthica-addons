@@ -518,6 +518,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         account: accountById[transaction.account],
         symbol: transaction.symbol,
         currency: transaction.currency,
+
         shares: closedShares,
 
         buyDate: buyRecord.date,
@@ -598,7 +599,32 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
     const closedPositions: ClosedPosition[] = [];
     const book: { [K: string]: CurrentPosition } = {};
-    props.transactions.forEach((transaction) => {
+
+    const transactions: Transaction[] = [];
+    const hash: { [K: string]: Transaction } = {};
+    props.transactions
+      .filter((t) => ['buy', 'sell', 'reinvest', 'split'].includes(t.type))
+      .forEach((transaction) => {
+        const key = `${transaction.date.format('YYYY-MM-DD')}-${transaction.type}-${transaction.symbol}-${
+          transaction.currency
+        }-${transaction.account}`;
+        const existingTransaction = hash[key];
+        if (existingTransaction) {
+          const shares = existingTransaction.shares + transaction.shares;
+          existingTransaction.price =
+            existingTransaction.price && existingTransaction.shares && transaction.price && transaction.shares
+              ? (existingTransaction.price * existingTransaction.shares + transaction.price * transaction.shares) /
+                shares
+              : existingTransaction.price;
+          existingTransaction.shares = shares;
+          existingTransaction.amount += transaction.amount;
+        } else {
+          transactions.push(transaction);
+          hash[key] = transaction;
+        }
+      });
+
+    transactions.forEach((transaction) => {
       const key = `${transaction.account}-${transaction.symbol}`;
       let position = book[key];
       if (!position) {
