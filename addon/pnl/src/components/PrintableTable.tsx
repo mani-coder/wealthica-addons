@@ -12,6 +12,10 @@ export default function PrintableTable<T extends object>({
   const printableTable = (
     <Table<T>
       {...props}
+      expandable={{
+        ...props.expandable,
+        defaultExpandAllRows: true,
+      }}
       title={() => (
         <Flex width={1} justifyContent="center">
           <Typography.Title level={4}>{printTitle}</Typography.Title>

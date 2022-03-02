@@ -106,7 +106,17 @@ const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => 
 };
 
 const RealizedPnLTable = React.memo(
-  ({ closedPositions, isPrivateMode }: { closedPositions: ClosedPosition[]; isPrivateMode: boolean }) => {
+  ({
+    closedPositions,
+    isPrivateMode,
+    fromDate,
+    toDate,
+  }: {
+    closedPositions: ClosedPosition[];
+    isPrivateMode: boolean;
+    fromDate: Moment;
+    toDate: Moment;
+  }) => {
     function getColumns(): ColumnProps<ClosedPosition>[] {
       return [
         {
@@ -252,7 +262,10 @@ const RealizedPnLTable = React.memo(
     return (
       <div className="zero-padding">
         <Collapsible title="Realized P&L History" closed>
-          <Table<ClosedPosition>
+          <PrintableTable<ClosedPosition>
+            printTitle={`Realized Gain/Loss For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(
+              DATE_DISPLAY_FORMAT,
+            )}`}
             rowKey="key"
             expandable={{
               expandedRowRender: (record) => <TransactionTable transactions={record.transactions} />,
@@ -362,6 +375,22 @@ const ExpensesTable = React.memo(
             printTitle={`Incurred Expenses For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(
               DATE_DISPLAY_FORMAT,
             )}`}
+            summary={(transactions) => {
+              const total = _.sumBy(transactions, 'amount');
+
+              return (
+                <>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell align="right" index={0} colSpan={3}>
+                      <Typography.Text strong>Total</Typography.Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} colSpan={2}>
+                      <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </>
+              );
+            }}
           />
         </Collapsible>
       </div>
@@ -1033,7 +1062,12 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       </Collapsible>
 
       {closedPositions.length > 0 && (
-        <RealizedPnLTable closedPositions={closedPositions} isPrivateMode={isPrivateMode} />
+        <RealizedPnLTable
+          closedPositions={closedPositions}
+          isPrivateMode={isPrivateMode}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
       )}
       {incomeTransactions.length > 0 && (
         <IncomeTable transactions={incomeTransactions} isPrivateMode={isPrivateMode} accountById={accountById} />
