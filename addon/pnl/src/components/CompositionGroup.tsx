@@ -1,6 +1,5 @@
 import Typography from 'antd/es/typography';
 import Radio from 'antd/lib/radio';
-import React from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Account } from '../types';

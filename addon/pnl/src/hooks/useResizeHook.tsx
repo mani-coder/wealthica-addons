@@ -1,5 +1,5 @@
 import ResizeObserver from 'rc-resize-observer';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 type Size = { width: number; height: number };
 export default function AutoReSizer({ children }: { children: (size: Size) => React.ReactElement }) {

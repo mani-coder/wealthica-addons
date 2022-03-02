@@ -2,7 +2,7 @@
 import Typography from 'antd/es/typography';
 import Empty from 'antd/lib/empty';
 import Switch from 'antd/lib/switch';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Position } from '../types';

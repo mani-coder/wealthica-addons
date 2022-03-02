@@ -397,7 +397,9 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           },
           labels: {
             formatter() {
-              return showValueChart ? formatCurrency(this.value, 2) : `${formatMoney(this.value, 0)}%`;
+              return showValueChart
+                ? formatCurrency(this.value as number, 2)
+                : `${formatMoney(this.value as number, 0)}%`;
             },
           },
           title: {

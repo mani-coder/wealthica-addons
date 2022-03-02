@@ -1,7 +1,7 @@
 import Table from 'antd/lib/table';
 import classNames from 'classnames';
 import ResizeObserver from 'rc-resize-observer';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { VariableSizeGrid as Grid } from 'react-window';
 
 export default function VirtualTable(props: Parameters<typeof Table>[0]) {

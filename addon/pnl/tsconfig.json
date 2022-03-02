@@ -13,7 +13,7 @@
       "es2021.intl",
       "ES2021.String"
     ],
-    "jsx": "react",
+    "jsx": "react-jsx",
     "target": "es2017",
     "module": "esnext",
     "moduleResolution": "node",

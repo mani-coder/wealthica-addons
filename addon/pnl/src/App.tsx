@@ -7,7 +7,7 @@ import Spin from 'antd/lib/spin';
 import Tabs from 'antd/lib/tabs';
 import _ from 'lodash';
 import moment from 'moment';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Flex } from 'rebass';
 import { initTracking, trackEvent } from './analytics';
 import {

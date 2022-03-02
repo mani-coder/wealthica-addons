@@ -2,7 +2,6 @@ import PrinterFilled from '@ant-design/icons/PrinterFilled';
 import { Typography } from 'antd';
 import Button from 'antd/lib/button';
 import Table, { TableProps } from 'antd/lib/table';
-import React from 'react';
 import { Flex } from 'rebass';
 import { usePrint } from '../hooks/usePrint';
 

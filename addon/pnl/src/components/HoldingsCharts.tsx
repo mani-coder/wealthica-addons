@@ -4,7 +4,7 @@ import Typography from 'antd/es/typography';
 import Switch from 'antd/lib/switch';
 import * as Highcharts from 'highcharts';
 import _ from 'lodash';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Account, Position } from '../types';

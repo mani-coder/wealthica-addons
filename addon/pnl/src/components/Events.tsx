@@ -8,7 +8,7 @@ import Spin from 'antd/lib/spin';
 import Table, { ColumnProps } from 'antd/lib/table';
 import Tag from 'antd/lib/tag';
 import moment, { Moment } from 'moment';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Position } from '../types';

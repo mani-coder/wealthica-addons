@@ -1,5 +1,4 @@
 import Collapse from 'antd/lib/collapse';
-import React from 'react';
 import { Box } from 'rebass';
 import { trackEvent } from '../analytics';
 

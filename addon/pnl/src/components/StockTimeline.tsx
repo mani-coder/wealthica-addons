@@ -2,7 +2,7 @@
 import Spin from 'antd/lib/spin';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
 import { Position, Transaction } from '../types';

@@ -1,6 +1,5 @@
 import Typography from 'antd/es/typography';
 import { TextProps } from 'antd/es/typography/Text';
-import React from 'react';
 import { Flex, FlexProps } from 'rebass';
 import { Account, Position } from '../types';
 import { formatMoney, getSymbol } from '../utils';

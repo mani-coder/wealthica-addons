@@ -5,7 +5,7 @@ import Modal from 'antd/lib/modal/Modal';
 import Tag from 'antd/lib/tag';
 import Timeline from 'antd/lib/timeline';
 import moment from 'moment';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
