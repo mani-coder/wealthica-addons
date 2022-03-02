@@ -272,15 +272,22 @@ const RealizedPnLTable = React.memo(
               (position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2),
             )}
             summary={(positions) => {
-              const totalPnL = positions.reduce((pnl, position) => pnl + position.pnl, 0);
+              const totalPnL = _.sumBy(positions, 'pnl');
+              const totalBuyCost = _.sumBy(positions, 'buyCost');
+              const totalSellCost = _.sumBy(positions, 'sellCost');
 
               return (
                 <>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell colSpan={5} align="right" index={0}>
+                    <Table.Summary.Cell align="right" index={0} colSpan={6}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} colSpan={3}>
+                    <Table.Summary.Cell align="right" index={1}>
+                      <Typography.Text>{formatMoney(totalBuyCost)}</Typography.Text> /
+                      <Typography.Text>{formatMoney(totalSellCost)}</Typography.Text>
+                    </Table.Summary.Cell>
+
+                    <Table.Summary.Cell index={1} colSpan={2} align="center">
                       <Typography.Text strong style={{ color: totalPnL > 0 ? 'green' : 'red' }}>
                         {formatMoney(totalPnL)} CAD
                       </Typography.Text>
