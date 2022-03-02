@@ -21,6 +21,7 @@ import { formatCurrency, formatMoney, formatMoneyWithCurrency, getCurrencyInCAD 
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup, { getGroupKey, GroupType } from './CompositionGroup';
+import PrintableTable from './PrintableTable';
 
 type Props = {
   transactions: Transaction[];
@@ -105,15 +106,7 @@ const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => 
 };
 
 const RealizedPnLTable = React.memo(
-  ({
-    closedPositions,
-    isPrivateMode,
-    currencyCache,
-  }: {
-    closedPositions: ClosedPosition[];
-    isPrivateMode: boolean;
-    currencyCache: { [K: string]: number };
-  }) => {
+  ({ closedPositions, isPrivateMode }: { closedPositions: ClosedPosition[]; isPrivateMode: boolean }) => {
     function getColumns(): ColumnProps<ClosedPosition>[] {
       return [
         {
@@ -309,10 +302,14 @@ const ExpensesTable = React.memo(
     accountById,
     transactions,
     isPrivateMode,
+    fromDate,
+    toDate,
   }: {
     accountById: { [K: string]: Account };
     transactions: AccountTransaction[];
     isPrivateMode: boolean;
+    fromDate: Moment;
+    toDate: Moment;
   }) => {
     function getColumns(): ColumnProps<AccountTransaction>[] {
       return [
@@ -358,10 +355,13 @@ const ExpensesTable = React.memo(
     return (
       <div className="zero-padding">
         <Collapsible title="Expenses History" closed>
-          <Table<AccountTransaction>
+          <PrintableTable<AccountTransaction>
             pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={transactions.reverse()}
             columns={getColumns()}
+            printTitle={`Incurred Expenses For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(
+              DATE_DISPLAY_FORMAT,
+            )}`}
           />
         </Collapsible>
       </div>
@@ -1033,17 +1033,19 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       </Collapsible>
 
       {closedPositions.length > 0 && (
-        <RealizedPnLTable
-          closedPositions={closedPositions}
-          isPrivateMode={isPrivateMode}
-          currencyCache={currencyCache}
-        />
+        <RealizedPnLTable closedPositions={closedPositions} isPrivateMode={isPrivateMode} />
       )}
       {incomeTransactions.length > 0 && (
         <IncomeTable transactions={incomeTransactions} isPrivateMode={isPrivateMode} accountById={accountById} />
       )}
       {expenseTransactions.length > 0 && (
-        <ExpensesTable transactions={expenseTransactions} isPrivateMode={isPrivateMode} accountById={accountById} />
+        <ExpensesTable
+          transactions={expenseTransactions}
+          isPrivateMode={isPrivateMode}
+          accountById={accountById}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
       )}
     </>
   ) : (
