@@ -292,6 +292,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
               (type !== 'transfer' && !(t.description || '').toLowerCase().includes('transfer')) ||
               (type === 'transfer' && (t.description || '').toLowerCase().includes('transfer'))),
         )
+        .map((t) => ({ ...t }))
         .sort((a, b) => a.date.valueOf() - b.date.valueOf())
         .reduce((array, transaction) => {
           const lastTransaction = array.pop();

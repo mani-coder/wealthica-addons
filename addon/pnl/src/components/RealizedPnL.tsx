@@ -604,6 +604,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     const hash: { [K: string]: Transaction } = {};
     props.transactions
       .filter((t) => ['buy', 'sell', 'reinvest', 'split'].includes(t.type))
+      .map((t) => ({ ...t }))
       .forEach((transaction) => {
         const key = `${transaction.date.format('YYYY-MM-DD')}-${transaction.type}-${transaction.symbol}-${
           transaction.currency
