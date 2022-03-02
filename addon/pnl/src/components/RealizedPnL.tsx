@@ -504,10 +504,9 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const isUSD = transaction.currency === 'usd' && !crypto;
       const buyValue = closedShares * buyRecord.price;
       const sellValue = closedShares * sellRecord.price;
-      const openDate = buyRecord.date.isAfter(sellRecord.date) ? sellRecord.date : buyRecord.date;
 
-      const buyCost = isUSD ? getCurrencyInCAD(openDate, buyValue, currencyCache) : buyValue;
-      const sellCost = isUSD ? getCurrencyInCAD(position.date, sellValue, currencyCache) : sellValue;
+      const buyCost = isUSD ? getCurrencyInCAD(buyRecord.date, buyValue, currencyCache) : buyValue;
+      const sellCost = isUSD ? getCurrencyInCAD(sellRecord.date, sellValue, currencyCache) : sellValue;
 
       const pnl = sellCost - buyCost;
       const pnlRatio = (pnl / buyCost) * 100;
