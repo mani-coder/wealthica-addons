@@ -28,17 +28,17 @@ do
 done
 
 
-for DIR in 'pnl'
-do
-  echo "${stars// /*}"
-  echo "Building $DIR Widget"
-  echo "${stars// /*}"
+# for DIR in 'pnl'
+# do
+#   echo "${stars// /*}"
+#   echo "Building $DIR Widget"
+#   echo "${stars// /*}"
 
-  cd widgets/$DIR
-  npm install
-  npm run build
-  cd ../../
+#   cd widgets/$DIR
+#   npm install
+#   npm run build
+#   cd ../../
 
-done
+# done
 
 cd ../../
