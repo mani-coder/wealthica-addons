@@ -5,24 +5,37 @@ import Table, { TableProps } from 'antd/lib/table';
 import { Flex } from 'rebass';
 import { usePrint } from '../hooks/usePrint';
 
+const PRINT_SETTINGS = `
+  @page {
+    size: portrait;
+  }
+`;
+
 export default function PrintableTable<T extends object>({
   printTitle,
   ...props
 }: TableProps<T> & { printTitle: string }) {
   const printableTable = (
-    <Table<T>
-      {...props}
-      expandable={{
-        ...props.expandable,
-        defaultExpandAllRows: true,
-      }}
-      title={() => (
-        <Flex width={1} justifyContent="center">
-          <Typography.Title level={4}>{printTitle}</Typography.Title>
-        </Flex>
-      )}
-      pagination={false}
-    />
+    <>
+      <style type="text/css" media="print">
+        {PRINT_SETTINGS}
+      </style>
+
+      <Table<T>
+        {...props}
+        bordered
+        expandable={{
+          ...props.expandable,
+          defaultExpandAllRows: true,
+        }}
+        title={() => (
+          <Flex width={1} justifyContent="center">
+            <Typography.Title level={4}>{printTitle}</Typography.Title>
+          </Flex>
+        )}
+        pagination={false}
+      />
+    </>
   );
   const { print, printing } = usePrint({
     title: printTitle.replaceAll(',', '_').replaceAll(' ', '_'),
