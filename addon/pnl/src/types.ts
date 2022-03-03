@@ -53,6 +53,7 @@ export type Transaction = {
 };
 
 export type AccountTransaction = {
+  id: string;
   date: Moment;
   amount: number;
   type: string;

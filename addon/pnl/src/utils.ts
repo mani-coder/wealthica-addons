@@ -187,3 +187,10 @@ export function computeBookValue(position: Position) {
     investment.book_value = position.book_value;
   }
 }
+
+export function isChrome() {
+  const userAgent = ((navigator && navigator.userAgent) || '').toLowerCase();
+  const vendor = ((navigator && navigator.vendor) || '').toLowerCase();
+  const match = /google inc/.test(vendor) ? userAgent.match(/(?:chrome|crios)\/(\d+)/) : null;
+  return match !== null;
+}

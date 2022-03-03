@@ -94,9 +94,9 @@ const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => 
   return (
     <Flex width="450">
       <Table<Transaction>
+        rowKey="id"
         bordered
         size="small"
-        rowKey="date"
         pagination={false}
         dataSource={transactions}
         columns={columns}
@@ -369,6 +369,7 @@ const ExpensesTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Expenses History" closed>
           <PrintableTable<AccountTransaction>
+            rowKey="id"
             pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={transactions.reverse()}
             columns={getColumns()}
@@ -467,6 +468,7 @@ const IncomeTable = React.memo(
       <div className="zero-padding">
         <Collapsible title="Income History" closed>
           <Table<IncomeTransaction>
+            rowKey="id"
             pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
             dataSource={transactions.reverse()}
             columns={getColumns()}

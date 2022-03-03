@@ -205,6 +205,7 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
           : amount;
 
       return {
+        id: transaction.id,
         date,
         account: transaction.investment,
         amount,

@@ -4,6 +4,7 @@ import Button from 'antd/lib/button';
 import Table, { TableProps } from 'antd/lib/table';
 import { Flex } from 'rebass';
 import { usePrint } from '../hooks/usePrint';
+import { isChrome } from '../utils';
 
 const PRINT_SETTINGS = `
   @page {
@@ -15,6 +16,8 @@ export default function PrintableTable<T extends object>({
   printTitle,
   ...props
 }: TableProps<T> & { printTitle: string }) {
+  const enablePrint = !isChrome() || process.env.NODE_ENV === 'development';
+
   const printableTable = (
     <>
       <style type="text/css" media="print">
@@ -45,7 +48,7 @@ export default function PrintableTable<T extends object>({
   return (
     <div style={{ position: 'relative' }}>
       <Table<T> {...props} />
-      <div style={{ position: 'absolute', bottom: 12, right: 12 }}>
+      <div style={{ position: 'absolute', bottom: 12, right: 12, display: enablePrint ? 'block' : 'none' }}>
         <Button
           type="primary"
           shape="circle"
