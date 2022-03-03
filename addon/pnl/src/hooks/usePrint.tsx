@@ -14,6 +14,7 @@ export function usePrint({ title, children }: Props) {
       message.error('Failed to print component.');
       setPrinting(false);
     },
+    removeAfterPrint: true,
   });
   const [printing, setPrinting] = useState(false);
 
