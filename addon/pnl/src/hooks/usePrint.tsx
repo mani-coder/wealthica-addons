@@ -14,6 +14,10 @@ export function usePrint({ title, children }: Props) {
       message.error('Failed to print component.');
       setPrinting(false);
     },
+    print: (target) => {
+      console.log('mani is cool', target);
+      return Promise.resolve(target.contentWindow?.print());
+    },
   });
   const [printing, setPrinting] = useState(false);
 

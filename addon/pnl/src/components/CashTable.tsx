@@ -98,6 +98,7 @@ function CashTable(props: Props) {
     <div className="zero-padding">
       <Collapsible title="Cash Table">
         <Table<Account>
+          rowKey="id"
           pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
           summary={(accounts) => {
             const totalCAD = accounts
