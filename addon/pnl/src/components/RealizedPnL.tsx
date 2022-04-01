@@ -274,9 +274,7 @@ const RealizedPnLTable = React.memo(
               indentSize: 0,
             }}
             pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
-            dataSource={closedPositions.filter(
-              (position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2),
-            )}
+            dataSource={closedPositions}
             summary={(positions) => {
               const totalPnL = _.sumBy(positions, 'pnl');
               const totalBuyCost = _.sumBy(positions, 'buyCost');
@@ -576,26 +574,6 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const openShares = position.shares + transaction.shares;
       position.shares = openShares;
 
-      // if (openShares !== 0) {
-      //   const closingShares = Math.abs(transaction.shares);
-      //   const positionTransactions: Transaction[] = [];
-      //   let shares = 0;
-      //   position.transactions.forEach((t) => {
-      //     if (!!positionTransactions.length) {
-      //       positionTransactions.push(t);
-      //     } else {
-      //       shares += Math.abs(t.shares);
-      //       if (closingShares < shares) {
-      //         positionTransactions.push(t);
-      //       }
-      //     }
-      //   });
-      //   position.transactions = positionTransactions;
-      //   if (!position.transactions.length) {
-      //      position.transactions = [{ ...transaction, shares: openShares }];
-      //   }
-      // }
-
       if (openShares > 0) {
         position.price = buyRecord.price;
         position.date = buyRecord.date;
@@ -692,6 +670,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
     return closedPositions
       .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
+      .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
       .reverse();
   }, [props.transactions, fromDate, toDate, accountById, currencyCache]);
 
