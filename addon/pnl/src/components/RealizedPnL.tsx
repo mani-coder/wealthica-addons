@@ -508,7 +508,9 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
   const { incomeTransactions, totalIncome } = useMemo(() => {
     const incomeTransactions: IncomeTransaction[] = accountTransactions
-      .filter((transaction) => ['interest', 'fee', 'tax'].includes(transaction.type) && transaction.amount > 0)
+      .filter(
+        (transaction) => ['income', 'interest', 'fee', 'tax'].includes(transaction.type) && transaction.amount > 0,
+      )
       .concat(transactions.filter((transaction) => ['income', 'dividend', 'distribution'].includes(transaction.type)))
       .sort((a, b) => a.date.unix() - b.date.unix());
 
