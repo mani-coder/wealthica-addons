@@ -192,8 +192,10 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
 export const parseAccountTransactionsResponse = (response: any, currencyCache: any): AccountTransaction[] => {
   return response
     .filter((t) => !t.deleted && t.type)
-    .filter((transaction) =>
-      ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(transaction.type.toLowerCase()),
+    .filter(
+      (transaction) =>
+        !(transaction.security || transaction.symbol) &&
+        ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(transaction.type.toLowerCase()),
     )
     .map((transaction) => {
       const date = getDate(transaction.date);
