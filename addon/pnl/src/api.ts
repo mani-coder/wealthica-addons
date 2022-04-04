@@ -193,7 +193,7 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
   return response
     .filter((t) => !t.deleted && t.type)
     .filter((transaction) =>
-      ['interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(transaction.type.toLowerCase()),
+      ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(transaction.type.toLowerCase()),
     )
     .map((transaction) => {
       const date = getDate(transaction.date);
