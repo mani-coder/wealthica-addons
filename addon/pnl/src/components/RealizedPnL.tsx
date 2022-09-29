@@ -670,6 +670,8 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       }
     });
 
+    console.log('mani is cool, outstanding book', book);
+
     return closedPositions
       .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
       .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
