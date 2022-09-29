@@ -139,14 +139,21 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
     }, {});
 };
 
+const isSecuritiesAccountsTransfer = (transaction: Transaction) =>
+  transaction.type &&
+  transaction.description &&
+  transaction.type.toLowerCase() === 'transfer' &&
+  transaction.description.startsWith('[Accounts Transfer]');
+
 export const parseSecurityTransactionsResponse = (response: any, currencyCache: any): Transaction[] => {
   return response
     .filter((t) => !t.deleted && t.type)
     .filter(
       (transaction) =>
-        ['sell', 'buy', 'income', 'dividend', 'distribution', 'tax', 'fee', 'split', 'reinvest'].includes(
+        (['sell', 'buy', 'income', 'dividend', 'distribution', 'tax', 'fee', 'split', 'reinvest'].includes(
           transaction.type.toLowerCase(),
-        ) &&
+        ) ||
+          isSecuritiesAccountsTransfer(transaction)) &&
         (transaction.security || transaction.symbol),
     )
     .map((transaction) => {
@@ -175,7 +182,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
           transaction.currency_amount && transaction.quantity
             ? Number(Math.abs(transaction.currency_amount / transaction.quantity).toFixed(3))
             : 0,
-        type: transaction.type,
+        type: transaction.type === 'transfer' ? (amount > 0 ? 'sell' : 'buy') : transaction.type,
         amount: Math.abs(amount),
         currency: transaction.security ? transaction.security.currency : 'USD',
         shares: transaction.quantity || 0,
@@ -194,8 +201,11 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
     .filter((t) => !t.deleted && t.type)
     .filter(
       (transaction) =>
-        !(transaction.security || transaction.symbol) &&
-        ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(transaction.type.toLowerCase()),
+        (!(transaction.security || transaction.symbol) &&
+          ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(
+            transaction.type.toLowerCase(),
+          )) ||
+        isSecuritiesAccountsTransfer(transaction),
     )
     .map((transaction) => {
       const date = getDate(transaction.date);
