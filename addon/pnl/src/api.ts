@@ -182,7 +182,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
           transaction.currency_amount && transaction.quantity
             ? Number(Math.abs(transaction.currency_amount / transaction.quantity).toFixed(3))
             : 0,
-        type: transaction.type === 'transfer' ? (amount < 0 ? 'sell' : 'buy') : transaction.type,
+        type: isSecuritiesAccountsTransfer(transaction) ? (amount < 0 ? 'sell' : 'buy') : transaction.type,
         amount: Math.abs(amount),
         currency: transaction.security ? transaction.security.currency : 'USD',
         shares: transaction.quantity || 0,
