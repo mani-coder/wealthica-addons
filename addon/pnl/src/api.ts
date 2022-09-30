@@ -2,6 +2,17 @@ import { DATE_FORMAT } from './constants';
 import { Account, AccountTransaction, Position, Transaction } from './types';
 import { getCurrencyInCAD, getDate, getSymbol, normalizeAccountType } from './utils';
 
+//
+// We can properly move the securities from one account to another by marking the description or notes
+// as accounts transfer, this is a manual work to handle the securities transfer since the amounts need
+// to be adjusted anyway.
+//
+const isSecuritiesAccountsTransfer = (transaction: any) =>
+  transaction.type &&
+  transaction.type.toLowerCase() === 'transfer' &&
+  ((transaction.description && transaction.description.startsWith('[Accounts Transfer]')) ||
+    (transaction.notes && transaction.notes === 'Accounts Transfer'));
+
 export const parseCurrencyReponse = (response: any) => {
   const date = getDate(response.from);
   return response.data.reduce((hash, value) => {
@@ -110,16 +121,17 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
         portfolioData.deposit += amount;
       } else if (type === 'transfer') {
         if (
+          isSecuritiesAccountsTransfer(transaction) ||
           // FX and journal over shouldn't be treated as deposits.
-          !['FXT', 'BRW', 'ExchTrade'].includes(transaction.origin_type) &&
-          //
-          // Ignore security transfers...
-          // When the securities are transfered from one account to another, we will get to know the value of the
-          // security at the time of the transfer. So counting that into deposits will scrwe up the deposits calculation.
-          //
-          // https://github.com/mani-coder/wealthica-addons/pull/5#issuecomment-876010402
-          //
-          !transaction.symbol
+          (!['FXT', 'BRW', 'ExchTrade'].includes(transaction.origin_type) &&
+            //
+            // Ignore security transfers...
+            // When the securities are transfered from one account to another, we will get to know the value of the
+            // security at the time of the transfer. So counting that into deposits will screw up the deposits calculation.
+            //
+            // https://github.com/mani-coder/wealthica-addons/pull/5#issuecomment-876010402
+            //
+            !transaction.symbol)
         ) {
           portfolioData.deposit += amount;
         }
@@ -138,12 +150,6 @@ export const parseTransactionsResponse = (response: any, currencyCache: any, acc
       return hash;
     }, {});
 };
-
-const isSecuritiesAccountsTransfer = (transaction: Transaction) =>
-  transaction.type &&
-  transaction.description &&
-  transaction.type.toLowerCase() === 'transfer' &&
-  transaction.description.startsWith('[Accounts Transfer]');
 
 export const parseSecurityTransactionsResponse = (response: any, currencyCache: any): Transaction[] => {
   return response

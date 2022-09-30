@@ -14,6 +14,12 @@ export function parseCurrencyReponse(response: any) {
   }, {});
 }
 
+const isSecuritiesAccountsTransfer = (transaction: any) =>
+  transaction.type &&
+  transaction.type.toLowerCase() === 'transfer' &&
+  ((transaction.description && transaction.description.startsWith('[Accounts Transfer]')) ||
+    (transaction.notes && transaction.notes === 'Accounts Transfer'));
+
 export function parseInstitutionsResponse(response: any, groups?: string[], institutions?: string[]): Account[] {
   const accounts: Account[] = [];
   return response
@@ -95,7 +101,7 @@ export function parseTransactionsResponse(response: any, currencyCache: any, acc
       if (['deposit'].includes(type)) {
         portfolioData.deposit += amount;
       } else if (type === 'transfer') {
-        if (!['FXT', 'ExchTrade'].includes(transaction.origin_type)) {
+        if (isSecuritiesAccountsTransfer(transaction) || !['FXT', 'ExchTrade'].includes(transaction.origin_type)) {
           portfolioData.deposit += amount;
         }
       } else if (['fee', 'interest', 'tax'].includes(type)) {
