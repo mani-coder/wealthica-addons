@@ -406,7 +406,7 @@ class App extends Component<Props, State> {
 
   render() {
     if (this.state.isLoaded) {
-      console.log('mani is cool -- loading completed', this.state);
+      console.debug('[DEBUG] Loaded State', this.state);
     }
 
     return (
