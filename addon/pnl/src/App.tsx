@@ -405,6 +405,10 @@ class App extends Component<Props, State> {
   }
 
   render() {
+    if (this.state.isLoaded) {
+      console.log('mani is cool -- loading completed', this.state);
+    }
+
     return (
       <Flex width={1} justifyContent="center">
         <div style={{ padding: 4, maxWidth: this.state.addon ? '100%' : 1100, width: '100%' }}>
