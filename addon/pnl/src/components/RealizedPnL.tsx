@@ -674,7 +674,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       '[DEBUG] Open Book',
       Object.keys(book)
         .filter((key) => book[key].shares !== 0)
-        .map((key) => ({ symbol: key, value: book[key] })),
+        .map((key) => ({ symbol: key, ...book[key] })),
     );
 
     return closedPositions
