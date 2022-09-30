@@ -670,6 +670,13 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       }
     });
 
+    console.debug(
+      '[DEBUG] Open Book',
+      Object.keys(book)
+        .filter((key) => book[key].shares !== 0)
+        .map((key) => ({ symbol: key, value: book[key] })),
+    );
+
     return closedPositions
       .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
       .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
