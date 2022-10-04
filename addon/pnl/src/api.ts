@@ -11,7 +11,7 @@ const isSecuritiesAccountsTransfer = (transaction: any) =>
   transaction.type &&
   transaction.type.toLowerCase() === 'transfer' &&
   ((transaction.description && transaction.description.startsWith('[Accounts Transfer]')) ||
-    (transaction.notes && transaction.notes === 'Accounts Transfer'));
+    (transaction.notes && transaction.notes.includes('Accounts Transfer')));
 
 export const parseCurrencyReponse = (response: any) => {
   const date = getDate(response.from);
