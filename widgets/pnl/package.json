@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "rm -rf public/assets; rollup -c && mkdir -p ../../public/mani-coder/wealthica-portfolio-addon/widgets/pnl/ && rm -rf ../../public/mani-coder/wealthica-portfolio-addon/widgets/pnl/* && cp -vR public/* ../../public/mani-coder/wealthica-portfolio-addon/widgets/pnl/",
-    "dev": "rollup -c -w",
+    "dev": "PORT=3000 rollup -c -w",
     "start": "sirv public",
     "validate": "svelte-check",
     "deploy": "npm run build && firebase deploy --only hosting:mani-coder"
