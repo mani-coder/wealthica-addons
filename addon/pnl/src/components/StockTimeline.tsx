@@ -260,7 +260,7 @@ class StockTimeline extends Component<Props, State> {
   }
 
   getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
-    const isBuySell = ['buy', 'sell', 'reinvest'].includes(type);
+    const isBuySell = ['buy', 'sell', 'reinvest', 'transfer'].includes(type);
     const _type = type === 'transfer' ? 'buy' : type;
 
     return {
