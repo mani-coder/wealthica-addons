@@ -601,6 +601,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     }
 
     function handleSplit(position: CurrentPosition, transaction: Transaction) {
+      console.log('[debug] handle split', { transaction, position });
       if (!transaction.splitRatio) {
         return;
       }
