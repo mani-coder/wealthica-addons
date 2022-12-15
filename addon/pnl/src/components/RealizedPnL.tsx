@@ -601,9 +601,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     }
 
     function handleSplit(position: CurrentPosition, transaction: Transaction) {
-      // there are two type of split transactions, one negates the full book and one adds the new shares.
-      // we are interested in the first one.
-      if (transaction.shares > 0) {
+      if (!transaction.splitRatio) {
         return;
       }
 
