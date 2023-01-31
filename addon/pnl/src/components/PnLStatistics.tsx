@@ -126,7 +126,7 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
 
             <StatisticBox
               title="Deposits"
-              tooltip={`Net new (deposits - withdrawals) between ${fromDateDisplay} & ${toDateDisplay}`}
+              tooltip={`Net new cash (deposits - withdrawals) between ${fromDateDisplay} & ${toDateDisplay}`}
               value={privateMode ? '--' : timelineDeposits}
               precision={2}
               prefix="$"
@@ -138,7 +138,7 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
               value={timelinePnlChangeRatio}
               precision={2}
               suffix="%"
-              prefix={portfolio.value >= portfolio.deposits ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+              prefix={timelinePnlChangeRatio >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
             />
             <StatisticBox
               title="P/L $ Change"
