@@ -13,6 +13,14 @@ HC_DrillDown(Highcharts);
 const TZ_OFFSET = new Date().getTimezoneOffset();
 
 Highcharts.setOptions({
+  credits: {
+    enabled: false,
+  },
+  plotOptions: {
+    series: {
+      turboThreshold: 10000,
+    },
+  },
   time: {
     getTimezoneOffset: function (timestamp) {
       return TZ_OFFSET;
