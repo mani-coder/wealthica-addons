@@ -123,7 +123,7 @@ export default function HoldingsCharts(props: Props) {
     );
   };
 
-  const { column, pie } = useMemo(() => {
+  const { column } = useMemo(() => {
     return getPositionsSeries();
   }, [props.accounts, props.positions, props.isPrivateMode]);
 
@@ -138,15 +138,15 @@ export default function HoldingsCharts(props: Props) {
       }),
     [column, props.isPrivateMode],
   );
-  const pieChartOptions = useMemo(
-    () =>
-      getOptions({
-        subtitle: '(click on a stock to view timeline and transactions)',
-        series: [pie],
-        isPrivateMode: props.isPrivateMode,
-      }),
-    [pie, props.isPrivateMode],
-  );
+  // const pieChartOptions = useMemo(
+  //   () =>
+  //     getOptions({
+  //       subtitle: '(click on a stock to view timeline and transactions)',
+  //       series: [pie],
+  //       isPrivateMode: props.isPrivateMode,
+  //     }),
+  //   [pie, props.isPrivateMode],
+  // );
 
   return (
     <>
@@ -154,7 +154,7 @@ export default function HoldingsCharts(props: Props) {
 
       <Flex width={1} flexWrap="wrap" alignItems="stretch">
         <Flex width={[1, 1, 2 / 3]} height="100%" justifyContent="center">
-          <Charts options={pieChartOptions} />
+          {/* <Charts options={pieChartOptions} /> */}
         </Flex>
 
         <Flex width={[1, 1, 1 / 3]} pr={4} height="100%" justifyContent="center">
