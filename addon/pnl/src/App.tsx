@@ -473,7 +473,7 @@ class App extends Component<Props, State> {
                   {!!this.state.positions.length ? (
                     <HoldingsCharts
                       currencyCache={this.state.currencyCache || {}}
-                      positions={this.state.positions}
+                      positions={this.state.positions.slice(1, 10)}
                       accounts={this.state.accounts}
                       isPrivateMode={this.state.privateMode}
                       addon={this.state.addon}
