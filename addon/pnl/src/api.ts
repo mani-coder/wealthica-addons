@@ -50,7 +50,7 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
     .reduce((accounts, instutition) => {
       return accounts.concat(
         instutition.investments
-          .filter((account) => isValidAccountGroup(account.groups) && !account.ignored)
+          .filter((account) => isValidAccountGroup(groups, account.groups) && !account.ignored)
           .map((account) => {
             return {
               id: account._id,
