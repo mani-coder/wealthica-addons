@@ -5,7 +5,7 @@ import { Flex } from 'rebass';
 import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
-import { getOptions, POSITION_TOOLTIP, StockSelector } from './HoldingsChartsBase';
+import { getOptionsV2, POSITION_TOOLTIP, StockSelector } from './HoldingsChartsBase';
 import StockTimeline from './StockTimeline';
 
 type Props = {
@@ -69,6 +69,7 @@ export default function HoldingsCharts(props: Props) {
     return {
       column: {
         type: 'column',
+        id: 'Holdings Column',
         name: 'Holdings',
         colorByPoint: true,
         data: data as any,
@@ -82,6 +83,7 @@ export default function HoldingsCharts(props: Props) {
       },
       pie: {
         type: 'pie' as 'pie',
+        id: 'Holdings Pie',
         name: 'Holdings',
 
         data: data.map((position) => ({ ...position, drilldown: undefined })) as any,
@@ -140,7 +142,7 @@ export default function HoldingsCharts(props: Props) {
   // );
   const pieChartOptions = useMemo(
     () =>
-      getOptions({
+      getOptionsV2({
         subtitle: '(click on a stock to view timeline and transactions)',
         series: [pie],
         isPrivateMode: props.isPrivateMode,

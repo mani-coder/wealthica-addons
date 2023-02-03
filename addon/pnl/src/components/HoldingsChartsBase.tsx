@@ -122,16 +122,18 @@ export const getOptions = ({
   };
 };
 
-export function getXOptions({
+export function getOptionsV2({
   title,
   yAxisTitle,
   subtitle,
   series,
+  isPrivateMode,
 }: {
-  series: Highcharts.SeriesColumnOptions[];
+  series: (Highcharts.SeriesColumnOptions | Highcharts.SeriesPieOptions)[];
   title?: string;
   subtitle?: string;
   yAxisTitle?: string;
+  isPrivateMode?: boolean;
 }): Highcharts.Options {
   return {
     series,
@@ -168,7 +170,7 @@ export function getXOptions({
 
     yAxis: {
       labels: {
-        // enabled: sortByValue ? true : !props.isPrivateMode,
+        enabled: !isPrivateMode,
       },
       title: {
         text: yAxisTitle,
