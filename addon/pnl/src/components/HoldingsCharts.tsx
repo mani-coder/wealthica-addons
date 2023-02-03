@@ -5,7 +5,8 @@ import { Flex } from 'rebass';
 import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
-import { getOptionsV2, POSITION_TOOLTIP, StockSelector } from './HoldingsChartsBase';
+import CompositionCharts from './CompositionCharts';
+import { getOptions, getOptionsV2, POSITION_TOOLTIP, StockSelector } from './HoldingsChartsBase';
 import StockTimeline from './StockTimeline';
 
 type Props = {
@@ -25,7 +26,7 @@ export default function HoldingsCharts(props: Props) {
   } => {
     const totalValue = props.positions.reduce((sum, position) => sum + position.market_value, 0);
     const data = props.positions
-      .sort((a, b) => b.value - a.value)
+      .sort((a, b) => b.market_value - a.market_value)
       .map((position) => {
         const symbol = getSymbol(position.security);
 
@@ -41,9 +42,9 @@ export default function HoldingsCharts(props: Props) {
 
         return {
           name: getSymbol(position.security),
-          y: position.value,
-          displayValue: props.isPrivateMode ? '-' : formatCurrency(position.value, 1),
-          value: props.isPrivateMode ? '-' : formatMoney(position.value),
+          y: position.market_value,
+          displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
+          value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
           gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
           profit: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
           percentage: (position.market_value / totalValue) * 100,
@@ -129,17 +130,17 @@ export default function HoldingsCharts(props: Props) {
     return getPositionsSeries();
   }, [props.accounts, props.positions, props.isPrivateMode]);
 
-  // const columnChartOptions = useMemo(
-  //   () =>
-  //     getOptions({
-  //       title: 'Your Holdings',
-  //       yAxisTitle: 'Market Value ($)',
-  //       subtitle: '(click on a stock to view transactions)',
-  //       series: [column],
-  //       isPrivateMode: props.isPrivateMode,
-  //     }),
-  //   [column, props.isPrivateMode],
-  // );
+  const columnChartOptions = useMemo(
+    () =>
+      getOptions({
+        title: 'Your Holdings',
+        yAxisTitle: 'Market Value ($)',
+        subtitle: '(click on a stock to view transactions)',
+        series: [column],
+        isPrivateMode: props.isPrivateMode,
+      }),
+    [column, props.isPrivateMode],
+  );
   const pieChartOptions = useMemo(
     () =>
       getOptionsV2({
@@ -150,11 +151,9 @@ export default function HoldingsCharts(props: Props) {
     [pie, props.isPrivateMode],
   );
 
-  console.log('[DEBUG] mani is cool', { pie, column });
-
   return (
     <>
-      {/* <Charts options={columnChartOptions} /> */}
+      <Charts options={columnChartOptions} />
 
       <Flex width={1} flexWrap="wrap" alignItems="stretch">
         <Flex width={[1, 1, 2 / 3]} height="100%" justifyContent="center">
@@ -174,7 +173,7 @@ export default function HoldingsCharts(props: Props) {
 
       {renderStockTimeline()}
 
-      {/* <CompositionCharts {...props} /> */}
+      <CompositionCharts {...props} />
     </>
   );
 }

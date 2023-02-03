@@ -64,7 +64,6 @@ export type AccountTransaction = {
 export type Position = {
   class: string;
   security: Security;
-  value: number;
   book_value: number;
   market_value: number;
   quantity: number;

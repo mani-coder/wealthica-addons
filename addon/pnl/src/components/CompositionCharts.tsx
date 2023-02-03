@@ -42,7 +42,7 @@ export default function CompositionCharts(props: Props) {
             mergedAccount = { name, value: 0, positions: {}, accounts: [] };
             hash[name] = mergedAccount;
           }
-          mergedAccount.value += account.positions.reduce((sum, position) => sum + position.value, 0);
+          mergedAccount.value += account.positions.reduce((sum, position) => sum + position.market_value, 0);
 
           account.positions.forEach((position) => {
             const symbol = getSymbol(position.security);
@@ -50,11 +50,10 @@ export default function CompositionCharts(props: Props) {
             if (!existingPosition) {
               mergedAccount.positions[symbol] = position;
             } else {
-              const value = existingPosition.value + position.value;
+              const value = existingPosition.market_value + position.market_value;
               const gain_amount = existingPosition.gain_amount + position.gain_amount;
               mergedAccount.positions[symbol] = {
                 ...existingPosition,
-                value,
                 book_value: existingPosition.book_value + position.book_value,
                 market_value: existingPosition.market_value + position.market_value,
                 quantity: existingPosition.quantity + position.quantity,
@@ -85,7 +84,7 @@ export default function CompositionCharts(props: Props) {
         const numPositions = positions.length;
 
         const data = positions
-          .sort((a, b) => b.value - a.value)
+          .sort((a, b) => b.market_value - a.market_value)
           .map((position, idx) => {
             const symbol = getSymbol(position.security);
             const accountsTable = account.accounts
@@ -104,9 +103,9 @@ export default function CompositionCharts(props: Props) {
             return {
               color: color && showHoldings ? Highcharts.color(color).brighten(brightness).get() : undefined,
               name: symbol,
-              y: position.value,
-              displayValue: props.isPrivateMode ? '-' : formatCurrency(position.value, 1),
-              value: props.isPrivateMode ? '-' : formatMoney(position.value),
+              y: position.market_value,
+              displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
+              value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
               gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
               profit: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
               buyPrice: formatMoney(position.book_value / position.quantity),
@@ -189,7 +188,7 @@ export default function CompositionCharts(props: Props) {
               mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
               hash[name] = mergedAccount;
             }
-            mergedAccount.value += account.positions.reduce((value, position) => value + position.value || 0, 0);
+            mergedAccount.value += account.positions.reduce((value, position) => value + position.market_value || 0, 0);
             mergedAccount.gainAmount += account.positions.reduce((value, position) => value + position.gain_amount, 0);
 
             const _name = account.name;

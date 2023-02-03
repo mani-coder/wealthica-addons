@@ -21,12 +21,15 @@ import {
 } from './api';
 import './App.less';
 import BuyMeACoffee from './components/BuyMeACoffee';
+import CashTable from './components/CashTable';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
 import HoldingsCharts from './components/HoldingsCharts';
+import HoldingsTable from './components/HoldingsTable';
 import News from './components/News';
 import PnLStatistics from './components/PnLStatistics';
+import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
 import RealizedPnL from './components/RealizedPnL';
@@ -479,18 +482,18 @@ class App extends Component<Props, State> {
                     <Empty description="No Holdings" />
                   )}
 
-                  {/* <CashTable
+                  <CashTable
                     accounts={this.state.accounts}
                     currencyCache={this.state.currencyCache || {}}
                     isPrivateMode={this.state.privateMode}
-                  /> */}
+                  />
 
-                  {/* {!!this.state.positions.length && (
+                  {!!this.state.positions.length && (
                     <>
                       <PortfolioVisualizer positions={this.state.positions} />
                       <HoldingsTable positions={this.state.positions} isPrivateMode={this.state.privateMode} />
                     </>
-                  )} */}
+                  )}
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key="gainers-losers">
