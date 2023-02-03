@@ -21,15 +21,12 @@ import {
 } from './api';
 import './App.less';
 import BuyMeACoffee from './components/BuyMeACoffee';
-import CashTable from './components/CashTable';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
 import HoldingsCharts from './components/HoldingsCharts';
-import HoldingsTable from './components/HoldingsTable';
 import News from './components/News';
 import PnLStatistics from './components/PnLStatistics';
-import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
 import RealizedPnL from './components/RealizedPnL';
