@@ -94,8 +94,102 @@ export const getOptions = ({
         text: yAxisTitle,
       },
     },
+    responsive: {
+      rules: [
+        {
+          condition: {
+            maxWidth: 500,
+          },
+          chartOptions: {
+            chart: {
+              height: 300,
+            },
+            yAxis: {
+              labels: {
+                enabled: false,
+              },
+            },
+            subtitle: {
+              text: undefined,
+            },
+            navigator: {
+              enabled: false,
+            },
+          },
+        },
+      ],
+    },
   };
 };
+
+export function getXOptions({
+  title,
+  yAxisTitle,
+  subtitle,
+  series,
+}: {
+  series: Highcharts.SeriesColumnOptions[];
+  title?: string;
+  subtitle?: string;
+  yAxisTitle?: string;
+}): Highcharts.Options {
+  return {
+    series,
+
+    tooltip: {
+      outside: true,
+
+      useHTML: true,
+      backgroundColor: '#FFF',
+      style: {
+        color: '#1F2A33',
+      },
+    },
+
+    title: {
+      text: title,
+    },
+    subtitle: {
+      text: subtitle,
+      style: {
+        color: '#1F2A33',
+      },
+    },
+    xAxis: {
+      type: 'category',
+      labels: {
+        rotation: -45,
+        style: {
+          fontSize: '13px',
+          fontFamily: 'Verdana, sans-serif',
+        },
+      },
+    },
+
+    yAxis: {
+      labels: {
+        // enabled: sortByValue ? true : !props.isPrivateMode,
+      },
+      title: {
+        text: yAxisTitle,
+      },
+    },
+
+    plotOptions: {
+      pie: {
+        allowPointSelect: true,
+        cursor: 'pointer',
+        dataLabels: {
+          enabled: true,
+          format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+          style: {
+            color: 'black',
+          },
+        },
+      },
+    },
+  };
+}
 
 type StockSelectorProps = {
   positions: Position[];
