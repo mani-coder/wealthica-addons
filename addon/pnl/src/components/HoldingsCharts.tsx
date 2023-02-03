@@ -125,7 +125,7 @@ export default function HoldingsCharts(props: Props) {
     );
   };
 
-  const { pie } = useMemo(() => {
+  const { pie, column } = useMemo(() => {
     return getPositionsSeries();
   }, [props.accounts, props.positions, props.isPrivateMode]);
 
@@ -149,6 +149,8 @@ export default function HoldingsCharts(props: Props) {
       }),
     [pie, props.isPrivateMode],
   );
+
+  console.log('[DEBUG] mani is cool', { pie, column });
 
   return (
     <>
