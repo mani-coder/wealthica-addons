@@ -31,6 +31,18 @@ export const parseGroupNameByIdReponse = (response: any): { [K: string]: string 
     return hash;
   }, {});
 
+export function isValidAccountGroup(groups?: string[], accountGroups?: string[]) {
+  // No group selection, don't ignore the account.
+  if (!groups || !groups.length) {
+    return true;
+  }
+  // If the account isn't mapped to a group, ignore the account since the group selection is ON.
+  if (!accountGroups || !accountGroups.length) {
+    return false;
+  }
+  return groups.some((group) => accountGroups.includes(group));
+}
+
 export const parseInstitutionsResponse = (response: any, groups?: string[], institutions?: string[]): Account[] => {
   const accounts: Account[] = [];
   return response
@@ -38,7 +50,7 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
     .reduce((accounts, instutition) => {
       return accounts.concat(
         instutition.investments
-          .filter((account) => (!groups || !groups.length || groups.includes(account.group)) && !account.ignored)
+          .filter((account) => isValidAccountGroup(account.groups) && !account.ignored)
           .map((account) => {
             return {
               id: account._id,
@@ -53,7 +65,7 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
                   ? account.name.split('-')[1].trim()
                   : account.name,
               ),
-              group: account.group,
+              groups: account.groups,
               cash: account.cash,
               value: account.value,
               currency_value: account.currency_value,

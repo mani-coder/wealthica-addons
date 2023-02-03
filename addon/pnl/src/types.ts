@@ -79,7 +79,7 @@ export type Account = {
   id: string;
   name: string;
   type: string;
-  group: string;
+  groups: string;
   currency: string;
   cash: number;
   value: number;
