@@ -482,18 +482,18 @@ class App extends Component<Props, State> {
                     <Empty description="No Holdings" />
                   )}
 
-                  <CashTable
+                  {/* <CashTable
                     accounts={this.state.accounts}
                     currencyCache={this.state.currencyCache || {}}
                     isPrivateMode={this.state.privateMode}
-                  />
+                  /> */}
 
-                  {!!this.state.positions.length && (
+                  {/* {!!this.state.positions.length && (
                     <>
                       <PortfolioVisualizer positions={this.state.positions} />
                       <HoldingsTable positions={this.state.positions} isPrivateMode={this.state.privateMode} />
                     </>
-                  )}
+                  )} */}
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key="gainers-losers">
