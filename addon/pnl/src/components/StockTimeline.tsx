@@ -2,10 +2,10 @@
 import Spin from 'antd/lib/spin';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
-import { Component } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { Position, Transaction } from '../types';
+import { Account, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getCurrencyInCAD, getDate } from '../utils';
 import Charts from './Charts';
 
@@ -14,6 +14,7 @@ type Props = {
   position: Position;
   isPrivateMode: boolean;
   addon?: any;
+  accounts: Account[];
   currencyCache: { [K: string]: number };
 };
 
@@ -22,38 +23,25 @@ type SecurityHistoryTimeline = {
   closePrice: number;
 };
 
-type State = {
-  loading: boolean;
-  data?: SecurityHistoryTimeline[];
-};
+function StockTimeline(props: Props) {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
 
-class StockTimeline extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      loading: true,
-    };
-    this._mounted = false;
-  }
-  _mounted: boolean;
+  const accountById = useMemo(() => {
+    return props.accounts.reduce((hash, account) => {
+      hash[account.id] = account;
+      return hash;
+    }, {} as { [K: string]: Account });
+  }, [props.accounts]);
 
-  componentDidMount() {
-    this._mounted = true;
-    this.fetchData();
+  function getAccountName(accountId: string) {
+    const account = accountById[accountId];
+    return account ? account.name : accountById;
   }
 
-  componentDidUpdate(nextProps: Props) {
-    if (this.props.symbol !== nextProps.symbol) {
-      this.fetchData();
-    }
-  }
-  componentWillUnmount() {
-    this._mounted = false;
-  }
-
-  parseSecuritiesResponse(response) {
-    if (this._mounted) {
-      const crypto = this.props.position.security.type === 'crypto';
+  const parseSecuritiesResponse = useCallback(
+    (response) => {
+      const crypto = props.position.security.type === 'crypto';
       const to = getDate(response.to);
       const data: SecurityHistoryTimeline[] = [];
       let prevPrice;
@@ -72,7 +60,7 @@ class StockTimeline extends Component<Props, State> {
           if (to.isoWeekday() <= 5 || crypto) {
             data.push({
               timestamp: to.clone(),
-              closePrice: crypto ? getCurrencyInCAD(to, closePrice, this.props.currencyCache) : closePrice,
+              closePrice: crypto ? getCurrencyInCAD(to, closePrice, props.currencyCache) : closePrice,
             });
           }
 
@@ -84,20 +72,19 @@ class StockTimeline extends Component<Props, State> {
       const sortedData = data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
 
       // console.debug('Loaded the securities data --', sortedData);
-      this.setState({ loading: false, data: sortedData });
-    }
-  }
+      setLoading(false);
+      setSecurityTimeline(sortedData);
+    },
+    [props.currencyCache, props.position.security.type],
+  );
 
-  fetchData() {
-    if (!this._mounted) {
-      return;
-    }
-    this.setState({ loading: true });
+  const fetchData = useCallback(() => {
+    setLoading(true);
     trackEvent('stock-timeline');
 
     const startDate = moment.min(
-      (this.props.position.transactions && this.props.position.transactions.length
-        ? this.props.position.transactions[0].date
+      (props.position.transactions && props.position.transactions.length
+        ? props.position.transactions[0].date
         : moment()
       )
         .clone()
@@ -105,18 +92,18 @@ class StockTimeline extends Component<Props, State> {
       moment().subtract(6, 'months'),
     );
 
-    const endpoint = `securities/${this.props.position.security.id}/history?from=${startDate.format(
+    const endpoint = `securities/${props.position.security.id}/history?from=${startDate.format(
       'YYYY-MM-DD',
     )}&to=${moment().format('YYYY-MM-DD')}`;
-    if (this.props.addon) {
-      this.props.addon
+    if (props.addon) {
+      props.addon
         .request({
           query: {},
           method: 'GET',
           endpoint,
         })
         .then((response) => {
-          this.parseSecuritiesResponse(response);
+          parseSecuritiesResponse(response);
         })
         .catch((error) => console.log(error));
     } else {
@@ -131,59 +118,25 @@ class StockTimeline extends Component<Props, State> {
       })
         .then((response) => response.json())
         .then((response) => {
-          this.parseSecuritiesResponse(response);
+          parseSecuritiesResponse(response);
         })
         .catch((error) => console.log(error));
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parseSecuritiesResponse, props.position.security.id]);
 
-  fetchDataUsingYahoo() {
-    if (!this._mounted) {
-      return;
-    }
+  useEffect(() => {
+    fetchData();
+  }, [props.symbol, fetchData]);
 
-    this.setState({ loading: true });
-    const startDate = (
-      this.props.position.transactions && this.props.position.transactions.length
-        ? this.props.position.transactions[0].date
-        : moment()
-    )
-      .clone()
-      .subtract(1, 'months');
-    const endDate = moment().unix();
-
-    const url = `https://query1.finance.yahoo.com/v7/finance/chart/${
-      this.props.symbol
-    }?period1=${startDate.unix()}&period2=${endDate}&interval=1d&events=history`;
-
-    console.debug('Fetching stock data..', url);
-
-    fetch(buildCorsFreeUrl(url), {
-      cache: 'force-cache',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .then((response) => {
-        if (this._mounted) {
-          // this.state.data.chart.error.
-          // const timestamps = this.state.data.chart.result[0].timestamp;
-          // const closePrices = this.state.data.chart.result[0].indicators.quote[0].close;
-          this.setState({ loading: false, data: response });
-        }
-      })
-      .catch((error) => console.log(error));
-  }
-
-  getSeries(): any {
-    if (!this.state.data) {
+  function getSeries(): any {
+    if (!securityTimeline) {
       return [{}];
     }
 
     const data: { x: number; y: number }[] = [];
     let minPrice, maxPrice, minTimestamp, maxTimestamp;
-    this.state.data.forEach((_data, index) => {
+    securityTimeline.forEach((_data, index) => {
       const timestamp = _data.timestamp.valueOf();
       const closePrice = _data.closePrice;
 
@@ -204,21 +157,21 @@ class StockTimeline extends Component<Props, State> {
     });
 
     const flags = [
-      this.getFlags('buy'),
-      this.getFlags('sell'),
-      this.getFlags('income', true),
-      this.getFlags('dividend', true),
-      this.getFlags('distribution', true),
-      this.getFlags('tax', true),
-      this.getFlags('fee', true),
-      this.getFlags('reinvest'),
-      this.getFlags('transfer'),
+      getFlags('buy'),
+      getFlags('sell'),
+      getFlags('income', true),
+      getFlags('dividend', true),
+      getFlags('distribution', true),
+      getFlags('tax', true),
+      getFlags('fee', true),
+      getFlags('reinvest'),
+      getFlags('transfer'),
     ].filter((series) => !!series.data?.length);
 
     return [
       {
         id: 'dataseries',
-        name: this.props.symbol,
+        name: props.symbol,
         data,
         type: 'line',
 
@@ -259,7 +212,7 @@ class StockTimeline extends Component<Props, State> {
     ];
   }
 
-  getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
+  const getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
     const isBuySell = ['buy', 'sell', 'reinvest', 'transfer'].includes(type);
     const _type = type === 'transfer' ? 'buy' : type;
 
@@ -271,11 +224,11 @@ class StockTimeline extends Component<Props, State> {
       width: 25,
 
       tooltip: {
-        pointFormat: '<b>{point.text}</b>',
+        pointFormat: '<b>{point.text}</b><br />{point.account}',
         valueDecimals: 2,
       },
 
-      data: this.props.position.transactions
+      data: props.position.transactions
         .filter(
           (t) =>
             t.type === _type &&
@@ -318,6 +271,7 @@ class StockTimeline extends Component<Props, State> {
             text: isBuySell
               ? `${_.startCase(type)}: ${shares}@${transaction.price}`
               : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
+            account: getAccountName(transaction.account),
           };
         }),
       color: TYPE_TO_COLOR[type],
@@ -328,14 +282,14 @@ class StockTimeline extends Component<Props, State> {
     };
   };
 
-  getOptions(): Highcharts.Options {
-    const dividends = this.props.position.transactions
+  function getOptions(): Highcharts.Options {
+    const dividends = props.position.transactions
       .filter((transaction) => transaction.type === 'dividend')
       .reduce((dividend, transaction) => dividend + transaction.amount, 0);
 
     return {
       title: {
-        text: `${this.props.symbol}`,
+        text: `${props.symbol}`,
         style: {
           color: '#1F2A33',
           textDecoration: 'underline',
@@ -343,16 +297,16 @@ class StockTimeline extends Component<Props, State> {
         },
       },
       subtitle: {
-        text: this.props.isPrivateMode
+        text: props.isPrivateMode
           ? 'Shares: -, Market Value: -, Profit: -'
-          : `Shares: ${this.props.position.quantity}@${formatMoney(
-              this.props.position.investments.reduce((cost, investment) => {
+          : `Shares: ${props.position.quantity}@${formatMoney(
+              props.position.investments.reduce((cost, investment) => {
                 return cost + investment.book_value;
-              }, 0) / this.props.position.quantity,
-            )}, Market Value: CAD ${formatCurrency(this.props.position.market_value, 2)}, P/L:  ${formatMoney(
-              this.props.position.gain_percent * 100,
+              }, 0) / props.position.quantity,
+            )}, Market Value: CAD ${formatCurrency(props.position.market_value, 2)}, P/L:  ${formatMoney(
+              props.position.gain_percent * 100,
               2,
-            )}% / CAD ${formatCurrency(this.props.position.gain_amount, 2)}${
+            )}% / CAD ${formatCurrency(props.position.gain_amount, 2)}${
               dividends ? `, Dividends: CAD ${formatCurrency(dividends, 2)}` : ''
             }`,
         style: {
@@ -401,22 +355,20 @@ class StockTimeline extends Component<Props, State> {
           },
         ],
       },
-      series: this.getSeries(),
+      series: getSeries(),
       legend: {
         enabled: true,
       },
     };
   }
 
-  render() {
-    return this.state.loading ? (
-      <div style={{ textAlign: 'center', margin: '12px' }}>
-        <Spin size="large" />
-      </div>
-    ) : (
-      <Charts constructorType={'stockChart'} options={this.getOptions()} />
-    );
-  }
+  return loading ? (
+    <div style={{ textAlign: 'center', margin: '12px' }}>
+      <Spin size="large" />
+    </div>
+  ) : (
+    <Charts constructorType="stockChart" options={getOptions()} />
+  );
 }
 
 export default StockTimeline;

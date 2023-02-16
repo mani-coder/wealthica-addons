@@ -121,6 +121,7 @@ export default function HoldingsCharts(props: Props) {
         symbol={timelineSymbol}
         position={position}
         addon={props.addon}
+        accounts={props.accounts}
         currencyCache={props.currencyCache}
       />
     );

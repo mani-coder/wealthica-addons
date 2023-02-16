@@ -501,6 +501,7 @@ class App extends Component<Props, State> {
                     positions={this.state.positions}
                     isPrivateMode={this.state.privateMode}
                     addon={this.state.addon}
+                    accounts={this.state.accounts}
                     currencyCache={this.state.currencyCache || {}}
                   />
                 </Tabs.TabPane>

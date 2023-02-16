@@ -4,11 +4,11 @@ import Empty from 'antd/lib/empty';
 import Spin from 'antd/lib/spin';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { Position, Transaction } from '../types';
+import { Account, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getCurrencyInCAD, getDate, max, min } from '../utils';
 import Charts from './Charts';
 
@@ -18,6 +18,7 @@ type Props = {
   isPrivateMode: boolean;
   addon?: any;
   showValueChart?: boolean;
+  accounts: Account[];
   currencyCache: { [K: string]: number };
 };
 
@@ -28,25 +29,24 @@ type StockPrice = {
 
 const POINT_FORMAT = `P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />`;
 
-function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, currencyCache }: Props) {
+function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, currencyCache, accounts }: Props) {
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<StockPrice[]>([]);
-  const mounted = useRef<boolean>(false);
   const crypto = position.security?.type === 'crypto';
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  const accountById = useMemo(() => {
+    return accounts.reduce((hash, account) => {
+      hash[account.id] = account;
+      return hash;
+    }, {} as { [K: string]: Account });
+  }, [accounts]);
+
+  function getAccountName(accountId: string) {
+    const account = accountById[accountId];
+    return account ? account.name : accountById;
+  }
 
   function parseSecuritiesResponse(response) {
-    if (!mounted.current) {
-      setPrices([]);
-      return;
-    }
-
     const to = getDate(response.to);
     const data: StockPrice[] = [];
     let prevPrice;
@@ -80,7 +80,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
   }
 
   useEffect(() => {
-    if (symbol && mounted.current) {
+    if (symbol) {
       setLoading(true);
 
       trackEvent('stock-pnl-timeline');
@@ -118,7 +118,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           .finally(() => setLoading(false));
       }
     }
-  }, [symbol, addon, position]);
+  }, [symbol, position]);
 
   function getNextWeekday(date) {
     const referenceDate = moment(date);
@@ -281,7 +281,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       width: 25,
 
       tooltip: {
-        pointFormat: '<b>{point.text}</b>',
+        pointFormat: '<b>{point.text}</b><br />{point.account}',
       },
 
       data: position.transactions
@@ -328,6 +328,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
             text: isBuySell
               ? `${_.startCase(type)}: ${shares}@${formatMoney(transaction.price)}`
               : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
+            account: getAccountName(transaction.account),
           };
         }),
       color: TYPE_TO_COLOR[type],

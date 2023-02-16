@@ -5,7 +5,7 @@ import Switch from 'antd/lib/switch';
 import { useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { Position } from '../types';
+import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
 import StockPnLTimeline from './StockPnLTimeline';
@@ -14,6 +14,7 @@ export function TopGainersLosers(props: {
   isPrivateMode: boolean;
   positions: Position[];
   addon: any;
+  accounts: Account[];
   currencyCache: { [K: string]: number };
 }) {
   const [sortByValue, setSortByValue] = useState(false);
@@ -199,6 +200,7 @@ export function TopGainersLosers(props: {
         position={position}
         addon={props.addon}
         showValueChart={sortByValue}
+        accounts={props.accounts}
         currencyCache={props.currencyCache}
       />
     );
