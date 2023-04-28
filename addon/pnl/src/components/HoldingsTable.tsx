@@ -39,6 +39,8 @@ function HoldingsTable(props: Props) {
         key: 'country',
         title: 'Country',
         dataIndex: 'security.currency',
+        filters: ['US', 'CA'].map((country) => ({ text: country, value: `${country.toLowerCase()}d` })),
+        onFilter: (value, position) => position.security.currency === value,
         render: (text, position) => (position.security.currency === 'usd' ? 'US' : 'CA'),
         sorter: (a, b) => a.security.currency.localeCompare(b.security.currency),
         width: 120,
