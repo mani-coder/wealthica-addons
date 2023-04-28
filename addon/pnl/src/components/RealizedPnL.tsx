@@ -444,7 +444,7 @@ const IncomeTable = React.memo(
           key: 'type',
           title: 'Type',
           dataIndex: 'type',
-          width: 100,
+          width: 125,
           render: (type) => <Typography.Text strong>{_.startCase(type || '-')}</Typography.Text>,
         },
         {
