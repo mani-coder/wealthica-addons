@@ -362,11 +362,11 @@ class App extends Component<Props, State> {
     let institutionsData, portfolioData, positionsData, transactionsData, currenciesData;
     if (process.env.NODE_ENV === 'development') {
       [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
-        import('./mocks/institutions-prod.json').then((response) => response.default),
-        import('./mocks/portfolio-prod.json').then((response) => response.default),
-        import('./mocks/positions-prod.json').then((response) => response.default),
-        import('./mocks/transactions-prod.json').then((response) => response.default),
-        import('./mocks/currencies-prod.json').then((response) => response.default),
+        import('./mocks/prod/institutions-prod.json').then((response) => response.default),
+        import('./mocks/prod/portfolio-prod.json').then((response) => response.default),
+        import('./mocks/prod/positions-prod.json').then((response) => response.default),
+        import('./mocks/prod/transactions-prod.json').then((response) => response.default),
+        import('./mocks/prod/currencies-prod.json').then((response) => response.default),
       ]);
     }
 
