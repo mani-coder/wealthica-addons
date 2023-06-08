@@ -2,11 +2,10 @@
 import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
 import React from 'react';
-import { Box, Flex } from 'rebass';
+import { Box } from 'rebass';
 import { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils';
 import Collapsible from './Collapsible';
-import VirtualTable from './VirtualTable';
 
 type Props = {
   positions: Position[];
