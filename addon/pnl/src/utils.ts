@@ -1,5 +1,6 @@
 import moment, { Moment } from 'moment';
 import { DATE_FORMAT } from './constants';
+import xirr from 'xirr';
 import { PortfolioData, Position, Security } from './types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
@@ -155,6 +156,12 @@ export function normalizeAccountType(type: string): string {
   } else {
     return type;
   }
+}
+
+export function computeXIRR(position: Position) {
+  const transactions = position.transactions;
+  transactions.filter((t) => ['buy', 'sell'].includes(t.type));
+  xirr();
 }
 
 export function computeBookValue(position: Position) {

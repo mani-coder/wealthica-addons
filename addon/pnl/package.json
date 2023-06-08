@@ -18,7 +18,8 @@
     "react-scripts": "^4.0.3",
     "react-to-print": "^2.14.4",
     "react-window": "^1.8.6",
-    "rebass": "^4.0.7"
+    "rebass": "^4.0.7",
+    "xirr": "^1.1.0"
   },
   "scripts": {
     "dev": "craco start",
