@@ -20,7 +20,7 @@ import { Account, AccountTransaction, Transaction } from '../types';
 import { formatCurrency, formatMoney, formatMoneyWithCurrency, getCurrencyInCAD } from '../utils';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
-import CompositionGroup, { getGroupKey, GroupType } from './CompositionGroup';
+import CompositionGroup, { GroupType, getGroupKey } from './CompositionGroup';
 import PrintableTable from './PrintableTable';
 
 type Props = {
@@ -148,7 +148,7 @@ const RealizedPnLTable = React.memo(
           title: 'Symbol',
           dataIndex: 'symbol',
           render: (text, position) => renderSymbol(text, position.currency),
-          width: 125,
+          width: 100,
           filters: Array.from(new Set(closedPositions.map((position) => position.symbol)))
             .map((value) => ({
               text: value,
@@ -164,7 +164,7 @@ const RealizedPnLTable = React.memo(
           dataIndex: 'shares',
           align: 'right',
           render: (text) => (isPrivateMode ? '-' : text.toLocaleString('en-US')),
-          width: 75,
+          width: 80,
         },
         {
           key: 'price',
@@ -218,17 +218,19 @@ const RealizedPnLTable = React.memo(
               P&L $%<div style={{ fontSize: 12 }}>(CAD)</div>
             </>
           ),
-          render: (text, position) => (
-            <Box style={{ color: position.pnl < 0 ? 'red' : 'green' }}>
-              <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
-                {isPrivateMode ? '-' : formatMoney(position.pnl)}
-              </Typography.Text>
-              <Box />
-              <Typography.Text style={{ color: 'inherit', fontSize: 13 }}>
-                {formatMoney(position.pnlRatio)}%
-              </Typography.Text>
-            </Box>
-          ),
+          render: (text, position) => {
+            return (
+              <Box style={{ color: position.pnl < 0 ? 'red' : 'green' }}>
+                <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
+                  {isPrivateMode ? '-' : formatMoney(position.pnl)}
+                </Typography.Text>
+                <Box />
+                <Typography.Text style={{ color: 'inherit', fontSize: 13 }}>
+                  {formatMoney(position.pnlRatio)}%
+                </Typography.Text>
+              </Box>
+            );
+          },
           align: 'right',
           sorter: (a, b) => a.pnlRatio - b.pnlRatio,
         },
@@ -273,7 +275,9 @@ const RealizedPnLTable = React.memo(
               defaultExpandAllRows: false,
               indentSize: 0,
             }}
-            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
+            scroll={{ y: 500 }}
+            pagination={false}
+            // pagination={{ pageSize: 10, responsive: true, position: ['bottomCenter'] }}
             dataSource={closedPositions}
             summary={(positions) => {
               const totalPnL = _.sumBy(positions, 'pnl');
@@ -281,7 +285,7 @@ const RealizedPnLTable = React.memo(
               const totalSellCost = _.sumBy(positions, 'sellCost');
 
               return (
-                <>
+                <Table.Summary fixed>
                   <Table.Summary.Row>
                     <Table.Summary.Cell align="right" index={0} colSpan={6}>
                       <Typography.Text strong>Total</Typography.Text>
@@ -297,7 +301,7 @@ const RealizedPnLTable = React.memo(
                       </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
-                </>
+                </Table.Summary>
               );
             }}
             columns={getColumns()}

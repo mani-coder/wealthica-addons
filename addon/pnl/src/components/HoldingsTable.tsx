@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Typography from 'antd/es/typography';
-import { ColumnProps } from 'antd/lib/table';
+import Table, { ColumnProps } from 'antd/lib/table';
 import React from 'react';
-import { Box } from 'rebass';
+import { Box, Flex } from 'rebass';
 import { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils';
 import Collapsible from './Collapsible';
@@ -32,7 +32,7 @@ function HoldingsTable(props: Props) {
             {getSymbol(position.security)}
           </Typography.Link>
         ),
-        width: 200,
+        width: 100,
         sorter: (a, b) => getSymbol(a.security).localeCompare(getSymbol(b.security)),
       },
       {
@@ -43,7 +43,7 @@ function HoldingsTable(props: Props) {
         onFilter: (value, position) => position.security.currency === value,
         render: (text, position) => (position.security.currency === 'usd' ? 'US' : 'CA'),
         sorter: (a, b) => a.security.currency.localeCompare(b.security.currency),
-        width: 120,
+        width: 75,
       },
       {
         key: 'lastPrice',
@@ -56,6 +56,7 @@ function HoldingsTable(props: Props) {
             <div style={{ fontSize: 11 }}>{position.security.currency.toUpperCase()}</div>
           </>
         ),
+        width: 150,
         sorter: (a, b) => a.security.last_price - b.security.last_price,
       },
       {
@@ -64,6 +65,7 @@ function HoldingsTable(props: Props) {
         dataIndex: 'quantity',
         render: (text) => <Typography.Text strong>{formatMoney(text, 0)}</Typography.Text>,
         align: 'right',
+        width: 100,
         sorter: (a, b) => a.quantity - b.quantity,
       },
       {
@@ -107,6 +109,20 @@ function HoldingsTable(props: Props) {
         sorter: (a, b) => a.gain_percent - b.gain_percent,
       },
       {
+        key: 'XIRR',
+        title: 'XIRR %',
+        dataIndex: 'xirr',
+        render: (text, position) => (
+          <Box style={{ color: position.xirr < 0 ? 'red' : 'green' }}>
+            <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
+              {formatMoney(position.xirr * 100)}%
+            </Typography.Text>
+          </Box>
+        ),
+        align: 'right',
+        sorter: (a, b) => a.gain_percent - b.gain_percent,
+      },
+      {
         key: 'marketValue',
         title: (
           <>
@@ -129,7 +145,12 @@ function HoldingsTable(props: Props) {
   return (
     <div className="zero-padding">
       <Collapsible title="Holdings Table" closed>
-        <VirtualTable scroll={{ y: 600 }} dataSource={props.positions} columns={getColumns() as any} />
+        <Table<Position>
+          rowKey={(row) => getSymbol(row.security)}
+          scroll={{ y: 600 }}
+          dataSource={props.positions}
+          columns={getColumns()}
+        />
       </Collapsible>
     </div>
   );

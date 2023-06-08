@@ -11,8 +11,11 @@ export const POSITION_TOOLTIP: Highcharts.TooltipOptions = {
       ? `<table width="100%">
       <tr><td>Weightage</td><td class="position-tooltip-value">${(this as any).percentage.toFixed(1)}%</td></tr>
       <tr><td>Value</td><td class="position-tooltip-value">CAD ${point.value}</td></tr>
+      <tr><td>XIRR %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
+          point.xirr ? point.xirr.toFixed(2) : 'n/a'
+        }%</td></tr>
       <tr><td>Unrealized P/L %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
-          point.gain ? point.gain.toFixed(1) : 'n/a'
+          point.gain ? point.gain.toFixed(2) : 'n/a'
         }%</td></tr>
       <tr><td>Unrealized P/L $</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">CAD ${
           point.profit

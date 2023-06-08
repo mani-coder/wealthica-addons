@@ -37,7 +37,7 @@ import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import { TRANSACTIONS_FROM_DATE } from './constants';
 import { Account, AccountTransaction, Portfolio, Position, Transaction } from './types';
-import { computeBookValue, getCurrencyInCAD, getSymbol } from './utils';
+import { computeBookValue, computeXIRR, getCurrencyInCAD, getSymbol } from './utils';
 
 type State = {
   addon: any;
@@ -217,6 +217,7 @@ class App extends Component<Props, State> {
         );
       }
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
+      position.xirr = computeXIRR(position);
       computeBookValue(position);
     });
 
@@ -380,7 +381,6 @@ class App extends Component<Props, State> {
       ]);
     }
 
-    console.log('mani is cool', { institutionsData, portfolioData, positionsData, currenciesData, transactionsData });
     const currencyCache = parseCurrencyReponse(currenciesData);
     const portfolioByDate = parsePortfolioResponse(portfolioData);
     const positions = parsePositionsResponse(positionsData);

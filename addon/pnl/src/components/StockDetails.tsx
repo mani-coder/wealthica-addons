@@ -66,6 +66,12 @@ export default function StockDetails(props: Props) {
         ).toFixed(2)}%)`}
         valueProps={{ type: position.gain_percent > 0 ? 'success' : 'danger', strong: true }}
       />
+      <LabelValue
+        label="XIRR"
+        value={`${(position.xirr ? position.xirr * 100 : position.xirr || 0).toFixed(2)}%`}
+        valueProps={{ type: position.xirr > 0 ? 'success' : 'danger', strong: true }}
+      />
+
       <LabelValue label="Shares" value={`${position.quantity}`} />
 
       <LabelValue label="Currency" value={currency} />

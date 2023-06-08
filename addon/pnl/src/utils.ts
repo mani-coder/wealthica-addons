@@ -1,6 +1,6 @@
 import moment, { Moment } from 'moment';
-import { DATE_FORMAT } from './constants';
 import xirr from 'xirr';
+import { DATE_FORMAT } from './constants';
 import { PortfolioData, Position, Security } from './types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
@@ -159,9 +159,62 @@ export function normalizeAccountType(type: string): string {
 }
 
 export function computeXIRR(position: Position) {
-  const transactions = position.transactions;
-  transactions.filter((t) => ['buy', 'sell'].includes(t.type));
-  xirr();
+  const data = position.transactions.reduce(
+    (hash, transaction) => {
+      if (['buy', 'sell', 'reinvest', 'split']) {
+        const openShares = hash.book[transaction.account] || 0;
+
+        let outstandingShares = 0;
+        if (transaction.type === 'split') {
+          outstandingShares = transaction.shares;
+        } else {
+          outstandingShares = transaction.shares + openShares;
+        }
+
+        hash.book[transaction.account] = outstandingShares;
+        hash.shares = Object.values(hash.book).reduce((total, shares) => total + shares);
+
+        if (
+          hash.shares === 0 &&
+          transaction.originalType !== 'transfer' &&
+          !transaction.description.includes('transfer')
+        ) {
+          hash.transactions = [];
+          return hash;
+        }
+      }
+
+      if (transaction.type !== 'split') {
+        hash.transactions.push({
+          amount: ['buy', 'tax', 'fee', 'reinvest'].includes(transaction.type)
+            ? -transaction.amount
+            : transaction.amount,
+          when: transaction.date.toDate(),
+        });
+      }
+
+      return hash;
+    },
+    { transactions: [], shares: 0, book: {} } as {
+      transactions: { amount: number; when: Date }[];
+      book: { [K: string]: number };
+      shares: number;
+    },
+  );
+
+  data.transactions.push({ amount: position.market_value, when: new Date() });
+
+  try {
+    const value = xirr(data.transactions);
+    return value;
+  } catch (error) {
+    console.warn(
+      'failed to compute the xirr for',
+      getSymbol(position.security),
+      data.transactions.map((v) => `${v.when.toLocaleDateString()} : ${v.amount}`),
+      error,
+    );
+  }
 }
 
 export function computeBookValue(position: Position) {

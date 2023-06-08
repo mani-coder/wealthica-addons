@@ -207,6 +207,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
         fees: transaction.fee,
         description: transaction.description,
         splitRatio,
+        originalType: transaction.type,
         securityType: transaction.security?.type,
       };
       return _transaction;

@@ -50,6 +50,7 @@ export type Transaction = {
   account: string;
   splitRatio?: number;
   securityType?: string;
+  originalType: string;
 };
 
 export type AccountTransaction = {
@@ -73,6 +74,7 @@ export type Position = {
   gain_amount: number;
   investments: Investment[];
   transactions: Transaction[];
+  xirr: number;
 };
 
 export type Account = {

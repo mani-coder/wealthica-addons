@@ -46,6 +46,7 @@ export default function HoldingsCharts(props: Props) {
           displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
           value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
           gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
+          xirr: position.xirr ? position.xirr * 100 : position.xirr,
           profit: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
           percentage: (position.market_value / totalValue) * 100,
           buyPrice: formatMoney(

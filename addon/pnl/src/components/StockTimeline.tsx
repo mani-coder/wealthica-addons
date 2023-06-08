@@ -303,12 +303,12 @@ function StockTimeline(props: Props) {
               props.position.investments.reduce((cost, investment) => {
                 return cost + investment.book_value;
               }, 0) / props.position.quantity,
-            )}, Market Value: CAD ${formatCurrency(props.position.market_value, 2)}, P/L:  ${formatMoney(
-              props.position.gain_percent * 100,
+            )}, Market Value: CAD ${formatCurrency(props.position.market_value, 2)}, XIRR: ${formatMoney(
+              props.position.xirr * 100,
+            )}%, P/L:  ${formatMoney(props.position.gain_percent * 100, 2)}% / CAD ${formatCurrency(
+              props.position.gain_amount,
               2,
-            )}% / CAD ${formatCurrency(props.position.gain_amount, 2)}${
-              dividends ? `, Dividends: CAD ${formatCurrency(dividends, 2)}` : ''
-            }`,
+            )}${dividends ? `, Dividends: CAD ${formatCurrency(dividends, 2)}` : ''}`,
         style: {
           color: '#1F2A33',
           fontWeight: 'bold',

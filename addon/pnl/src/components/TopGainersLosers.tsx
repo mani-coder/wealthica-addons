@@ -46,6 +46,7 @@ export function TopGainersLosers(props: {
               y: sortByValue ? position.gain_amount : position.gain_percent * 100,
               gainRatio: position.gain_percent * 100,
               gain: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
+              xirr: position.xirr * 100,
               gainDisplay: props.isPrivateMode ? '-' : formatCurrency(position.gain_amount, 1),
             };
           }),
@@ -53,6 +54,10 @@ export function TopGainersLosers(props: {
           headerFormat: '',
           pointFormat: `<table>
             <tr><th colspan="2" style="text-align:center">{point.name}</th></tr>
+            <tr>
+              <td>XIRR %</td>
+              <td style="text-align: right;"><b>{point.xirr:.1f}%</b></td>
+            </tr>
             <tr>
               <td>P&L %</td>
               <td style="text-align: right;"><b>{point.gainRatio:.1f}%</b></td>
