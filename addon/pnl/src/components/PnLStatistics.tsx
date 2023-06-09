@@ -29,6 +29,7 @@ function StatisticBox(props: StatisticProps & { tooltip?: string }) {
 }
 
 type Props = {
+  xirr: number;
   portfolios: Portfolio[];
   positions: Position[];
   privateMode: boolean;
@@ -36,7 +37,7 @@ type Props = {
   toDate: string;
 };
 
-function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }: Props) {
+function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toDate }: Props) {
   const portfolio = portfolios[portfolios.length - 1];
   const marketValue = positions.reduce((value, position) => value + position.market_value, 0);
   const bookValue = positions.reduce((value, position) => value + position.book_value, 0);
@@ -44,7 +45,6 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
   const unrealizePnLValue = marketValue - bookValue;
   const unrealizedPnLRatio = unrealizePnLValue ? (unrealizePnLValue / bookValue) * 100 : 0;
 
-  // const oneDayBeforeStartDate = moment(fromDate).subtract(1, 'day').format(DATE_FORMAT);
   const startPortfolio = portfolios.find((portfolio) => portfolio.date === fromDate);
 
   let timelineDeposits,
@@ -84,6 +84,17 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
           prefix="$"
         />
         <StatisticBox
+          title="XIRR %"
+          valueStyle={{ color: xirr > 0 ? 'green' : 'red' }}
+          value={xirr * 100}
+          precision={2}
+          suffix="%"
+          prefix={xirr >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+        />
+
+        <Divider style={{ marginTop: 12, marginBottom: 12 }} />
+
+        <StatisticBox
           title="All Time P&L %"
           valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
           value={((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100}
@@ -98,6 +109,7 @@ function PnLStatistics({ portfolios, privateMode, positions, fromDate, toDate }:
           precision={privateMode ? undefined : 2}
           prefix="$"
         />
+
         <StatisticBox
           title="Unrealized P&L Value"
           valueStyle={{ color: noHoldings ? 'grey' : unrealizePnLValue >= 0 ? 'green' : 'red' }}

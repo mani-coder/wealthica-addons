@@ -19,6 +19,7 @@ import {
   parseSecurityTransactionsResponse,
   parseTransactionsResponse,
 } from './api';
+import xirr from 'xirr';
 import './App.less';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
@@ -45,6 +46,7 @@ type State = {
   securityTransactions: Transaction[];
   accountTransactions: AccountTransaction[];
   portfolios: Portfolio[];
+  xirr: number;
   allPortfolios: Portfolio[];
   positions: Position[];
   accounts: Account[];
@@ -72,6 +74,7 @@ class App extends Component<Props, State> {
       allPortfolios: [],
       positions: [],
       accounts: [],
+      xirr: 0,
       isLoaded: false,
       privateMode: false,
       fromDate: TRANSACTIONS_FROM_DATE,
@@ -131,20 +134,6 @@ class App extends Component<Props, State> {
         console.error('Failed to load currency data.', error);
       });
   }
-
-  // loadGroupsCache() {
-  //   if (this.state.groupsCache) {
-  //     return;
-  //   }
-
-  //   console.debug('Loading groups data.');
-  //   return this.state.addon
-  //     .request({ method: 'GET', endpoint: 'groups' })
-  //     .then((response) => parseGroupNameByIdReponse(response))
-  //     .catch((error) => {
-  //       console.error('Failed to load groups data.', error);
-  //     });
-  // }
 
   load = _.debounce(
     (options: any) => {
@@ -235,7 +224,6 @@ class App extends Component<Props, State> {
     }, {});
 
     const portfolios: Portfolio[] = [];
-
     const sortedDates = Object.keys(portfolioPerDay).sort();
     let deposits = Object.keys(transactionsByDate)
       .filter((date) => date < sortedDates[0])
@@ -255,12 +243,32 @@ class App extends Component<Props, State> {
       });
     });
 
+    let xirrRate = 0;
+    const values = Object.keys(transactionsByDate).reduce((transactions, date) => {
+      const portfolio = transactionsByDate[date];
+      if (portfolio.deposit) {
+        transactions.push({ amount: -portfolio.deposit, when: new Date(date) });
+      } else if (portfolio.withdrawal) {
+        transactions.push({ amount: portfolio.deposit, when: new Date(date) });
+      }
+      return transactions;
+    }, [] as { amount: number; when: Date }[]);
+
+    const portfolio = portfolios[portfolios.length - 1];
+    values.push({ when: new Date(portfolio.date), amount: portfolio.value });
+    try {
+      xirrRate = xirr(values);
+    } catch (error) {
+      console.warn('Unable to compute portfolio xirr -- ', error, values);
+    }
+
     this.setState({
       positions,
       securityTransactions,
       accountTransactions: parseAccountTransactionsResponse(transactions, currencyCache),
 
       allPortfolios: portfolios,
+      xirr: xirrRate,
       portfolios: portfolios.filter((portfolio) => moment(portfolio.date).isoWeekday() <= 5),
       isLoaded: true,
       isLoadingOnUpdate: false,
@@ -450,6 +458,7 @@ class App extends Component<Props, State> {
               >
                 <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key="pnl">
                   <PnLStatistics
+                    xirr={this.state.xirr}
                     portfolios={this.state.allPortfolios}
                     privateMode={this.state.privateMode}
                     positions={this.state.positions}

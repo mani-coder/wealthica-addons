@@ -94,7 +94,18 @@ export const parsePortfolioResponse = (response: any) => {
   }, {});
 };
 
-export const parseTransactionsResponse = (response: any, currencyCache: any, accounts: Account[]) => {
+export const parseTransactionsResponse = (
+  response: any,
+  currencyCache: any,
+  accounts: Account[],
+): {
+  [K: string]: {
+    deposit: number;
+    withdrawal: number;
+    interest: number;
+    income: number;
+  };
+} => {
   return response
     .filter((t) => !t.deleted)
     .reduce((hash, transaction) => {
