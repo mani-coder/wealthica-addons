@@ -113,7 +113,7 @@ function CashTable(props: Props) {
             const total = totalCAD + getCurrencyInCAD(lastCurrencyDate, totalUSD, props.currencyCache);
 
             return (
-              <>
+              <Table.Summary fixed>
                 <Table.Summary.Row>
                   <Table.Summary.Cell colSpan={3} align="right" index={0}>
                     <Box pb={1}>
@@ -139,7 +139,7 @@ function CashTable(props: Props) {
                     </Typography.Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
-              </>
+              </Table.Summary>
             );
           }}
           dataSource={accounts}

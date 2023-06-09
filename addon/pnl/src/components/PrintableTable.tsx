@@ -47,7 +47,7 @@ export default function PrintableTable<T extends object>({
 
   return (
     <div style={{ position: 'relative' }}>
-      <Table<T> {...props} />
+      <Table<T> scroll={{ y: 500 }} pagination={false} {...props} />
       <div style={{ position: 'absolute', bottom: 12, right: 12, display: enablePrint ? 'block' : 'none' }}>
         <Button
           type="primary"

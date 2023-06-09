@@ -371,8 +371,6 @@ const ExpensesTable = React.memo(
         <Collapsible title="Expenses History" closed>
           <PrintableTable<AccountTransaction>
             rowKey="id"
-            scroll={{ y: 500 }}
-            pagination={false}
             dataSource={transactions.reverse()}
             columns={getColumns()}
             printTitle={`Incurred Expenses For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(
@@ -380,9 +378,8 @@ const ExpensesTable = React.memo(
             )}`}
             summary={(transactions) => {
               const total = _.sumBy(transactions, 'amount');
-
               return (
-                <>
+                <Table.Summary fixed>
                   <Table.Summary.Row>
                     <Table.Summary.Cell align="right" index={0} colSpan={3}>
                       <Typography.Text strong>Total</Typography.Text>
@@ -391,7 +388,7 @@ const ExpensesTable = React.memo(
                       <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
-                </>
+                </Table.Summary>
               );
             }}
           />
@@ -476,6 +473,21 @@ const IncomeTable = React.memo(
             pagination={false}
             dataSource={transactions.reverse()}
             columns={getColumns()}
+            summary={(transactions) => {
+              const total = _.sumBy(transactions, 'amount');
+              return (
+                <Table.Summary fixed>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell align="right" index={0} colSpan={3}>
+                      <Typography.Text strong>Total</Typography.Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} colSpan={2}>
+                      <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </Table.Summary>
+              );
+            }}
           />
         </Collapsible>
       </div>
