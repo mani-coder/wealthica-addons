@@ -149,6 +149,7 @@ function HoldingsTable(props: Props) {
           scroll={{ y: 600 }}
           dataSource={props.positions}
           columns={getColumns()}
+          pagination={false}
         />
       </Collapsible>
     </div>

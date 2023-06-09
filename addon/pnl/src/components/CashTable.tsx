@@ -99,7 +99,8 @@ function CashTable(props: Props) {
       <Collapsible title="Cash Table">
         <Table<Account>
           rowKey="id"
-          pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
+          pagination={false}
+          scroll={{ y: 500 }}
           summary={(accounts) => {
             const totalCAD = accounts
               .filter((a) => a.currency === 'cad')

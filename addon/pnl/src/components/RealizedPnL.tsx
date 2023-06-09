@@ -277,7 +277,6 @@ const RealizedPnLTable = React.memo(
             }}
             scroll={{ y: 500 }}
             pagination={false}
-            // pagination={{ pageSize: 10, responsive: true, position: ['bottomCenter'] }}
             dataSource={closedPositions}
             summary={(positions) => {
               const totalPnL = _.sumBy(positions, 'pnl');
@@ -372,7 +371,8 @@ const ExpensesTable = React.memo(
         <Collapsible title="Expenses History" closed>
           <PrintableTable<AccountTransaction>
             rowKey="id"
-            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
+            scroll={{ y: 500 }}
+            pagination={false}
             dataSource={transactions.reverse()}
             columns={getColumns()}
             printTitle={`Incurred Expenses For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(
@@ -472,7 +472,8 @@ const IncomeTable = React.memo(
         <Collapsible title="Income History" closed>
           <Table<IncomeTransaction>
             rowKey="id"
-            pagination={{ pageSize: 5, responsive: true, position: ['bottomCenter'] }}
+            scroll={{ y: 500 }}
+            pagination={false}
             dataSource={transactions.reverse()}
             columns={getColumns()}
           />
