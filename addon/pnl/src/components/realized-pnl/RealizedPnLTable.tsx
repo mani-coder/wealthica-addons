@@ -81,7 +81,7 @@ const RealizedPnLTable = React.memo(
           key: 'symbol',
           title: 'Symbol',
           dataIndex: 'symbol',
-          width: 125,
+          width: 100,
           render: (text, position) => renderSymbol(text, position.currency),
           filters: Array.from(new Set(closedPositions.map((position) => position.symbol)))
             .map((value) => ({

@@ -13,7 +13,7 @@ import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
 import { DATE_FORMAT } from '../../constants';
 import { Account, AccountTransaction, Transaction } from '../../types';
-import { formatCurrency, formatMoney, getCurrencyInCAD, getSymbol } from '../../utils';
+import { formatCurrency, formatMoney, getCurrencyInCAD } from '../../utils';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
 import CompositionGroup, { GroupType, getGroupKey } from '../CompositionGroup';

@@ -67,6 +67,7 @@ const ExpenseTable = React.memo(
           key: 'description',
           title: 'Description',
           dataIndex: 'description',
+          ellipsis: true,
         },
       ];
     }
@@ -90,7 +91,9 @@ const ExpenseTable = React.memo(
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell align="center" index={1} colSpan={1}>
-                      <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
+                      <Typography.Text strong type="danger">
+                        {formatMoney(total)} CAD
+                      </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                 </Table.Summary>

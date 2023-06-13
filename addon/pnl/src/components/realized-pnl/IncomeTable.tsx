@@ -45,7 +45,7 @@ const IncomeTable = React.memo(
           title: 'Symbol',
           dataIndex: 'symbol',
           render: (text, transaction) => (transaction.symbol ? renderSymbol(text, transaction.currency) : '--'),
-          width: 100,
+          width: 125,
           filters: Array.from(new Set(transactions.map((t) => t.symbol)))
             .filter((value) => !!value)
             .map((value) => ({
@@ -81,6 +81,7 @@ const IncomeTable = React.memo(
           key: 'description',
           title: 'Description',
           dataIndex: 'description',
+          ellipsis: true,
         },
       ];
     }
@@ -92,7 +93,7 @@ const IncomeTable = React.memo(
             rowKey="id"
             scroll={{ y: 500 }}
             pagination={false}
-            dataSource={transactions.reverse()}
+            dataSource={transactions}
             columns={getColumns()}
             summary={(transactions) => {
               const total = _.sumBy(transactions, 'amount');
@@ -102,8 +103,10 @@ const IncomeTable = React.memo(
                     <Table.Summary.Cell align="right" index={0} colSpan={4}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
-                      <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
+                    <Table.Summary.Cell align="left" index={1} colSpan={2}>
+                      <Typography.Text strong type="success">
+                        {formatMoney(total)} CAD
+                      </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                 </Table.Summary>
