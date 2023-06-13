@@ -9,6 +9,8 @@ import _ from 'lodash';
 import moment from 'moment';
 import { Component } from 'react';
 import { Flex } from 'rebass';
+import xirr from 'xirr';
+import './App.less';
 import { initTracking, trackEvent } from './analytics';
 import {
   parseAccountTransactionsResponse,
@@ -17,10 +19,8 @@ import {
   parsePortfolioResponse,
   parsePositionsResponse,
   parseSecurityTransactionsResponse,
-  parseTransactionsResponse,
+  computeCashFlowByDate,
 } from './api';
-import xirr from 'xirr';
-import './App.less';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
@@ -38,7 +38,7 @@ import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import { TRANSACTIONS_FROM_DATE } from './constants';
 import { Account, AccountTransaction, Portfolio, Position, Transaction } from './types';
-import { computeBookValue, computeXIRR, getCurrencyInCAD, getSymbol } from './utils';
+import { computeBookValue, computeXIRR, formatMoney, getCurrencyInCAD, getSymbol } from './utils';
 
 type State = {
   addon: any;
@@ -187,6 +187,7 @@ class App extends Component<Props, State> {
     accounts: Account[],
     currencyCache: any,
   ) => {
+    // Security transactions & XIRR computation
     const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyCache);
     const securityTransactionsBySymbol = securityTransactions.reduce((hash, transaction) => {
       if (!hash[transaction.symbol]) {
@@ -210,54 +211,48 @@ class App extends Component<Props, State> {
       computeBookValue(position);
     });
 
-    const transactionsByDate = parseTransactionsResponse(transactions, currencyCache, accounts);
-    const portfolioPerDay = Object.keys(portfolioByDate).reduce((hash, date) => {
-      const data = transactionsByDate[date] || {};
-      hash[date] = {
-        value: portfolioByDate[date],
-        deposit: data.deposit || 0,
-        withdrawal: data.withdrawal || 0,
-        income: data.income || 0,
-        interest: data.interest || 0,
-      };
-      return hash;
-    }, {});
+    const cashFlowByDate = computeCashFlowByDate(transactions, currencyCache);
 
+    // Portfolio computation
     const portfolios: Portfolio[] = [];
-    const sortedDates = Object.keys(portfolioPerDay).sort();
-    let deposits = Object.keys(transactionsByDate)
+    const sortedDates = Object.keys(portfolioByDate).sort();
+    let depositsToDate = Object.keys(cashFlowByDate)
       .filter((date) => date < sortedDates[0])
-      .reduce((totalDeposits, date) => {
-        const transaction = transactionsByDate[date];
-        totalDeposits += transaction.deposit - transaction.withdrawal;
-        return totalDeposits;
+      .reduce((deposits, date) => {
+        const transaction = cashFlowByDate[date];
+        deposits += transaction.deposit - transaction.withdrawal;
+        return deposits;
       }, 0);
 
     sortedDates.forEach((date) => {
-      const portfolio = portfolioPerDay[date];
-      deposits += portfolio.deposit - portfolio.withdrawal;
-      portfolios.push({
-        date: date,
-        value: portfolio.value,
-        deposits: deposits,
-      });
+      const portfolioValue = portfolioByDate[date];
+      const asOfTransactionValue = cashFlowByDate[date];
+      if (asOfTransactionValue) {
+        depositsToDate += asOfTransactionValue.deposit - asOfTransactionValue.withdrawal;
+      }
+      portfolios.push({ date, value: portfolioValue, deposits: depositsToDate });
     });
 
+    // XIRR computation
     let xirrRate = 0;
-    const values = Object.keys(transactionsByDate).reduce((transactions, date) => {
-      const portfolio = transactionsByDate[date];
-      if (portfolio.deposit) {
-        transactions.push({ amount: -portfolio.deposit, when: new Date(date) });
-      } else if (portfolio.withdrawal) {
-        transactions.push({ amount: portfolio.deposit, when: new Date(date) });
+    const values = Object.keys(cashFlowByDate).reduce((transactions, date) => {
+      const portfolio = cashFlowByDate[date];
+      const amount = portfolio.withdrawal - portfolio.deposit;
+      if (amount !== 0) {
+        transactions.push({ amount, when: new Date(date) });
       }
       return transactions;
     }, [] as { amount: number; when: Date }[]);
 
     const portfolio = portfolios[portfolios.length - 1];
     values.push({ when: new Date(portfolio.date), amount: portfolio.value });
+
     try {
       xirrRate = xirr(values);
+      console.debug('XIRR computation -- ', {
+        values: values.map((value) => `${value.when.toLocaleDateString()}, ${formatMoney(value.amount)}`),
+        xirrRate,
+      });
     } catch (error) {
       console.warn('Unable to compute portfolio xirr -- ', error, values);
     }

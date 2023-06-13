@@ -53,6 +53,13 @@ export type Transaction = {
   originalType: string;
 };
 
+export type CashFlow = {
+  deposit: number;
+  withdrawal: number;
+  interest: number;
+  income: number;
+};
+
 export type AccountTransaction = {
   id: string;
   date: Moment;

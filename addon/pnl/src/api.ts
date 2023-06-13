@@ -1,5 +1,5 @@
 import { DATE_FORMAT } from './constants';
-import { Account, AccountTransaction, Position, Transaction } from './types';
+import { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
 import { getCurrencyInCAD, getDate, getSymbol, normalizeAccountType } from './utils';
 
 //
@@ -94,18 +94,7 @@ export const parsePortfolioResponse = (response: any) => {
   }, {});
 };
 
-export const parseTransactionsResponse = (
-  response: any,
-  currencyCache: any,
-  accounts: Account[],
-): {
-  [K: string]: {
-    deposit: number;
-    withdrawal: number;
-    interest: number;
-    income: number;
-  };
-} => {
+export const computeCashFlowByDate = (response: any, currencyCache: any): { [K: string]: CashFlow } => {
   return response
     .filter((t) => !t.deleted)
     .reduce((hash, transaction) => {
@@ -114,15 +103,15 @@ export const parseTransactionsResponse = (
         return hash;
       }
 
-      let date = getDate(transaction.date);
-      if (['deposit', 'transfer', 'withdrawal'].includes(type)) {
-        // adjust the date of transaction, so that portfolio isn't screw'd up.
-        const account = (accounts || []).find((account) => account.institution === transaction.institution);
-        if (account && account.created_at > date) {
-          // console.debug('Aligning transaction date with the account creation date', account, transaction);
-          date = account.created_at;
-        }
-      }
+      const date = getDate(transaction.date);
+      // if (['deposit', 'transfer', 'withdrawal'].includes(type)) {
+      //   // adjust the date of transaction, so that portfolio isn't screw'd up.
+      //   const account = (accounts || []).find((account) => account.institution === transaction.institution);
+      //   if (account && account.created_at > date) {
+      //     // console.debug('Aligning transaction date with the account creation date', account, transaction);
+      //     date = account.created_at;
+      //   }
+      // }
 
       const dateKey = date.format(DATE_FORMAT);
       const portfolioData = hash[dateKey]
@@ -160,7 +149,7 @@ export const parseTransactionsResponse = (
         }
       } else if (['fee', 'interest', 'tax', 'income', 'dividend', 'distribution'].includes(type)) {
         if (amount > 0) {
-          portfolioData.interest += amount;
+          portfolioData.income += amount;
         } else {
           portfolioData.interest += Math.abs(amount);
         }

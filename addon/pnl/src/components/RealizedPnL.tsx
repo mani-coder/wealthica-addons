@@ -148,7 +148,6 @@ const RealizedPnLTable = React.memo(
           title: 'Symbol',
           dataIndex: 'symbol',
           render: (text, position) => renderSymbol(text, position.currency),
-          width: 100,
           filters: Array.from(new Set(closedPositions.map((position) => position.symbol)))
             .map((value) => ({
               text: value,
@@ -164,7 +163,6 @@ const RealizedPnLTable = React.memo(
           dataIndex: 'shares',
           align: 'right',
           render: (text) => (isPrivateMode ? '-' : text.toLocaleString('en-US')),
-          width: 80,
         },
         {
           key: 'price',
@@ -190,7 +188,6 @@ const RealizedPnLTable = React.memo(
         },
         {
           key: 'cost',
-          width: 150,
           title: (
             <Box>
               <div>ACB /</div>
@@ -212,7 +209,6 @@ const RealizedPnLTable = React.memo(
         },
         {
           key: 'gain',
-          width: 125,
           title: (
             <>
               P&L $%<div style={{ fontSize: 12 }}>(CAD)</div>
@@ -236,7 +232,6 @@ const RealizedPnLTable = React.memo(
         },
         {
           key: 'holding-period',
-          width: 150,
           title: (
             <>
               <div>Open Date</div>
@@ -384,7 +379,7 @@ const ExpensesTable = React.memo(
                     <Table.Summary.Cell align="right" index={0} colSpan={3}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} colSpan={2}>
+                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
                       <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
@@ -478,10 +473,10 @@ const IncomeTable = React.memo(
               return (
                 <Table.Summary fixed>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell align="right" index={0} colSpan={3}>
+                    <Table.Summary.Cell align="right" index={0} colSpan={4}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} colSpan={2}>
+                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
                       <Typography.Text strong>{formatMoney(total)} CAD</Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
