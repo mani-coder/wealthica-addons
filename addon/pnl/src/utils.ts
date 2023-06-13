@@ -202,6 +202,11 @@ export function computeXIRR(position: Position) {
     },
   );
 
+  if (!data.transactions.length) {
+    // Skip xirr computation if there are no transactions.
+    return;
+  }
+
   data.transactions.push({ amount: position.market_value, when: new Date() });
 
   try {

@@ -80,11 +80,12 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
     }, accounts);
 };
 
-export const parsePortfolioResponse = (response: any) => {
-  const data = response.history.total;
+export const parsePortfolioResponse = (response: any, institution?: string) => {
+  const data = institution ? response.history[institution] : response.history.total;
+
   const date = getDate(data.from);
   return data.data.reduce((hash, value) => {
-    if (value !== null || value !== undefined) {
+    if (value !== null && value !== undefined) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
 
@@ -238,7 +239,5 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
 };
 
 export const parsePositionsResponse = (response: any): Position[] => {
-  return response.map((position) => {
-    return position as Position;
-  });
+  return response.map((position) => position as Position);
 };

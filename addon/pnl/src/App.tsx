@@ -386,8 +386,14 @@ class App extends Component<Props, State> {
       ]);
     }
 
+    // Dev testing filters
+    const testInstitution = undefined;
+    const portfolioByDate = parsePortfolioResponse(portfolioData, testInstitution);
+    if (testInstitution) {
+      transactionsData = transactionsData.filter((transaction) => transaction.institution === testInstitution);
+    }
+
     const currencyCache = parseCurrencyReponse(currenciesData);
-    const portfolioByDate = parsePortfolioResponse(portfolioData);
     const positions = parsePositionsResponse(positionsData);
     const accounts = parseInstitutionsResponse(institutionsData);
 

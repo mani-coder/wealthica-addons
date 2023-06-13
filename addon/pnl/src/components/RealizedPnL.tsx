@@ -587,7 +587,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       };
 
       const openShares = position.shares + transaction.shares;
-      position.shares = openShares;
+      position.shares = parseFloat(openShares.toFixed(3));
 
       if (openShares > 0) {
         position.price = buyRecord.price;
@@ -631,7 +631,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     const transactions: Transaction[] = [];
     const hash: { [K: string]: Transaction } = {};
     props.transactions
-      .filter((t) => ['buy', 'sell', 'reinvest', 'split'].includes(t.type))
+      .filter((t) => ['buy', 'sell', 'reinvest', 'split', 'distribution'].includes(t.type))
       .map((t) => ({ ...t }))
       .forEach((transaction) => {
         const key = `${transaction.date.format('YYYY-MM-DD')}-${transaction.type}-${transaction.symbol}-${
@@ -675,7 +675,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         }
       } else if (transaction.type === 'split') {
         handleSplit(position, transaction);
-      } else if (transaction.type === 'reinvest') {
+      } else if (['reinvest', 'distribution'].includes(transaction.type)) {
         // acquire this position at zero cost, since it's a re-investment.
         openPosition(position, { ...transaction, price: 0 });
       }
