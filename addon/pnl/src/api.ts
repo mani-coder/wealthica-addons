@@ -84,7 +84,7 @@ export const parsePortfolioResponse = (response: any) => {
   const data = response.history.total;
   const date = getDate(data.from);
   return data.data.reduce((hash, value) => {
-    if (!!value) {
+    if (value !== null || value !== undefined) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
 

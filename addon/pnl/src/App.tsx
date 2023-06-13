@@ -245,7 +245,9 @@ class App extends Component<Props, State> {
     }, [] as { amount: number; when: Date }[]);
 
     const portfolio = portfolios[portfolios.length - 1];
-    values.push({ when: new Date(portfolio.date), amount: portfolio.value });
+    if (portfolio.value) {
+      values.push({ when: new Date(portfolio.date), amount: portfolio.value });
+    }
 
     try {
       xirrRate = xirr(values);
