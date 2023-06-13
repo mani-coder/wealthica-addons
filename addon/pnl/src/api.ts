@@ -220,7 +220,6 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
     )
     .map((transaction) => {
       const date = getDate(transaction.date);
-
       let amount = Number(transaction.currency_amount);
       amount =
         transaction.investment && transaction.investment.includes(':usd')

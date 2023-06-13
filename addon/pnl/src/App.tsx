@@ -33,7 +33,7 @@ import PnLStatistics from './components/PnLStatistics';
 import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
-import RealizedPnL from './components/RealizedPnL';
+import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import { TRANSACTIONS_FROM_DATE } from './constants';
