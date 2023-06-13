@@ -86,12 +86,12 @@ const ExpenseTable = React.memo(
               const total = _.sumBy(transactions, 'amount');
               return (
                 <Table.Summary fixed>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell align="right" index={0} colSpan={3}>
+                  <Table.Summary.Row style={{ backgroundColor: '#fff1f0' }}>
+                    <Table.Summary.Cell align="center" index={0} colSpan={3}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell align="center" index={1} colSpan={1}>
-                      <Typography.Text strong type="danger">
+                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
+                      <Typography.Text strong style={{ color: '#f5222d' }}>
                         {formatMoney(total)} CAD
                       </Typography.Text>
                     </Table.Summary.Cell>

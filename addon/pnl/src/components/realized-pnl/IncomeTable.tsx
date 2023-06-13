@@ -99,12 +99,12 @@ const IncomeTable = React.memo(
               const total = _.sumBy(transactions, 'amount');
               return (
                 <Table.Summary fixed>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell align="right" index={0} colSpan={4}>
+                  <Table.Summary.Row style={{ backgroundColor: '#f6ffed' }}>
+                    <Table.Summary.Cell align="center" index={0} colSpan={4}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell align="left" index={1} colSpan={2}>
-                      <Typography.Text strong type="success">
+                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
+                      <Typography.Text strong style={{ color: '#52c41a' }}>
                         {formatMoney(total)} CAD
                       </Typography.Text>
                     </Table.Summary.Cell>

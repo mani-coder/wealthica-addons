@@ -216,16 +216,16 @@ const RealizedPnLTable = React.memo(
 
               return (
                 <Table.Summary fixed>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell align="right" index={0} colSpan={6}>
+                  <Table.Summary.Row style={{ backgroundColor: '#fff0f6' }}>
+                    <Table.Summary.Cell align="center" index={0} colSpan={4}>
                       <Typography.Text strong>Total</Typography.Text>
                     </Table.Summary.Cell>
-                    <Table.Summary.Cell align="right" index={1}>
-                      <Typography.Text>{formatMoney(totalBuyCost)}</Typography.Text> /
-                      <Typography.Text>{formatMoney(totalSellCost)}</Typography.Text>
+                    <Table.Summary.Cell align="center" index={1} colSpan={2}>
+                      <Typography.Text strong>{formatMoney(totalBuyCost)}</Typography.Text> /{' '}
+                      <Typography.Text strong>{formatMoney(totalSellCost)}</Typography.Text>
                     </Table.Summary.Cell>
 
-                    <Table.Summary.Cell index={1} colSpan={2} align="center">
+                    <Table.Summary.Cell index={1} colSpan={3} align="center">
                       <Typography.Text strong style={{ color: totalPnL > 0 ? 'green' : 'red' }}>
                         {formatMoney(totalPnL)} CAD
                       </Typography.Text>
