@@ -224,7 +224,8 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         }
       } else if (transaction.type === 'split') {
         handleSplit(position, transaction);
-      } else if (['reinvest', 'distribution'].includes(transaction.type)) {
+        // handle distribution as the reinvest of shares.
+      } else if (['reinvest', 'distribution'].includes(transaction.type) && transaction.shares > 0) {
         // acquire this position at zero cost, since it's a re-investment.
         openPosition(position, { ...transaction, price: 0 });
       }
