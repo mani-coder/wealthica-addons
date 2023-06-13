@@ -22,7 +22,7 @@
     "xirr": "^1.1.0"
   },
   "scripts": {
-    "dev": "craco start",
+    "dev": "GENERATE_SOURCEMAP=false craco start",
     "build": "GENERATE_SOURCEMAP=false craco build && mkdir -p ../../public/mani-coder/wealthica-portfolio-addon/ && rm -rf ../../public/mani-coder/wealthica-portfolio-addon/static; cp -vR build/* ../../public/mani-coder/wealthica-portfolio-addon/",
     "deploy": "npm run build && firebase deploy --only hosting:mani-coder"
   },
