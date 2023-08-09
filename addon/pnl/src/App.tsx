@@ -208,7 +208,7 @@ class App extends Component<Props, State> {
       }
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
       position.xirr = computeXIRR(position);
-      computeBookValue(position);
+      computeBookValue(position, currencyCache);
     });
 
     const cashFlowByDate = computeCashFlowByDate(transactions, currencyCache);

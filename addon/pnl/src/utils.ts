@@ -222,11 +222,13 @@ export function computeXIRR(position: Position) {
   }
 }
 
-export function computeBookValue(position: Position) {
+export function computeBookValue(position: Position, currencyCache: any) {
   const transactions = position.transactions;
   if (!transactions || !transactions.length || position.book_value) {
     return;
   }
+  console.log('mani is cool', position);
+  const isUsStock = position.security.currency === 'usd';
   const book = transactions
     .filter((t) => ['buy', 'sell'].includes(t.type))
     .reduce(
@@ -241,16 +243,19 @@ export function computeBookValue(position: Position) {
         }
         return book;
       },
-      { price: 0, shares: 0, value: 0 } as { price: number; shares: number; value: number },
+      { price: 0, shares: 0, value: 0 } as { price: number; usPrice: number; shares: number; value: number },
     );
 
-  position.book_value = book.value;
-  position.gain_amount = position.market_value - book.value;
+  const price = isUsStock ? getCurrencyInCAD(moment(), book.price, currencyCache) : book.price;
+  position.book_value = book.shares * price;
+  position.gain_amount = position.market_value - position.book_value;
   position.gain_percent = position.gain_amount / position.book_value;
-  const investment = position.investments ? position.investments[0] : undefined;
-  if (investment && !investment.book_value) {
-    investment.book_value = position.book_value;
-  }
+
+  (position.investments || []).forEach((investment) => {
+    if (!investment.book_value) {
+      investment.book_value = investment.quantity * book.price;
+    }
+  });
 }
 
 export function isChrome() {
