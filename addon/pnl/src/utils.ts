@@ -227,7 +227,8 @@ export function computeBookValue(position: Position, currencyCache: any) {
   if (!transactions || !transactions.length || position.book_value) {
     return;
   }
-  console.log('mani is cool', position);
+
+  console.log('Computing the book value:', position);
   const isUsStock = position.security.currency === 'usd';
   const book = transactions
     .filter((t) => ['buy', 'sell'].includes(t.type))
