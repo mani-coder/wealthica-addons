@@ -1,18 +1,19 @@
 import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { startCase } from 'lodash';
+import moment from 'moment';
 import { useCallback, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { Account, Position } from '../types';
-import { formatCurrency, formatMoney, getCurrencyInCAD, getSymbol } from '../utils';
+import { Account, CurrencyCache, Position } from '../types';
+import { formatCurrency, formatMoney, getCurrencyInCAD, getSymbol, sumOf } from '../utils';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
-import CompositionGroup, { getGroupKey, GroupType } from './CompositionGroup';
-import { getOptions, POSITION_TOOLTIP } from './HoldingsChartsBase';
+import CompositionGroup, { GroupType, getGroupKey } from './CompositionGroup';
+import { POSITION_TOOLTIP, getOptions } from './HoldingsChartsBase';
 
 type Props = {
-  currencyCache: { [K: string]: number };
+  currencyCache: CurrencyCache;
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;
@@ -24,11 +25,6 @@ const COLORS = Highcharts.getOptions().colors;
 export default function CompositionCharts(props: Props) {
   const [showHoldings, setShowHoldings] = useState(true);
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('currency');
-
-  const lastCurrencyDate = useMemo(() => {
-    const currencyCacheKeys = Object.keys(props.currencyCache);
-    return currencyCacheKeys[currencyCacheKeys.length - 1];
-  }, [props.currencyCache]);
 
   const getColor = useCallback((index) => (COLORS ? COLORS[index % COLORS?.length] : undefined), []);
 
@@ -194,12 +190,15 @@ export default function CompositionCharts(props: Props) {
             const _name = account.name;
             let _account = mergedAccount.accounts[_name];
             if (!_account) {
-              _account = { name: _name, cad: 0, usd: 0, value: 0 };
+              _account = { name: _name, currencyValues: {}, value: 0 };
               mergedAccount.accounts[_name] = _account;
             }
             const cash = account.cash ? Number(account.cash.toFixed(2)) : 0;
-            _account.cad = _account.cad + (account.currency === 'cad' ? cash : 0);
-            _account.usd = _account.usd + (account.currency === 'usd' ? cash : 0);
+
+            if (!_account.currencyValues[account.currency]) {
+              _account.currencyValues[account.currency] = 0;
+            }
+            _account.currencyValues[account.currency] += cash;
 
             return hash;
           },
@@ -208,7 +207,7 @@ export default function CompositionCharts(props: Props) {
               name: string;
               value: number;
               gainAmount: number;
-              accounts: { [K: string]: { name: string; cad: number; usd: number; value: number } };
+              accounts: { [K: string]: { name: string; value: number; currencyValues: { [K: string]: number } } };
             };
           },
         ),
@@ -224,26 +223,30 @@ export default function CompositionCharts(props: Props) {
           .sort((a, b) => b.value - a.value)
           .map((account, index) => {
             const accounts = Object.values(account.accounts);
-            const cad = accounts.reduce((sum, account) => sum + account.cad, 0);
-            const usd = accounts.reduce((sum, account) => sum + account.usd, 0);
+            const cash = sumOf(
+              ...accounts.map((account) =>
+                sumOf(
+                  ...Object.keys(account.currencyValues).map((currency) =>
+                    getCurrencyInCAD(moment(), account.currencyValues[currency], props.currencyCache, currency),
+                  ),
+                ),
+              ),
+            );
             const cashTable = accounts
-              .filter((account) => !!account.cad || !!account.usd)
-              .sort((a, b) => b.usd + b.cad - (a.usd + a.cad))
+              .filter((account) => !!sumOf(...Object.values(account.currencyValues)))
               .map(
                 (account) =>
                   `<tr>
                 <td style="vertical-align: top">${account.name}</td>
                 <td style="text-align: right;">
-                ${
-                  !!account.cad
-                    ? `<div style="color:${account.cad < 0 ? 'red' : ''}">C$ ${formatMoney(account.cad)}</div>`
-                    : ''
-                }
-                ${
-                  !!account.usd
-                    ? `<span style="color:${account.usd < 0 ? 'red' : ''}">U$ ${formatMoney(account.usd)}</span>`
-                    : ''
-                }
+                ${Object.keys(account.currencyValues)
+                  .filter((currency) => !!account.currencyValues[currency])
+                  .map((currency) => {
+                    return `<div style="color:${
+                      account.currencyValues[currency] < 0 ? 'red' : ''
+                    }">${currency.toUpperCase()} ${formatMoney(account.currencyValues[currency])}</div>`;
+                  })
+                  .join('')}
                 </td>
               </tr>`,
               )
@@ -259,9 +262,7 @@ export default function CompositionCharts(props: Props) {
               gain: props.isPrivateMode ? '-' : `CAD ${formatMoney(account.gainAmount)}`,
               gainRatio: `${((account.gainAmount / (account.value - account.gainAmount)) * 100).toFixed(2)}%`,
               pnlColor: account.gainAmount >= 0 ? 'green' : 'red',
-              cash: cad + (usd ? getCurrencyInCAD(lastCurrencyDate, usd, props.currencyCache) : 0),
-              cad,
-              usd,
+              cash,
               cashTable,
             };
           }),
@@ -311,20 +312,6 @@ export default function CompositionCharts(props: Props) {
                 };">CAD ${formatMoney(point.cash)}</td></tr>`
               : ''
           }
-          ${
-            !!point.cad && !props.isPrivateMode
-              ? `<tr><td>CAD Cash</td><td style="text-align: right;" class="position-tooltip-cash" style="color:${
-                  point.cad < 0 ? 'red' : ''
-                };">CAD ${formatMoney(point.cad)}</td></tr>`
-              : ''
-          }
-          ${
-            !!point.usd && !props.isPrivateMode
-              ? `<tr><td>USD Cash</td><td style="text-align: right;" class="position-tooltip-cash" style="color:${
-                  point.usd < 0 ? 'red' : ''
-                };">USD ${formatMoney(point.usd)}</td></tr>`
-              : ''
-          }
         </table>`;
           },
         },
@@ -341,7 +328,6 @@ export default function CompositionCharts(props: Props) {
       props.isPrivateMode,
       props.currencyCache,
       showHoldings,
-      lastCurrencyDate,
     ],
   );
 
@@ -355,7 +341,7 @@ export default function CompositionCharts(props: Props) {
     } => {
       const series = getAccountsCompositionSeries(group);
       const drilldown = showHoldings ? undefined : getAccountsCompositionHoldingsDrilldown(group, true);
-      const title = group === 'currency' ? 'USD vs CAD' : group === 'type' ? 'Account Type' : `${startCase(group)}`;
+      const title = group === 'type' ? 'Account Type' : `${startCase(group)}`;
 
       return { series, drilldown, title: `${title} Composition` };
     },

@@ -2,15 +2,15 @@
 import * as Highcharts from 'highcharts';
 import { useMemo, useState } from 'react';
 import { Flex } from 'rebass';
-import { Account, Position } from '../types';
+import { Account, CurrencyCache, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
 import CompositionCharts from './CompositionCharts';
-import { getOptions, getOptionsV2, POSITION_TOOLTIP, StockSelector } from './HoldingsChartsBase';
+import { POSITION_TOOLTIP, StockSelector, getOptions, getOptionsV2 } from './HoldingsChartsBase';
 import StockTimeline from './StockTimeline';
 
 type Props = {
-  currencyCache: { [K: string]: number };
+  currencyCache: CurrencyCache;
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;

@@ -13,13 +13,13 @@ import xirr from 'xirr';
 import './App.less';
 import { initTracking, trackEvent } from './analytics';
 import {
+  computeCashFlowByDate,
   parseAccountTransactionsResponse,
   parseCurrencyReponse,
   parseInstitutionsResponse,
   parsePortfolioResponse,
   parsePositionsResponse,
   parseSecurityTransactionsResponse,
-  computeCashFlowByDate,
 } from './api';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
@@ -33,16 +33,16 @@ import PnLStatistics from './components/PnLStatistics';
 import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
-import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
+import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TRANSACTIONS_FROM_DATE } from './constants';
-import { Account, AccountTransaction, Portfolio, Position, Transaction } from './types';
+import { Account, AccountTransaction, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getCurrencyInCAD, getSymbol } from './utils';
 
 type State = {
   addon: any;
-  currencyCache?: { [key: string]: number };
+  currencyCache?: CurrencyCache;
   securityTransactions: Transaction[];
   accountTransactions: AccountTransaction[];
   portfolios: Portfolio[];
@@ -115,33 +115,35 @@ class App extends Component<Props, State> {
     return null;
   };
 
-  loadCurrenciesCache() {
-    if (this.state.currencyCache) {
-      return null;
+  async loadCurrenciesCache(currencies: string[]) {
+    const validCurrencies = currencies.filter((currency) => currency !== 'cad');
+    const loadCurrency = (currency: string) => {
+      return fetch(`https://app.wealthica.com/api/currencies/cad/history?base=${currency}`)
+        .then((response) => response.json())
+        .then((response) => parseCurrencyReponse(response))
+        .catch((error) => console.error(`Failed to load currency for ${currency}`, error));
+    };
+
+    async function _loadCurrencies() {
+      const values = await Promise.all(validCurrencies.map(loadCurrency));
+      return validCurrencies.reduce((hash, currency, index) => {
+        hash[currency] = values[index];
+        return hash;
+      }, {});
     }
 
-    console.debug('Loading currencies data.');
-    return this.state.addon
-      .request({
-        method: 'GET',
-        endpoint: 'currencies/usd/history',
-        query: {
-          base: 'cad',
-        },
-      })
-      .then((response) => parseCurrencyReponse(response))
-      .catch((error) => {
-        console.error('Failed to load currency data.', error);
-      });
+    const loadedCurrencies = new Set(Object.keys(this.state.currencyCache ?? {}));
+    if (this.state.currencyCache && validCurrencies.every((currency) => loadedCurrencies.has(currency))) {
+      console.debug('Skip loading currencies afresh...', currencies);
+      return this.state.currencyCache;
+    }
+
+    console.debug('Loading currencies data...', validCurrencies);
+    const values = await _loadCurrencies();
+    return values;
   }
 
-  load = _.debounce(
-    (options: any) => {
-      this.loadData(options);
-    },
-    100,
-    { leading: true },
-  );
+  load = _.debounce((options: any) => this.loadData(options), 100, { leading: true });
 
   mergeOptions(options) {
     if (!this.state.options) {
@@ -159,25 +161,26 @@ class App extends Component<Props, State> {
     options = this.mergeOptions(options);
     this.setState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
 
-    const [positions, portfolioByDate, transactions, accounts, currencyCache] = await Promise.all([
+    const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
       this.loadPositions(options),
       this.loadPortfolioData(options),
       this.loadTransactions(options),
       this.loadInstitutionsData(options),
-      this.loadCurrenciesCache(),
     ]);
 
-    const _currencyCache = currencyCache || this.state.currencyCache;
+    const currencyCache = await this.loadCurrenciesCache(
+      Array.from(new Set(accounts.map((account) => account.currency))),
+    );
 
     console.debug('Loaded data', {
       positions,
       portfolioByDate,
       transactions,
       accounts,
-      currencyCache: _currencyCache,
+      currencyCache,
     });
 
-    this.computePortfolios(positions, portfolioByDate, transactions, accounts, _currencyCache);
+    this.computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
   }
 
   computePortfolios = (
@@ -185,7 +188,7 @@ class App extends Component<Props, State> {
     portfolioByDate: any,
     transactions: any,
     accounts: Account[],
-    currencyCache: any,
+    currencyCache: CurrencyCache,
   ) => {
     // Security transactions & XIRR computation
     const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyCache);
@@ -204,6 +207,7 @@ class App extends Component<Props, State> {
           position.security?.last_date ? moment(position.security.last_date.slice(0, 10)) : moment(),
           position.security.last_price,
           currencyCache,
+          'usd',
         );
       }
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
@@ -365,9 +369,9 @@ class App extends Component<Props, State> {
   }
 
   async loadStaticPortfolioData() {
-    let institutionsData, portfolioData, positionsData, transactionsData, currenciesData;
+    let institutionsData, portfolioData, positionsData, transactionsData;
     if (process.env.NODE_ENV === 'development') {
-      [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
+      [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
         import('./mocks/prod/institutions-prod.json').then((response) => response.default),
         import('./mocks/prod/portfolio-prod.json').then((response) => response.default),
         import('./mocks/prod/positions-prod.json').then((response) => response.default),
@@ -377,7 +381,7 @@ class App extends Component<Props, State> {
     }
 
     if (!institutionsData || !institutionsData.length) {
-      [institutionsData, portfolioData, positionsData, transactionsData, currenciesData] = await Promise.all([
+      [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
         import('./mocks/institutions').then((response) => response.DATA),
         import('./mocks/portfolio').then((response) => response.DATA),
         import('./mocks/positions').then((response) => response.DATA),
@@ -393,10 +397,12 @@ class App extends Component<Props, State> {
       transactionsData = transactionsData.filter((transaction) => transaction.institution === testInstitution);
     }
 
-    const currencyCache = parseCurrencyReponse(currenciesData);
     const positions = parsePositionsResponse(positionsData);
     const accounts = parseInstitutionsResponse(institutionsData);
 
+    const currencyCache = await this.loadCurrenciesCache(
+      Array.from(new Set(accounts.map((account) => account.currency))),
+    );
     this.computePortfolios(positions, portfolioByDate, transactionsData, accounts, currencyCache);
     console.debug('State:', this.state);
   }
@@ -429,7 +435,12 @@ class App extends Component<Props, State> {
               {!this.state.addon && (
                 <>
                   <p
-                    style={{ fontWeight: 'bolder', textAlign: 'center', color: '#C00316', textDecoration: 'underline' }}
+                    style={{
+                      fontWeight: 'bolder',
+                      textAlign: 'center',
+                      color: '#C00316',
+                      textDecoration: 'underline',
+                    }}
                   >
                     <img
                       src="/mani-coder/wealthica-portfolio-addon/favicon.png"

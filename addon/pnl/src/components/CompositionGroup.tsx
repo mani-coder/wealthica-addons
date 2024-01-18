@@ -25,7 +25,7 @@ export default function CompositionGroup({ group = 'currency', changeGroup, trac
           trackEvent(tracker, { group: e.target.value });
         }}
         options={[
-          { label: 'USD vs CAD', value: 'currency' },
+          { label: 'Currency', value: 'currency' },
           { label: 'Account Type', value: 'type' },
           { label: 'Institution', value: 'institution' },
           { label: 'Account', value: 'accounts' },

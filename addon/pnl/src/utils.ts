@@ -1,7 +1,7 @@
 import moment, { Moment } from 'moment';
 import xirr from 'xirr';
 import { DATE_FORMAT } from './constants';
-import { PortfolioData, Position, Security } from './types';
+import { CurrencyCache, PortfolioData, Position, Security } from './types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
   return Boolean(data.deposit || data.income || data.interest || data.value || data.withdrawal);
@@ -11,14 +11,21 @@ export const getDate = (date: string): Moment => {
   return moment(date.slice(0, 10), DATE_FORMAT);
 };
 
-export const getCurrencyInCAD = (date: Moment | string, value: number, currencyCache: any): number => {
-  const multiplier = currencyCache[typeof date === 'string' ? date : date.format(DATE_FORMAT)];
-  if (multiplier) {
-    return value / multiplier;
-  } else {
-    const latestDate = Object.keys(currencyCache).sort((a, b) => b.localeCompare(a))[0];
-    return latestDate ? value / currencyCache[latestDate] : value;
-  }
+export const getCurrencyInCAD = (
+  date: Moment | string,
+  value: number,
+  currencyCache: CurrencyCache,
+  currency: string = 'usd',
+): number => {
+  if (currency.toLowerCase() === 'cad') return value;
+
+  const _currencyCache = currencyCache[currency.toLowerCase()];
+  const _date = typeof date === 'string' ? date : date.format(DATE_FORMAT);
+  const multiplier = _currencyCache[_date];
+  if (multiplier) return value * multiplier;
+
+  const latestDate = Object.keys(_currencyCache).sort((a, b) => b.localeCompare(a))[0];
+  return latestDate ? value * _currencyCache[latestDate] : value;
 };
 
 export const formatMoney = (amount?: number, precision?: number): string => {
@@ -137,6 +144,10 @@ export function setLocalCache(name, value) {
   } catch {}
 }
 
+export function sumOf(...args) {
+  return args.reduce((s, value) => (value ? s + value : s), 0);
+}
+
 export function getLocalCache(name) {
   try {
     return window.localStorage.getItem(name);
@@ -229,7 +240,6 @@ export function computeBookValue(position: Position, currencyCache: any) {
   }
 
   console.log('Computing the book value:', position);
-  const isUsStock = position.security.currency === 'usd';
   const book = transactions
     .filter((t) => ['buy', 'sell'].includes(t.type))
     .reduce(
@@ -247,7 +257,7 @@ export function computeBookValue(position: Position, currencyCache: any) {
       { price: 0, shares: 0, value: 0 } as { price: number; usPrice: number; shares: number; value: number },
     );
 
-  const price = isUsStock ? getCurrencyInCAD(moment(), book.price, currencyCache) : book.price;
+  const price = getCurrencyInCAD(moment(), book.price, currencyCache, position.security.currency);
   position.book_value = book.shares * price;
   position.gain_amount = position.market_value - position.book_value;
   position.gain_percent = position.gain_amount / position.book_value;

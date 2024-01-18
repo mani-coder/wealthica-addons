@@ -2,20 +2,19 @@
 import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
 import React, { useMemo } from 'react';
-import { Box } from 'rebass';
-import { Account } from '../types';
-import { formatMoney, getCurrencyInCAD } from '../utils';
+import { Box, Flex } from 'rebass';
+import { Account, CurrencyCache } from '../types';
+import { formatMoney, getCurrencyInCAD, sumOf } from '../utils';
 import Collapsible from './Collapsible';
+import moment from 'moment';
 
 type Props = {
   accounts: Account[];
-  currencyCache: { [K: string]: number };
+  currencyCache: CurrencyCache;
   isPrivateMode: boolean;
 };
 
 function CashTable(props: Props) {
-  const currencyCacheKeys = Object.keys(props.currencyCache);
-  const lastCurrencyDate = currencyCacheKeys[currencyCacheKeys.length - 1];
   const accounts = useMemo(() => {
     return props.accounts.filter((acc) => acc.cash && acc.cash !== 0).sort((a, b) => b.cash - a.cash);
   }, [props.accounts]);
@@ -83,10 +82,7 @@ function CashTable(props: Props) {
         dataIndex: 'cash',
         render: (cash: number, account: Account) => (
           <Typography.Text strong style={{ color: cash < 0 ? 'red' : '', fontSize: 14 }}>
-            {formatMoney(
-              account.currency === 'usd' ? getCurrencyInCAD(lastCurrencyDate, cash, props.currencyCache) : cash,
-            )}{' '}
-            CAD
+            {formatMoney(getCurrencyInCAD(moment(), cash, props.currencyCache, account.currency))} CAD
           </Typography.Text>
         ),
         sorter: (a, b) => a.cash - b.cash,
@@ -102,38 +98,35 @@ function CashTable(props: Props) {
           pagination={false}
           scroll={{ y: 500 }}
           summary={(accounts) => {
-            const totalCAD = accounts
-              .filter((a) => a.currency === 'cad')
-              .reduce((total, account) => total + account.cash, 0);
+            const currencyValues = accounts.reduce((hash, account) => {
+              if (!hash[account.currency]) hash[account.currency] = 0;
+              hash[account.currency] += account.cash;
+              return hash;
+            }, {});
 
-            const totalUSD = accounts
-              .filter((a) => a.currency === 'usd')
-              .reduce((total, account) => total + account.cash, 0);
-
-            const total = totalCAD + getCurrencyInCAD(lastCurrencyDate, totalUSD, props.currencyCache);
+            const total = sumOf(
+              ...Object.keys(currencyValues).map((currency) =>
+                getCurrencyInCAD(moment(), currencyValues[currency], props.currencyCache, currency),
+              ),
+            );
 
             return (
               <Table.Summary fixed>
                 <Table.Summary.Row>
-                  <Table.Summary.Cell colSpan={3} align="right" index={0}>
-                    <Box pb={1}>
-                      <Typography.Text strong>CAD Total</Typography.Text>
-                    </Box>
-                    <Typography.Text strong>USD Total</Typography.Text>
+                  <Table.Summary.Cell index={1} colSpan={4} align="right">
+                    <Flex px={2} flexDirection="row" justifyContent="space-evenly">
+                      {Object.keys(currencyValues).map((currency) => (
+                        <Box px={2}>
+                          <Typography.Text strong style={{ color: currencyValues[currency] >= 0 ? 'green' : 'red' }}>
+                            {formatMoney(currencyValues[currency])} {currency.toUpperCase()}
+                          </Typography.Text>
+                        </Box>
+                      ))}
+                    </Flex>
                   </Table.Summary.Cell>
 
                   <Table.Summary.Cell index={1} colSpan={1} align="right">
-                    <Box pb={1}>
-                      <Typography.Text strong style={{ color: totalCAD >= 0 ? 'green' : 'red' }}>
-                        {formatMoney(totalCAD)} CAD
-                      </Typography.Text>
-                    </Box>
-                    <Typography.Text strong style={{ color: totalUSD >= 0 ? 'green' : 'red' }}>
-                      {formatMoney(totalUSD)} USD
-                    </Typography.Text>
-                  </Table.Summary.Cell>
-
-                  <Table.Summary.Cell index={1} colSpan={1} align="right">
+                    <Typography.Text style={{ paddingRight: 8 }}>Total:</Typography.Text>
                     <Typography.Text strong style={{ color: total >= 0 ? 'green' : 'red' }}>
                       {formatMoney(total)} CAD
                     </Typography.Text>

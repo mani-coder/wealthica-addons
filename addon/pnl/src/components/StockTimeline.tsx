@@ -5,7 +5,7 @@ import moment, { Moment } from 'moment';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { Account, Position, Transaction } from '../types';
+import { Account, CurrencyCache, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getCurrencyInCAD, getDate } from '../utils';
 import Charts from './Charts';
 
@@ -15,7 +15,7 @@ type Props = {
   isPrivateMode: boolean;
   addon?: any;
   accounts: Account[];
-  currencyCache: { [K: string]: number };
+  currencyCache: CurrencyCache;
 };
 
 type SecurityHistoryTimeline = {

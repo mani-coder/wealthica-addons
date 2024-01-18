@@ -12,7 +12,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
 import { DATE_FORMAT } from '../../constants';
-import { Account, AccountTransaction, Transaction } from '../../types';
+import { Account, AccountTransaction, CurrencyCache, Transaction } from '../../types';
 import { formatCurrency, formatMoney, getCurrencyInCAD } from '../../utils';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
@@ -29,7 +29,7 @@ type Props = {
   isPrivateMode: boolean;
   fromDate: string;
   toDate: string;
-  currencyCache: { [K: string]: number };
+  currencyCache: CurrencyCache;
 };
 
 type CurrentPosition = {
@@ -101,12 +101,16 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
       const crypto = transaction.securityType === 'crypto';
 
-      const isUSD = transaction.currency === 'usd' && !crypto;
+      const isCAD = transaction.currency === 'cad' || crypto;
       const buyValue = closedShares * buyRecord.price;
       const sellValue = closedShares * sellRecord.price;
 
-      const buyCost = isUSD ? getCurrencyInCAD(buyRecord.date, buyValue, currencyCache) : buyValue;
-      const sellCost = isUSD ? getCurrencyInCAD(sellRecord.date, sellValue, currencyCache) : sellValue;
+      const buyCost = isCAD
+        ? getCurrencyInCAD(buyRecord.date, buyValue, currencyCache, transaction.currency)
+        : buyValue;
+      const sellCost = isCAD
+        ? getCurrencyInCAD(sellRecord.date, sellValue, currencyCache, transaction.currency)
+        : sellValue;
 
       const pnl = sellCost - buyCost;
       const pnlRatio = (pnl / buyCost) * 100;

@@ -1,5 +1,5 @@
 import { DATE_FORMAT } from './constants';
-import { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
+import { Account, AccountTransaction, CashFlow, CurrencyCache, Position, Transaction } from './types';
 import { getCurrencyInCAD, getDate, getSymbol, normalizeAccountType } from './utils';
 
 //
@@ -95,6 +95,11 @@ export const parsePortfolioResponse = (response: any, institution?: string) => {
   }, {});
 };
 
+const getInvestmentCurrency = (investment: string) => {
+  const currency = investment && investment.includes(':') && investment.split(':').pop();
+  return currency && currency.length === 3 ? currency : 'cad';
+};
+
 export const computeCashFlowByDate = (response: any, currencyCache: any): { [K: string]: CashFlow } => {
   return response
     .filter((t) => !t.deleted)
@@ -115,11 +120,12 @@ export const computeCashFlowByDate = (response: any, currencyCache: any): { [K: 
             income: 0,
           };
 
-      let amount = Number(transaction.currency_amount);
-      amount =
-        transaction.investment && transaction.investment.includes(':usd')
-          ? getCurrencyInCAD(date, amount, currencyCache)
-          : amount;
+      const amount = getCurrencyInCAD(
+        date,
+        Number(transaction.currency_amount),
+        currencyCache,
+        getInvestmentCurrency(transaction.investment),
+      );
 
       if (['deposit'].includes(type)) {
         portfolioData.deposit += amount;
@@ -155,7 +161,7 @@ export const computeCashFlowByDate = (response: any, currencyCache: any): { [K: 
     }, {});
 };
 
-export const parseSecurityTransactionsResponse = (response: any, currencyCache: any): Transaction[] => {
+export const parseSecurityTransactionsResponse = (response: any, currencyCache: CurrencyCache): Transaction[] => {
   return response
     .filter((t) => !t.deleted && t.type)
     .filter(
@@ -169,11 +175,12 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
     .map((transaction) => {
       const date = getDate(transaction.date);
 
-      let amount = Number(transaction.currency_amount);
-      amount =
-        transaction.investment && transaction.investment.includes(':usd')
-          ? getCurrencyInCAD(date, amount, currencyCache)
-          : amount;
+      const amount = getCurrencyInCAD(
+        date,
+        Number(transaction.currency_amount),
+        currencyCache,
+        getInvestmentCurrency(transaction.investment),
+      );
 
       let splitRatio;
       if (transaction.type === 'split' && transaction.description?.includes('@')) {
@@ -207,7 +214,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencyCache: 
     .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 };
 
-export const parseAccountTransactionsResponse = (response: any, currencyCache: any): AccountTransaction[] => {
+export const parseAccountTransactionsResponse = (response: any, currencyCache: CurrencyCache): AccountTransaction[] => {
   return response
     .filter((t) => !t.deleted && t.type)
     .filter(
@@ -220,11 +227,12 @@ export const parseAccountTransactionsResponse = (response: any, currencyCache: a
     )
     .map((transaction) => {
       const date = getDate(transaction.date);
-      let amount = Number(transaction.currency_amount);
-      amount =
-        transaction.investment && transaction.investment.includes(':usd')
-          ? getCurrencyInCAD(date, amount, currencyCache)
-          : amount;
+      const amount = getCurrencyInCAD(
+        date,
+        Number(transaction.currency_amount),
+        currencyCache,
+        getInvestmentCurrency(transaction.investment),
+      );
 
       return {
         id: transaction.id,

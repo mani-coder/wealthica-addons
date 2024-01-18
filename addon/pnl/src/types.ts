@@ -1,5 +1,7 @@
 import { Moment } from 'moment';
 
+export type CurrencyCache = { [key: string]: { [key: string]: number } };
+
 // This is the data of the portfolio on the single day.
 export type PortfolioData = {
   value?: number; // combined portfolio value on a given day
