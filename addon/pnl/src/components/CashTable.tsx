@@ -15,9 +15,18 @@ type Props = {
 };
 
 function CashTable(props: Props) {
+  const cashComparator = (a: Account, b: Account) =>
+    getCurrencyInCAD(moment(), b.cash, props.currencyCache, b.currency) -
+    getCurrencyInCAD(moment(), a.cash, props.currencyCache, a.currency);
+
   const accounts = useMemo(() => {
-    return props.accounts.filter((acc) => acc.cash && acc.cash !== 0).sort((a, b) => b.cash - a.cash);
+    return props.accounts.filter((acc) => acc.cash && acc.cash !== 0).sort(cashComparator);
   }, [props.accounts]);
+
+  const currencies = [{ value: 'cad', text: 'CAD' }].concat(
+    ...Object.keys(props.currencyCache).map((currency) => ({ value: currency, text: currency.toUpperCase() })),
+  );
+  console.log('mani is cool', currencies);
 
   function getColumns(): ColumnProps<Account>[] {
     return [
@@ -55,11 +64,8 @@ function CashTable(props: Props) {
         dataIndex: 'currency',
         render: (currency: string) => currency.toUpperCase(),
         sorter: (a, b) => a.currency.localeCompare(b.currency),
-        width: 100,
-        filters: [
-          { value: 'cad', text: 'CAD' },
-          { value: 'usd', text: 'USD' },
-        ],
+        width: 120,
+        filters: currencies,
         onFilter: (value, account) => !!account.currency && account.currency.indexOf(value as any) === 0,
       },
 
@@ -73,7 +79,7 @@ function CashTable(props: Props) {
             {formatMoney(cash, 2)} {account.currency.toUpperCase()}
           </Typography.Text>
         ),
-        sorter: (a, b) => a.cash - b.cash,
+        sorter: cashComparator,
       },
       {
         key: 'cadCash',
@@ -85,7 +91,7 @@ function CashTable(props: Props) {
             {formatMoney(getCurrencyInCAD(moment(), cash, props.currencyCache, account.currency))} CAD
           </Typography.Text>
         ),
-        sorter: (a, b) => a.cash - b.cash,
+        sorter: cashComparator,
       },
     ];
   }
