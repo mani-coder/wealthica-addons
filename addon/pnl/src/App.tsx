@@ -376,7 +376,6 @@ class App extends Component<Props, State> {
         import('./mocks/prod/portfolio-prod.json').then((response) => response.default),
         import('./mocks/prod/positions-prod.json').then((response) => response.default),
         import('./mocks/prod/transactions-prod.json').then((response) => response.default),
-        import('./mocks/prod/currencies-prod.json').then((response) => response.default),
       ]);
     }
 
@@ -386,7 +385,6 @@ class App extends Component<Props, State> {
         import('./mocks/portfolio').then((response) => response.DATA),
         import('./mocks/positions').then((response) => response.DATA),
         import('./mocks/transactions').then((response) => response.DATA),
-        import('./mocks/currencies').then((response) => response.DATA),
       ]);
     }
 
