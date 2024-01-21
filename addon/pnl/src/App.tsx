@@ -494,7 +494,7 @@ export default function App() {
                   <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane tab="Holdings Analyzer" key="holdings">
+                <Tabs.TabPane forceRender tab="Holdings Analyzer" key="holdings">
                   {!!state.positions.length ? (
                     <HoldingsCharts
                       positions={state.positions}
