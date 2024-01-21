@@ -69,7 +69,7 @@ export function shuffle(s: string) {
 }
 
 export const getSymbol = (security: Security): string => {
-  return `${security.symbol || security.name}${security.currency === 'usd' || security.type === 'crypto' ? '' : '.TO'}`;
+  return `${security.symbol || security.name}${security.currency === 'cad' && security.type !== 'crypto' ? '.TO' : ''}`;
 };
 
 export const getNasdaqTicker = (security: Security): string =>

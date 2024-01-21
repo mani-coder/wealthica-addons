@@ -26,7 +26,6 @@ function CashTable(props: Props) {
   const currencies = [{ value: 'cad', text: 'CAD' }].concat(
     ...Object.keys(props.currencyCache).map((currency) => ({ value: currency, text: currency.toUpperCase() })),
   );
-  console.log('mani is cool', currencies);
 
   function getColumns(): ColumnProps<Account>[] {
     return [

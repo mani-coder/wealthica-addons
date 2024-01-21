@@ -184,8 +184,16 @@ export default function CompositionCharts(props: Props) {
               mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
               hash[name] = mergedAccount;
             }
-            mergedAccount.value += account.positions.reduce((value, position) => value + position.market_value || 0, 0);
-            mergedAccount.gainAmount += account.positions.reduce((value, position) => value + position.gain_amount, 0);
+            mergedAccount.value += account.positions.reduce(
+              (value, position) =>
+                value + getCurrencyInCAD(moment(), position.market_value, props.currencyCache, position.currency) || 0,
+              0,
+            );
+            mergedAccount.gainAmount += account.positions.reduce(
+              (value, position) =>
+                value + getCurrencyInCAD(moment(), position.gain_amount, props.currencyCache, position.currency),
+              0,
+            );
 
             const _name = account.name;
             let _account = mergedAccount.accounts[_name];
