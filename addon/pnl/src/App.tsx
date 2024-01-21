@@ -153,7 +153,9 @@ export default function App() {
   function mergeOptions(options) {
     if (!state.options) {
       updateState({ options });
+      return;
     }
+
     const oldOptions = state.options;
     Object.keys(options).forEach((key) => {
       oldOptions[key] = options[key];
