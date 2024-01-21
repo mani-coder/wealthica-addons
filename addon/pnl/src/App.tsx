@@ -56,24 +56,23 @@ type State = {
 
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
-  const [addOnOptions, setAddOnOptions] = useState<{ [K: string]: any }>({
+  const addOnOptionsRef = useRef<{ [K: string]: any }>({
     currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
     toDate: moment().format('YYYY-MM-DD'),
   });
+  const addOnOptions = addOnOptionsRef.current;
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
-  function mergeOptions(newOptions) {
-    console.log('merging options', { addOnOptions, newOptions });
-    const finalOptions = { ...(addOnOptions || {}) };
-    Object.keys(newOptions).forEach((key) => {
-      finalOptions[key] = newOptions[key];
-    });
-    return finalOptions;
-  }
+  const getAddon = (addOnOptionsRef: React.RefObject<{ [K: string]: any }>): any => {
+    function updateOptions(_addOnOptions, options) {
+      Object.keys(options).forEach((option) => {
+        _addOnOptions[option] = options[option];
+      });
+      return _addOnOptions;
+    }
 
-  const getAddon = (): any => {
     try {
       const addon = new Addon(
         (window.location.search || '').includes('?developer') ? {} : { id: 'mani-coder/wealthica-portfolio-addon' },
@@ -81,7 +80,7 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        load(options);
+        load(updateOptions(addOnOptionsRef.current, options));
         initTracking(options.authUser && options.authUser.id);
       });
 
@@ -94,7 +93,7 @@ export default function App() {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
         setLoadingOnUpdate(true);
-        load(options);
+        load(updateOptions(addOnOptionsRef.current, options));
         trackEvent('update');
       });
 
@@ -106,7 +105,7 @@ export default function App() {
     return null;
   };
 
-  const addon = useRef(getAddon());
+  const addon = useRef(getAddon(addOnOptionsRef));
 
   const [state, setState] = useState<State>({
     securityTransactions: [],
@@ -153,12 +152,8 @@ export default function App() {
 
   const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
 
-  async function loadData(newOptions: any) {
-    console.debug('[DEBUG] Load Data being state: ', { state, newOptions, addOnOptions });
-
-    const options = mergeOptions(newOptions);
-    setAddOnOptions(options);
-
+  async function loadData(options: any) {
+    console.debug('[DEBUG] Load Data being state: ', { state, options, addOnOptions });
     currencyRef.current.setBaseCurrency(options.currency);
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
       loadPositions(options),
