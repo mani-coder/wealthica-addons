@@ -57,6 +57,7 @@ type State = {
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
   const [addOnOptions, setAddOnOptions] = useState<{ [K: string]: any }>({
+    currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
     toDate: moment().format('YYYY-MM-DD'),
@@ -95,7 +96,7 @@ export default function App() {
         const mergedOptions = mergeOptions(options);
         setAddOnOptions(mergedOptions);
         setLoadingOnUpdate(true);
-        load(mergedOptions, true);
+        load(mergedOptions);
         trackEvent('update');
       });
 
@@ -152,9 +153,9 @@ export default function App() {
     return values;
   }
 
-  const load = _.debounce((options: any, isUpdate?: boolean) => loadData(options, isUpdate), 100, { leading: true });
+  const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
 
-  async function loadData(options: any, isUpdate?: boolean) {
+  async function loadData(options: any) {
     console.debug('[DEBUG] Load Data being state: ', { state, options });
     currencyRef.current.setBaseCurrency(options.currency);
 
