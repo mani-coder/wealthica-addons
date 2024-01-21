@@ -42,8 +42,6 @@ import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Positi
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
 
 type State = {
-  addon: any;
-
   securityTransactions: Transaction[];
   accountTransactions: AccountTransaction[];
   portfolios: Portfolio[];
@@ -51,20 +49,27 @@ type State = {
   positions: Position[];
   accounts: Account[];
   cashflows: CashFlow[];
-
   newChangeLogsCount?: number;
   xirr: number;
-  privateMode: boolean;
-  fromDate: string;
-  toDate: string;
-
-  options: any;
   isLoaded: boolean;
-  isLoadingOnUpdate?: boolean;
 };
 
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
+  const [addOnOptions, setAddOnOptions] = useState<{ [K: string]: any }>({
+    privateMode: false,
+    fromDate: TRANSACTIONS_FROM_DATE,
+    toDate: moment().format('YYYY-MM-DD'),
+  });
+  const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
+
+  function mergeOptions(newOptions) {
+    const finalOptions = { ...(addOnOptions || {}) };
+    Object.keys(newOptions).forEach((key) => {
+      finalOptions[key] = newOptions[key];
+    });
+    return finalOptions;
+  }
 
   const getAddon = (): any => {
     try {
@@ -74,6 +79,7 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
+        setAddOnOptions(options);
         load(options);
         initTracking(options.authUser && options.authUser.id);
       });
@@ -86,7 +92,10 @@ export default function App() {
       addon.on('update', (options) => {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
-        load(options, true);
+        const mergedOptions = mergeOptions(options);
+        setAddOnOptions(mergedOptions);
+        setLoadingOnUpdate(true);
+        load(mergedOptions, true);
         trackEvent('update');
       });
 
@@ -98,8 +107,9 @@ export default function App() {
     return null;
   };
 
+  const addon = useRef(getAddon());
+
   const [state, setState] = useState<State>({
-    addon: getAddon(),
     securityTransactions: [],
     accountTransactions: [],
     portfolios: [],
@@ -109,10 +119,6 @@ export default function App() {
     cashflows: [],
     xirr: 0,
     isLoaded: false,
-    privateMode: false,
-    fromDate: TRANSACTIONS_FROM_DATE,
-    toDate: moment().format('YYYY-MM-DD'),
-    options: {},
   });
 
   function updateState(_state: Partial<State>) {
@@ -148,24 +154,8 @@ export default function App() {
 
   const load = _.debounce((options: any, isUpdate?: boolean) => loadData(options, isUpdate), 100, { leading: true });
 
-  async function loadData(_options: any, isUpdate?: boolean) {
-    function mergeOptions(newOptions) {
-      const finalOptions = { ...(state.options || {}) };
-      Object.keys(newOptions).forEach((key) => {
-        finalOptions[key] = newOptions[key];
-      });
-      return finalOptions;
-    }
-    console.debug('[DEBUG] Load Data being state: ', { state });
-    const options = mergeOptions(_options);
-    console.debug('Loading data with addon options -- ', options);
-    updateState({
-      options,
-      isLoadingOnUpdate: !!isUpdate,
-      privateMode: options.privateMode,
-      fromDate: options.fromDate,
-      toDate: options.toDate,
-    });
+  async function loadData(options: any, isUpdate?: boolean) {
+    console.debug('[DEBUG] Load Data being state: ', { state, options });
     currencyRef.current.setBaseCurrency(options.currency);
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
@@ -261,7 +251,6 @@ export default function App() {
     } catch (error) {
       console.warn('Unable to compute portfolio xirr -- ', error, values);
     }
-
     updateState({
       positions,
       securityTransactions,
@@ -273,9 +262,9 @@ export default function App() {
       portfolios: portfolios.filter((portfolio) => moment(portfolio.date).isoWeekday() <= 5),
 
       isLoaded: true,
-      isLoadingOnUpdate: false,
       accounts,
     });
+    setLoadingOnUpdate(false);
   }
 
   function loadPortfolioData(options) {
@@ -288,7 +277,7 @@ export default function App() {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return state.addon
+    return addon.current
       .request({
         query,
         method: 'GET',
@@ -308,7 +297,7 @@ export default function App() {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return state.addon
+    return addon.current
       .request({
         query,
         method: 'GET',
@@ -328,7 +317,7 @@ export default function App() {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return state.addon
+    return addon.current
       .request({
         query,
         method: 'GET',
@@ -356,7 +345,7 @@ export default function App() {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return state.addon
+    return addon.current
       .request({
         query,
         method: 'GET',
@@ -401,13 +390,13 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!state.addon) {
+    if (!addon.current) {
       setTimeout(() => loadStaticPortfolioData(), 0);
     }
 
     setTimeout(() => computeChangeLogCount(), 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.addon]);
+  }, [addon.current]);
 
   function computeChangeLogCount() {
     const newChangeLogsCount = getNewChangeLogsCount();
@@ -424,10 +413,10 @@ export default function App() {
   return (
     <CurrencyContextProvider currencyRef={currencyRef}>
       <Flex width={1} justifyContent="center">
-        <div style={{ padding: 4, maxWidth: state.addon ? '100%' : 1100, width: '100%' }}>
+        <div style={{ padding: 4, maxWidth: addon.current ? '100%' : 1100, width: '100%' }}>
           {state.isLoaded ? (
             <>
-              {!state.addon && (
+              {!addon.current && (
                 <>
                   <p
                     style={{
@@ -448,7 +437,7 @@ export default function App() {
                   </p>
                 </>
               )}
-              {state.isLoadingOnUpdate ? (
+              {isLoadingOnUpdate ? (
                 <Flex width={1} justifyContent="center" alignItems="center">
                   <Spin size="small" />
                 </Flex>
@@ -484,21 +473,24 @@ export default function App() {
                   <PnLStatistics
                     xirr={state.xirr}
                     portfolios={state.allPortfolios}
-                    privateMode={state.privateMode}
+                    privateMode={addOnOptions.privateMode}
                     positions={state.positions}
-                    fromDate={state.fromDate}
-                    toDate={state.toDate}
+                    fromDate={addOnOptions.fromDate}
+                    toDate={addOnOptions.toDate}
                   />
 
                   <DepositVsPortfolioValueTimeline
                     portfolios={state.portfolios}
                     cashflows={state.cashflows}
-                    isPrivateMode={state.privateMode}
+                    isPrivateMode={addOnOptions.privateMode}
                   />
 
-                  <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={state.privateMode} />
-                  <ProfitLossPercentageTimeline portfolios={state.portfolios} isPrivateMode={state.privateMode} />
-                  <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={state.privateMode} />
+                  <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
+                  <ProfitLossPercentageTimeline
+                    portfolios={state.portfolios}
+                    isPrivateMode={addOnOptions.privateMode}
+                  />
+                  <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane tab="Holdings Analyzer" key="holdings">
@@ -506,19 +498,19 @@ export default function App() {
                     <HoldingsCharts
                       positions={state.positions}
                       accounts={state.accounts}
-                      isPrivateMode={state.privateMode}
-                      addon={state.addon}
+                      isPrivateMode={addOnOptions.privateMode}
+                      addon={addon.current}
                     />
                   ) : (
                     <Empty description="No Holdings" />
                   )}
 
-                  <CashTable accounts={state.accounts} isPrivateMode={state.privateMode} />
+                  <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
 
                   {!!state.positions.length && (
                     <>
                       <PortfolioVisualizer positions={state.positions} />
-                      <HoldingsTable positions={state.positions} isPrivateMode={state.privateMode} />
+                      <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
                     </>
                   )}
                 </Tabs.TabPane>
@@ -526,20 +518,20 @@ export default function App() {
                 <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key="gainers-losers">
                   <TopGainersLosers
                     positions={state.positions}
-                    isPrivateMode={state.privateMode}
-                    addon={state.addon}
+                    isPrivateMode={addOnOptions.privateMode}
+                    addon={addon.current}
                     accounts={state.accounts}
                   />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Realized P&L" key="realized-pnl">
                   <RealizedPnL
-                    fromDate={state.fromDate}
-                    toDate={state.toDate}
+                    fromDate={addOnOptions.fromDate}
+                    toDate={addOnOptions.toDate}
                     transactions={state.securityTransactions}
                     accountTransactions={state.accountTransactions}
                     accounts={state.accounts}
-                    isPrivateMode={state.privateMode}
+                    isPrivateMode={addOnOptions.privateMode}
                   />
                 </Tabs.TabPane>
 
