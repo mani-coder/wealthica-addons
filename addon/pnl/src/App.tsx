@@ -166,6 +166,7 @@ export default function App() {
 
   async function loadData(options) {
     options = mergeOptions(options);
+    console.debug('Loading data with addon options -- ', options);
     updateState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
