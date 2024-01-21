@@ -81,7 +81,6 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        setAddOnOptions({ ...options });
         load(options);
         initTracking(options.authUser && options.authUser.id);
       });
@@ -94,10 +93,8 @@ export default function App() {
       addon.on('update', (options) => {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
-        const mergedOptions = mergeOptions(options);
-        setAddOnOptions(mergedOptions);
         setLoadingOnUpdate(true);
-        load(mergedOptions);
+        load(options);
         trackEvent('update');
       });
 
@@ -156,10 +153,13 @@ export default function App() {
 
   const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
 
-  async function loadData(options: any) {
-    console.debug('[DEBUG] Load Data being state: ', { state, options, addOnOptions });
-    currencyRef.current.setBaseCurrency(options.currency);
+  async function loadData(newOptions: any) {
+    console.debug('[DEBUG] Load Data being state: ', { state, newOptions, addOnOptions });
 
+    const options = mergeOptions(newOptions);
+    setAddOnOptions(options);
+
+    currencyRef.current.setBaseCurrency(options.currency);
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
       loadPositions(options),
       loadPortfolioData(options),
