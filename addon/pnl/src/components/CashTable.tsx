@@ -3,29 +3,24 @@ import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
 import React, { useMemo } from 'react';
 import { Box, Flex } from 'rebass';
-import { Account, CurrencyCache } from '../types';
-import { formatMoney, getCurrencyInCAD, sumOf } from '../utils';
+import useCurrency from '../hooks/useCurrency';
+import { Account } from '../types';
+import { formatMoney, sumOf } from '../utils';
 import Collapsible from './Collapsible';
-import moment from 'moment';
 
-type Props = {
-  accounts: Account[];
-  currencyCache: CurrencyCache;
-  isPrivateMode: boolean;
-};
+type Props = { accounts: Account[]; isPrivateMode: boolean };
 
 function CashTable(props: Props) {
-  const cashComparator = (a: Account, b: Account) =>
-    getCurrencyInCAD(moment(), b.cash, props.currencyCache, b.currency) -
-    getCurrencyInCAD(moment(), a.cash, props.currencyCache, a.currency);
+  const { baseCurrencyDisplay, getValue, allCurrencies } = useCurrency();
+  const cashComparator = (a: Account, b: Account) => getValue(b.currency, b.cash) - getValue(a.currency, a.cash);
 
   const accounts = useMemo(() => {
     return props.accounts.filter((acc) => acc.cash && acc.cash !== 0).sort(cashComparator);
   }, [props.accounts]);
 
-  const currencies = [{ value: 'cad', text: 'CAD' }].concat(
-    ...Object.keys(props.currencyCache).map((currency) => ({ value: currency, text: currency.toUpperCase() })),
-  );
+  const currencies = useMemo(() => {
+    return allCurrencies.map((currency) => ({ value: currency, text: currency.toUpperCase() }));
+  }, [allCurrencies]);
 
   function getColumns(): ColumnProps<Account>[] {
     return [
@@ -81,13 +76,13 @@ function CashTable(props: Props) {
         sorter: cashComparator,
       },
       {
-        key: 'cadCash',
-        title: 'Cash In CAD',
+        key: 'baseCurrencyCash',
+        title: `Cash In ${baseCurrencyDisplay}`,
         align: 'right',
         dataIndex: 'cash',
         render: (cash: number, account: Account) => (
           <Typography.Text strong style={{ color: cash < 0 ? 'red' : '', fontSize: 14 }}>
-            {formatMoney(getCurrencyInCAD(moment(), cash, props.currencyCache, account.currency))} CAD
+            {formatMoney(getValue(account.currency, cash))} {baseCurrencyDisplay}
           </Typography.Text>
         ),
         sorter: cashComparator,
@@ -110,9 +105,7 @@ function CashTable(props: Props) {
             }, {});
 
             const total = sumOf(
-              ...Object.keys(currencyValues).map((currency) =>
-                getCurrencyInCAD(moment(), currencyValues[currency], props.currencyCache, currency),
-              ),
+              ...Object.keys(currencyValues).map((currency) => getValue(currency, currencyValues[currency])),
             );
 
             return (
@@ -133,7 +126,7 @@ function CashTable(props: Props) {
                   <Table.Summary.Cell index={1} colSpan={1} align="right">
                     <Typography.Text style={{ paddingRight: 8 }}>Total:</Typography.Text>
                     <Typography.Text strong style={{ color: total >= 0 ? 'green' : 'red' }}>
-                      {formatMoney(total)} CAD
+                      {formatMoney(total)} {baseCurrencyDisplay}
                     </Typography.Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>

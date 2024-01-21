@@ -3,6 +3,7 @@ import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
 import React from 'react';
 import { Box } from 'rebass';
+import useCurrency from '../hooks/useCurrency';
 import { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils';
 import Collapsible from './Collapsible';
@@ -13,6 +14,7 @@ type Props = {
 };
 
 function HoldingsTable(props: Props) {
+  const { baseCurrencyDisplay } = useCurrency();
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
   }, 0);
@@ -89,7 +91,7 @@ function HoldingsTable(props: Props) {
         key: 'gainPercent',
         title: (
           <>
-            Profit / Loss %<div style={{ fontSize: 12 }}>CAD</div>
+            P/L %$<div style={{ fontSize: 12 }}>({baseCurrencyDisplay})</div>
           </>
         ),
         dataIndex: 'gain_percent',
@@ -125,7 +127,7 @@ function HoldingsTable(props: Props) {
         key: 'marketValue',
         title: (
           <>
-            Market Value<div style={{ fontSize: 12 }}>CAD</div>
+            Market Value<div style={{ fontSize: 12 }}>$ {baseCurrencyDisplay}</div>
           </>
         ),
         dataIndex: 'market_value',

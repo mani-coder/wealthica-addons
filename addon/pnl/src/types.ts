@@ -56,6 +56,7 @@ export type Transaction = {
 };
 
 export type CashFlow = {
+  date: string;
   deposit: number;
   withdrawal: number;
   interest: number;

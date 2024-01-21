@@ -5,7 +5,8 @@ import Switch from 'antd/lib/switch';
 import { useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { Account, CurrencyCache, Position } from '../types';
+import useCurrency from '../hooks/useCurrency';
+import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
 import StockPnLTimeline from './StockPnLTimeline';
@@ -15,10 +16,10 @@ export function TopGainersLosers(props: {
   positions: Position[];
   addon: any;
   accounts: Account[];
-  currencyCache: CurrencyCache;
 }) {
   const [sortByValue, setSortByValue] = useState(false);
   const [pnlSymbol, setPnlSymbol] = useState<string>();
+  const { baseCurrencyDisplay } = useCurrency();
 
   function getTopGainersLosers(gainers: boolean): Highcharts.SeriesColumnOptions[] {
     return [
@@ -45,6 +46,7 @@ export function TopGainersLosers(props: {
               name: getSymbol(position.security),
               y: sortByValue ? position.gain_amount : position.gain_percent * 100,
               gainRatio: position.gain_percent * 100,
+              baseCurrency: baseCurrencyDisplay,
               gain: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
               xirr: position.xirr * 100,
               gainDisplay: props.isPrivateMode ? '-' : formatCurrency(position.gain_amount, 1),
@@ -64,7 +66,7 @@ export function TopGainersLosers(props: {
             </tr>
             <tr>
               <td>P&L $</td>
-              <td style="text-align: right; padding-left: 16px;"><b>{point.gain} CAD</b></td>
+              <td style="text-align: right; padding-left: 16px;"><b>{point.gain} {point.baseCurrency}</b></td>
             </tr>
           </table>`,
         },
@@ -206,7 +208,6 @@ export function TopGainersLosers(props: {
         addon={props.addon}
         showValueChart={sortByValue}
         accounts={props.accounts}
-        currencyCache={props.currencyCache}
       />
     );
   };

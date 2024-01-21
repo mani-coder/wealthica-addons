@@ -3,6 +3,7 @@ import Table, { ColumnProps } from 'antd/lib/table';
 import _ from 'lodash';
 import 'moment-precise-range-plugin';
 import React from 'react';
+import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
 import { formatMoney } from '../../utils';
 import Collapsible from '../Collapsible';
@@ -23,6 +24,7 @@ const IncomeTable = React.memo(
     transactions: IncomeTransaction[];
     isPrivateMode: boolean;
   }) => {
+    const { baseCurrencyDisplay } = useCurrency();
     function getColumns(): ColumnProps<IncomeTransaction>[] {
       return [
         {
@@ -70,7 +72,7 @@ const IncomeTable = React.memo(
         },
         {
           key: 'income',
-          title: 'Income (CAD)',
+          title: `Income (${baseCurrencyDisplay})`,
           dataIndex: 'amount',
           render: (amount) => (isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(amount)}</Typography.Text>),
           align: 'right',
@@ -105,7 +107,7 @@ const IncomeTable = React.memo(
                     </Table.Summary.Cell>
                     <Table.Summary.Cell align="center" index={1} colSpan={2}>
                       <Typography.Text strong style={{ color: '#52c41a' }}>
-                        {formatMoney(total)} CAD
+                        {formatMoney(total)} {baseCurrencyDisplay}
                       </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

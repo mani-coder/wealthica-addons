@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { Moment } from 'moment';
 import 'moment-precise-range-plugin';
 import React from 'react';
+import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
 import { formatMoney } from '../../utils';
 import Collapsible from '../Collapsible';
@@ -24,6 +25,7 @@ const ExpenseTable = React.memo(
     fromDate: Moment;
     toDate: Moment;
   }) => {
+    const { baseCurrencyDisplay } = useCurrency();
     function getColumns(): ColumnProps<AccountTransaction>[] {
       return [
         {
@@ -55,7 +57,7 @@ const ExpenseTable = React.memo(
         },
         {
           key: 'expense',
-          title: 'Expense (CAD)',
+          title: `Expense (${baseCurrencyDisplay})`,
           dataIndex: 'amount',
           render: (expense) =>
             isPrivateMode ? '--' : <Typography.Text strong>${formatMoney(expense)}</Typography.Text>,
@@ -92,7 +94,7 @@ const ExpenseTable = React.memo(
                     </Table.Summary.Cell>
                     <Table.Summary.Cell align="center" index={1} colSpan={2}>
                       <Typography.Text strong style={{ color: '#f5222d' }}>
-                        {formatMoney(total)} CAD
+                        {formatMoney(total)} {baseCurrencyDisplay}
                       </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

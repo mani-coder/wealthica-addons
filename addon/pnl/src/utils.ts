@@ -1,7 +1,8 @@
 import moment, { Moment } from 'moment';
 import xirr from 'xirr';
 import { DATE_FORMAT } from './constants';
-import { CurrencyCache, PortfolioData, Position, Security } from './types';
+import { Currencies } from './context/CurrencyContext';
+import { PortfolioData, Position, Security } from './types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
   return Boolean(data.deposit || data.income || data.interest || data.value || data.withdrawal);
@@ -9,23 +10,6 @@ export const isValidPortfolioData = (data: PortfolioData): boolean => {
 
 export const getDate = (date: string): Moment => {
   return moment(date.slice(0, 10), DATE_FORMAT);
-};
-
-export const getCurrencyInCAD = (
-  date: Moment | string,
-  value: number,
-  currencyCache: CurrencyCache,
-  currency: string = 'usd',
-): number => {
-  if (currency.toLowerCase() === 'cad') return value;
-
-  const _currencyCache = currencyCache[currency.toLowerCase()];
-  const _date = typeof date === 'string' ? date : date.format(DATE_FORMAT);
-  const multiplier = _currencyCache[_date];
-  if (multiplier) return value * multiplier;
-
-  const latestDate = Object.keys(_currencyCache).sort((a, b) => b.localeCompare(a))[0];
-  return latestDate ? value * _currencyCache[latestDate] : value;
 };
 
 export const formatMoney = (amount?: number, precision?: number): string => {
@@ -233,7 +217,7 @@ export function computeXIRR(position: Position) {
   }
 }
 
-export function computeBookValue(position: Position, currencyCache: any) {
+export function computeBookValue(position: Position, currencies: Currencies) {
   const transactions = position.transactions;
   if (!transactions || !transactions.length || position.book_value) {
     return;
@@ -257,7 +241,8 @@ export function computeBookValue(position: Position, currencyCache: any) {
       { price: 0, shares: 0, value: 0 } as { price: number; usPrice: number; shares: number; value: number },
     );
 
-  const price = getCurrencyInCAD(moment(), book.price, currencyCache, position.security.currency);
+  const price = currencies.getValue(position.security.currency, book.price);
+
   position.book_value = book.shares * price;
   position.gain_amount = position.market_value - position.book_value;
   position.gain_percent = position.gain_amount / position.book_value;

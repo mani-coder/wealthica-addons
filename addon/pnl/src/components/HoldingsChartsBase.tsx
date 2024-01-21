@@ -10,16 +10,16 @@ export const POSITION_TOOLTIP: Highcharts.TooltipOptions = {
     return point.name !== 'Cash'
       ? `<table width="100%">
       <tr><td>Weightage</td><td class="position-tooltip-value">${(this as any).percentage.toFixed(1)}%</td></tr>
-      <tr><td>Value</td><td class="position-tooltip-value">CAD ${point.value}</td></tr>
+      <tr><td>Value</td><td class="position-tooltip-value">${point.baseCurrency} ${point.value}</td></tr>
       <tr><td>XIRR %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
           point.xirr ? point.xirr.toFixed(2) : 'n/a'
         }%</td></tr>
       <tr><td>Unrealized P/L %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
           point.gain ? point.gain.toFixed(2) : 'n/a'
         }%</td></tr>
-      <tr><td>Unrealized P/L $</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">CAD ${
-          point.profit
-        }</td></tr>
+      <tr><td>Unrealized P/L $</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
+          point.baseCurrency
+        } ${point.profit}</td></tr>
       <tr><td>Shares</td><td style="text-align: right;">${point.shares}</td></tr>
       <tr><td>Currency</td><td style="text-align: right;">${point.currency}</td></tr>
       <tr><td>Buy Price</td><td style="text-align: right;">${point.buyPrice}</td></tr>
@@ -31,7 +31,7 @@ export const POSITION_TOOLTIP: Highcharts.TooltipOptions = {
       : `
       <table width="100%">
         <tr><td>Weightage</td><td class="position-tooltip-value">${(this as any).percentage.toFixed(1)}%</td></tr>
-        <tr><td>Value</td><td class="position-tooltip-value">CAD ${point.value}</td></tr>
+        <tr><td>Value</td><td class="position-tooltip-value">${point.baseCurrency} ${point.value}</td></tr>
         <tr><td colspan="2"><hr /></td></tr>
         <tr style="font-weight: 600"><td>Account</td><td style="text-align: right;">Cash</td></tr>
         ${point.accountsTable}

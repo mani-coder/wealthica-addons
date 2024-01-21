@@ -32,7 +32,7 @@ export function renderSymbol(symbol: string, currency?: string) {
       <Typography.Link rel="noreferrer noopener" href={`https://finance.yahoo.com/quote/${symbol}`} target="_blank">
         {symbol}
       </Typography.Link>
-      {currency && <div style={{ fontSize: 10 }}>{currency === 'usd' ? 'USD' : 'CAD'}</div>}
+      {currency && <div style={{ fontSize: 10 }}>{currency.toUpperCase()}</div>}
     </>
   );
 }

@@ -12,8 +12,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
 import { DATE_FORMAT } from '../../constants';
-import { Account, AccountTransaction, CurrencyCache, Transaction } from '../../types';
-import { formatCurrency, formatMoney, getCurrencyInCAD } from '../../utils';
+import useCurrency from '../../hooks/useCurrency';
+import { Account, AccountTransaction, Transaction } from '../../types';
+import { formatCurrency, formatMoney } from '../../utils';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
 import CompositionGroup, { GroupType, getGroupKey } from '../CompositionGroup';
@@ -29,7 +30,6 @@ type Props = {
   isPrivateMode: boolean;
   fromDate: string;
   toDate: string;
-  currencyCache: CurrencyCache;
 };
 
 type CurrentPosition = {
@@ -41,8 +41,9 @@ type CurrentPosition = {
 
 type TransactionType = 'income' | 'pnl' | 'expense';
 
-export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ...props }: Props) {
+export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props) {
   const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
+  const { getValue, baseCurrencyDisplay } = useCurrency();
 
   const { transactions, accountTransactions, fromDate, toDate } = useMemo(() => {
     const fromDate = moment(props.fromDate);
@@ -100,17 +101,10 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       const sellRecord = transaction.type === 'sell' ? transaction : position;
 
       const crypto = transaction.securityType === 'crypto';
-
-      const isCAD = transaction.currency === 'cad' || crypto;
       const buyValue = closedShares * buyRecord.price;
       const sellValue = closedShares * sellRecord.price;
-
-      const buyCost = isCAD
-        ? getCurrencyInCAD(buyRecord.date, buyValue, currencyCache, transaction.currency)
-        : buyValue;
-      const sellCost = isCAD
-        ? getCurrencyInCAD(sellRecord.date, sellValue, currencyCache, transaction.currency)
-        : sellValue;
+      const buyCost = getValue(crypto ? 'cad' : transaction.currency, buyValue, buyRecord.date);
+      const sellCost = getValue(crypto ? 'cad' : transaction.currency, sellValue, sellRecord.date);
 
       const pnl = sellCost - buyCost;
       const pnlRatio = (pnl / buyCost) * 100;
@@ -246,7 +240,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
       .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
       .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
       .reverse();
-  }, [props.transactions, fromDate, toDate, accountById, currencyCache]);
+  }, [props.transactions, getValue, accountById, fromDate, toDate]);
 
   function getDefaultTypes(): TransactionType[] {
     return [closedPositions.length ? 'pnl' : incomeTransactions.length ? 'income' : 'expense'];
@@ -289,12 +283,12 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
             enabled: !isPrivateMode,
           },
           title: {
-            text: '$ (CAD)',
+            text: baseCurrencyDisplay,
           },
         },
       };
     },
-    [isPrivateMode],
+    [isPrivateMode, baseCurrencyDisplay],
   );
 
   const getData = useCallback(
@@ -354,6 +348,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
             y: value.pnl,
             pnl: !isPrivateMode ? formatMoney(value.pnl) : '-',
             pnlHuman: !isPrivateMode ? formatCurrency(value.pnl, 2) : '-',
+            baseCurrency: baseCurrencyDisplay,
             startDate: value.startDate,
             endDate: value.endDate,
           })),
@@ -361,7 +356,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
             headerFormat: `<span style="font-size: 13px; font-weight: 700;">${name}</span>`,
             pointFormat: `<hr /><span style="font-size: 12px;font-weight: 500;">{point.startDate} - {point.endDate}</span>
           <br />
-          <b style="font-size: 13px; font-weight: 700">{point.pnl} CAD</b><br />`,
+          <b style="font-size: 13px; font-weight: 700">{point.pnl} {point.baseCurrency}</b><br />`,
           },
           dataLabels: { enabled: true, format: '{point.pnlHuman}' },
           showInLegend: true,
@@ -473,6 +468,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
               name: account.name,
               y: Math.abs(account.pnl),
               negative: account.pnl < 0,
+              baseCurrency: baseCurrencyDisplay,
               displayValue: isPrivateMode ? '-' : account.pnl ? formatMoney(account.pnl) : account.pnl,
               totalValue: isPrivateMode ? '-' : formatMoney(closedPnL),
               pnlColor: account.pnl < 0 ? 'red' : 'green',
@@ -484,8 +480,8 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
           pointFormatter() {
             const point = this.options as any;
             return `<table>
-          <tr><td>P/L</td><td class="position-tooltip-value">${point.displayValue} CAD</td></tr>
-          <tr><td>Total P/L</td><td class="position-tooltip-value">${point.totalValue} CAD</td></tr>
+          <tr><td>P/L</td><td class="position-tooltip-value">${point.displayValue} ${point.baseCurrency}</td></tr>
+          <tr><td>Total P/L</td><td class="position-tooltip-value">${point.totalValue} ${point.baseCurrency}</td></tr>
         </table>`;
           },
         },
@@ -493,7 +489,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
 
       return [accountsSeries];
     },
-    [expenseTransactions, incomeTransactions, accountById, isPrivateMode, types],
+    [expenseTransactions, incomeTransactions, accountById, isPrivateMode, types, baseCurrencyDisplay],
   );
 
   const { closedPnL, realizedPnL } = useMemo(() => {
@@ -521,7 +517,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         <>
           Realized P&L{' '}
           <Typography.Text type={realizedPnL > 0 ? 'success' : realizedPnL < 0 ? 'danger' : 'secondary'} strong>
-            {formatMoney(realizedPnL)} CAD
+            {formatMoney(realizedPnL)} {baseCurrencyDisplay}
           </Typography.Text>
         </>
       ),
@@ -534,7 +530,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         <>
           Income (Dividends){' '}
           <Typography.Text type={totalIncome ? 'success' : 'secondary'} strong={totalIncome > 0}>
-            {formatMoney(totalIncome)} CAD
+            {formatMoney(totalIncome)} {baseCurrencyDisplay}
           </Typography.Text>
         </>
       ),
@@ -547,7 +543,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         <>
           Expenses (Interest, Fee){' '}
           <Typography.Text type={totalExpense ? 'danger' : 'secondary'} strong={totalExpense > 0}>
-            {formatMoney(totalExpense)} CAD
+            {formatMoney(totalExpense)} {baseCurrencyDisplay}
           </Typography.Text>
         </>
       ),
@@ -556,7 +552,15 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
     });
 
     return options;
-  }, [closedPositions, incomeTransactions, expenseTransactions, realizedPnL, totalExpense, totalIncome]);
+  }, [
+    closedPositions,
+    incomeTransactions,
+    expenseTransactions,
+    realizedPnL,
+    totalExpense,
+    totalIncome,
+    baseCurrencyDisplay,
+  ]);
 
   const show = closedPositions.length > 0 || incomeTransactions.length > 0 || expenseTransactions.length > 0;
   return show ? (
@@ -565,7 +569,7 @@ export default function RealizedPnL({ currencyCache, accounts, isPrivateMode, ..
         <Statistic
           value={isPrivateMode ? '--' : closedPnL}
           precision={2}
-          suffix="CAD"
+          suffix={baseCurrencyDisplay}
           valueStyle={{ color: closedPnL >= 0 ? 'green' : 'red' }}
           prefix={closedPnL >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />

@@ -8,8 +8,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { Account, CurrencyCache, Position, Transaction } from '../types';
-import { buildCorsFreeUrl, formatCurrency, formatMoney, getCurrencyInCAD, getDate, max, min } from '../utils';
+import useCurrency from '../hooks/useCurrency';
+import { Account, Position, Transaction } from '../types';
+import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate, max, min } from '../utils';
 import Charts from './Charts';
 
 type Props = {
@@ -19,7 +20,6 @@ type Props = {
   addon?: any;
   showValueChart?: boolean;
   accounts: Account[];
-  currencyCache: CurrencyCache;
 };
 
 type StockPrice = {
@@ -29,7 +29,8 @@ type StockPrice = {
 
 const POINT_FORMAT = `P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />`;
 
-function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, currencyCache, accounts }: Props) {
+function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, accounts }: Props) {
+  const { getValue, baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<StockPrice[]>([]);
   const crypto = position.security?.type === 'crypto';
@@ -66,7 +67,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         if (to.isoWeekday() <= 5 || crypto) {
           data.push({
             timestamp: to.clone(),
-            closePrice: crypto ? getCurrencyInCAD(to, closePrice, currencyCache) : closePrice,
+            closePrice: crypto ? getValue('USD', closePrice, to) : closePrice,
           });
         }
 
@@ -360,12 +361,14 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
               position.investments.reduce((cost, investment) => {
                 return cost + investment.book_value;
               }, 0) / position.quantity,
-            )}, Market Value: ${formatCurrency(position.market_value, 2)} CAD, XIRR: ${formatMoney(
+            )}, Market Value: ${formatCurrency(position.market_value, 2)} ${baseCurrencyDisplay}, XIRR: ${formatMoney(
               position.xirr * 100,
             )}%, P/L: ${formatMoney(position.gain_percent * 100, 2)}% / ${formatCurrency(
               position.gain_amount,
               2,
-            )}  CAD${dividends ? `, Dividends: ${formatCurrency(dividends, 2)} CAD` : ''}`,
+            )} ${baseCurrencyDisplay}${
+              dividends ? `, Dividends: ${formatCurrency(dividends, 2)} ${baseCurrencyDisplay}` : ''
+            }`,
         style: {
           color: '#1F2A33',
           fontWeight: 'bold',

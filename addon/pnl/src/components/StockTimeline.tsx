@@ -5,8 +5,9 @@ import moment, { Moment } from 'moment';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { Account, CurrencyCache, Position, Transaction } from '../types';
-import { buildCorsFreeUrl, formatCurrency, formatMoney, getCurrencyInCAD, getDate } from '../utils';
+import useCurrency from '../hooks/useCurrency';
+import { Account, Position, Transaction } from '../types';
+import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils';
 import Charts from './Charts';
 
 type Props = {
@@ -15,7 +16,6 @@ type Props = {
   isPrivateMode: boolean;
   addon?: any;
   accounts: Account[];
-  currencyCache: CurrencyCache;
 };
 
 type SecurityHistoryTimeline = {
@@ -25,6 +25,7 @@ type SecurityHistoryTimeline = {
 
 function StockTimeline(props: Props) {
   const [loading, setLoading] = useState<boolean>(false);
+  const { getValue, baseCurrencyDisplay } = useCurrency();
   const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
 
   const accountById = useMemo(() => {
@@ -60,7 +61,7 @@ function StockTimeline(props: Props) {
           if (to.isoWeekday() <= 5 || crypto) {
             data.push({
               timestamp: to.clone(),
-              closePrice: crypto ? getCurrencyInCAD(to, closePrice, props.currencyCache) : closePrice,
+              closePrice: crypto ? getValue('usd', closePrice, to) : closePrice,
             });
           }
 
@@ -75,7 +76,7 @@ function StockTimeline(props: Props) {
       setLoading(false);
       setSecurityTimeline(sortedData);
     },
-    [props.currencyCache, props.position.security.type],
+    [getValue, props.position.security.type],
   );
 
   const fetchData = useCallback(() => {
@@ -303,12 +304,15 @@ function StockTimeline(props: Props) {
               props.position.investments.reduce((cost, investment) => {
                 return cost + investment.book_value;
               }, 0) / props.position.quantity,
-            )}, Market Value: CAD ${formatCurrency(props.position.market_value, 2)}, XIRR: ${formatMoney(
-              props.position.xirr * 100,
-            )}%, P/L:  ${formatMoney(props.position.gain_percent * 100, 2)}% / CAD ${formatCurrency(
-              props.position.gain_amount,
+            )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
+              props.position.market_value,
               2,
-            )}${dividends ? `, Dividends: CAD ${formatCurrency(dividends, 2)}` : ''}`,
+            )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
+              props.position.gain_percent * 100,
+              2,
+            )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${
+              dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
+            }`,
         style: {
           color: '#1F2A33',
           fontWeight: 'bold',

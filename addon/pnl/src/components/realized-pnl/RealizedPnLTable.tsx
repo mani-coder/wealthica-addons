@@ -12,6 +12,7 @@ import { formatMoney, formatMoneyWithCurrency } from '../../utils';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
 import { ClosedPosition, DATE_DISPLAY_FORMAT, renderSymbol } from './utils';
+import useCurrency from '../../hooks/useCurrency';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
   const columns: ColumnType<Transaction>[] = [
@@ -51,6 +52,7 @@ const RealizedPnLTable = React.memo(
     fromDate: Moment;
     toDate: Moment;
   }) => {
+    const { baseCurrencyDisplay } = useCurrency();
     function getColumns(): ColumnProps<ClosedPosition>[] {
       return [
         {
@@ -128,7 +130,7 @@ const RealizedPnLTable = React.memo(
             <Box>
               <div>ACB /</div>
               <div>Proceeds </div>
-              <Typography.Text style={{ fontSize: 12 }}>(CAD)</Typography.Text>{' '}
+              <Typography.Text style={{ fontSize: 12 }}>({baseCurrencyDisplay})</Typography.Text>{' '}
               <Tooltip title="This is the Adjusted Cost Base (ACB) which includes the buy/sell transaction fees.">
                 <QuestionCircleTwoTone twoToneColor="#bfbfbf" />
               </Tooltip>
@@ -147,7 +149,7 @@ const RealizedPnLTable = React.memo(
           key: 'gain',
           title: (
             <>
-              P&L $%<div style={{ fontSize: 12 }}>(CAD)</div>
+              P&L $%<div style={{ fontSize: 12 }}>({baseCurrencyDisplay})</div>
             </>
           ),
           render: (text, position) => {
@@ -227,7 +229,7 @@ const RealizedPnLTable = React.memo(
 
                     <Table.Summary.Cell index={1} colSpan={3} align="center">
                       <Typography.Text strong style={{ color: totalPnL > 0 ? 'green' : 'red' }}>
-                        {formatMoney(totalPnL)} CAD
+                        {formatMoney(totalPnL)} {baseCurrencyDisplay}
                       </Typography.Text>
                     </Table.Summary.Cell>
                   </Table.Summary.Row>

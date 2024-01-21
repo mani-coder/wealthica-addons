@@ -1,19 +1,18 @@
 import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { startCase } from 'lodash';
-import moment from 'moment';
 import { useCallback, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { Account, CurrencyCache, Position } from '../types';
-import { formatCurrency, formatMoney, getCurrencyInCAD, getSymbol, sumOf } from '../utils';
+import useCurrency from '../hooks/useCurrency';
+import { Account, Position } from '../types';
+import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup, { GroupType, getGroupKey } from './CompositionGroup';
 import { POSITION_TOOLTIP, getOptions } from './HoldingsChartsBase';
 
 type Props = {
-  currencyCache: CurrencyCache;
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;
@@ -24,6 +23,7 @@ const COLORS = Highcharts.getOptions().colors;
 
 export default function CompositionCharts(props: Props) {
   const [showHoldings, setShowHoldings] = useState(true);
+  const { getValue, baseCurrencyDisplay } = useCurrency();
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('currency');
 
   const getColor = useCallback((index) => (COLORS ? COLORS[index % COLORS?.length] : undefined), []);
@@ -100,6 +100,7 @@ export default function CompositionCharts(props: Props) {
               color: color && showHoldings ? Highcharts.color(color).brighten(brightness).get() : undefined,
               name: symbol,
               y: position.market_value,
+              baseCurrency: baseCurrencyDisplay,
               displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
               value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
               gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
@@ -184,15 +185,11 @@ export default function CompositionCharts(props: Props) {
               mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
               hash[name] = mergedAccount;
             }
-            mergedAccount.value += account.positions.reduce(
-              (value, position) =>
-                value + getCurrencyInCAD(moment(), position.market_value, props.currencyCache, position.currency) || 0,
-              0,
+            mergedAccount.value += sumOf(
+              ...account.positions.map((position) => getValue(position.currency, position.market_value)),
             );
-            mergedAccount.gainAmount += account.positions.reduce(
-              (value, position) =>
-                value + getCurrencyInCAD(moment(), position.gain_amount, props.currencyCache, position.currency),
-              0,
+            mergedAccount.gainAmount += sumOf(
+              ...account.positions.map((position) => getValue(position.currency, position.gain_amount)),
             );
 
             const _name = account.name;
@@ -235,7 +232,7 @@ export default function CompositionCharts(props: Props) {
               ...accounts.map((account) =>
                 sumOf(
                   ...Object.keys(account.currencyValues).map((currency) =>
-                    getCurrencyInCAD(moment(), account.currencyValues[currency], props.currencyCache, currency),
+                    getValue(currency, account.currencyValues[currency]),
                   ),
                 ),
               ),
@@ -265,9 +262,10 @@ export default function CompositionCharts(props: Props) {
               name: account.name,
               drilldown: showHoldings ? undefined : account.name,
               y: account.value,
+              baseCurrency: baseCurrencyDisplay,
               displayValue: props.isPrivateMode ? '-' : account.value ? formatMoney(account.value) : account.value,
               totalValue: props.isPrivateMode ? '-' : formatMoney(totalValue),
-              gain: props.isPrivateMode ? '-' : `CAD ${formatMoney(account.gainAmount)}`,
+              gain: props.isPrivateMode ? '-' : `${baseCurrencyDisplay} ${formatMoney(account.gainAmount)}`,
               gainRatio: `${((account.gainAmount / (account.value - account.gainAmount)) * 100).toFixed(2)}%`,
               pnlColor: account.gainAmount >= 0 ? 'green' : 'red',
               cash,
@@ -294,12 +292,12 @@ export default function CompositionCharts(props: Props) {
           pointFormatter() {
             const point = this.options as any;
             return `<table>
-          <tr><td>Value</td><td style="text-align: right;" class="position-tooltip-value">CAD ${
-            point.displayValue
-          }</td></tr>
-          <tr><td>Total Value</td><td style="text-align: right;" class="position-tooltip-value">CAD ${
-            point.totalValue
-          }</td></tr>
+          <tr><td>Value</td><td style="text-align: right;" class="position-tooltip-value">${point.baseCurrency} ${
+              point.displayValue
+            }</td></tr>
+          <tr><td>Total Value</td><td style="text-align: right;" class="position-tooltip-value">${point.baseCurrency} ${
+              point.totalValue
+            }</td></tr>
           <tr><td>Unrealized P/L ($) </td><td style="text-align: right;" style="color:${
             point.pnlColor
           };" class="position-tooltip-value">${point.gain}</td></tr>
@@ -317,7 +315,7 @@ export default function CompositionCharts(props: Props) {
             !!point.cash && !props.isPrivateMode
               ? `<tr><td>Total Cash</td><td style="text-align: right;" class="position-tooltip-cash" style="color:${
                   point.cash < 0 ? 'red' : ''
-                };">CAD ${formatMoney(point.cash)}</td></tr>`
+                };">${point.baseCurrency} ${formatMoney(point.cash)}</td></tr>`
               : ''
           }
         </table>`;
@@ -330,12 +328,13 @@ export default function CompositionCharts(props: Props) {
         : [accountsSeries];
     },
     [
-      getColor,
-      getAccountsCompositionHoldingsDrilldown,
       props.accounts,
       props.isPrivateMode,
-      props.currencyCache,
       showHoldings,
+      getAccountsCompositionHoldingsDrilldown,
+      getValue,
+      getColor,
+      baseCurrencyDisplay,
     ],
   );
 

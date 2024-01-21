@@ -2,7 +2,8 @@
 import * as Highcharts from 'highcharts';
 import { useMemo, useState } from 'react';
 import { Flex } from 'rebass';
-import { Account, CurrencyCache, Position } from '../types';
+import useCurrency from '../hooks/useCurrency';
+import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils';
 import Charts from './Charts';
 import CompositionCharts from './CompositionCharts';
@@ -10,7 +11,6 @@ import { POSITION_TOOLTIP, StockSelector, getOptions, getOptionsV2 } from './Hol
 import StockTimeline from './StockTimeline';
 
 type Props = {
-  currencyCache: CurrencyCache;
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;
@@ -19,6 +19,7 @@ type Props = {
 
 export default function HoldingsCharts(props: Props) {
   const [timelineSymbol, setTimelineSymbol] = useState<string>();
+  const { baseCurrencyDisplay } = useCurrency();
 
   const getPositionsSeries = (): {
     column: Highcharts.SeriesColumnOptions;
@@ -43,6 +44,7 @@ export default function HoldingsCharts(props: Props) {
         return {
           name: getSymbol(position.security),
           y: position.market_value,
+          baseCurrency: baseCurrencyDisplay,
           displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
           value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
           gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
@@ -123,7 +125,6 @@ export default function HoldingsCharts(props: Props) {
         position={position}
         addon={props.addon}
         accounts={props.accounts}
-        currencyCache={props.currencyCache}
       />
     );
   };

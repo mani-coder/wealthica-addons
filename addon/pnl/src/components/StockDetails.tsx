@@ -3,6 +3,7 @@ import { TextProps } from 'antd/es/typography/Text';
 import { Flex, FlexProps } from 'rebass';
 import { Account, Position } from '../types';
 import { formatMoney, getSymbol } from '../utils';
+import useCurrency from '../hooks/useCurrency';
 
 type Props = {
   symbol: string;
@@ -26,6 +27,7 @@ function LabelValue({
 }
 
 export default function StockDetails(props: Props) {
+  const { baseCurrencyDisplay } = useCurrency();
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
   }, 0);
@@ -48,22 +50,23 @@ export default function StockDetails(props: Props) {
     <Flex flexDirection="column" p={2}>
       <LabelValue label="Symbol" value={getSymbol(position.security)} />
 
-      <LabelValue label="Book Value" value={`CAD ${props.isPrivateMode ? '-' : formatMoney(position.book_value)}`} />
+      <LabelValue
+        label="Book Value"
+        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.book_value)}`}
+      />
 
       <LabelValue
         label="Market Value"
-        value={`CAD ${props.isPrivateMode ? '-' : formatMoney(position.market_value)} (${(position.market_value
-          ? (position.market_value / marketValue) * 100
-          : 0
-        ).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${
+          props.isPrivateMode ? '-' : formatMoney(position.market_value)
+        } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
       />
 
       <LabelValue
         label="Proft/Loss"
-        value={`CAD ${props.isPrivateMode ? '-' : formatMoney(position.gain_amount)} (${(position.gain_percent
-          ? position.gain_percent * 100
-          : position.gain_percent || 0
-        ).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${
+          props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
+        } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
         valueProps={{ type: position.gain_percent > 0 ? 'success' : 'danger', strong: true }}
       />
       <LabelValue

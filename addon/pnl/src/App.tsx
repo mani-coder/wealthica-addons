@@ -7,7 +7,7 @@ import Spin from 'antd/lib/spin';
 import Tabs from 'antd/lib/tabs';
 import _ from 'lodash';
 import moment from 'moment';
-import { Component } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Flex } from 'rebass';
 import xirr from 'xirr';
 import './App.less';
@@ -36,53 +36,37 @@ import ProfitLossTimeline from './components/ProfitLossTimeline';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
-import { TRANSACTIONS_FROM_DATE } from './constants';
-import { Account, AccountTransaction, CurrencyCache, Portfolio, Position, Transaction } from './types';
-import { computeBookValue, computeXIRR, formatMoney, getCurrencyInCAD, getSymbol } from './utils';
+import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE } from './constants';
+import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
+import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
+import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
 
 type State = {
   addon: any;
-  currencyCache?: CurrencyCache;
+
   securityTransactions: Transaction[];
   accountTransactions: AccountTransaction[];
   portfolios: Portfolio[];
-  xirr: number;
   allPortfolios: Portfolio[];
   positions: Position[];
   accounts: Account[];
-  isLoaded: boolean;
+  cashflows: CashFlow[];
+
+  newChangeLogsCount?: number;
+  xirr: number;
   privateMode: boolean;
   fromDate: string;
   toDate: string;
 
   options?: any;
+  isLoaded: boolean;
   isLoadingOnUpdate?: boolean;
-  newChangeLogsCount?: number;
 };
-type Props = {};
 
-class App extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
+export default function App() {
+  const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
 
-    this.state = {
-      addon: this.getAddon(),
-      currencyCache: undefined,
-      securityTransactions: [],
-      accountTransactions: [],
-      portfolios: [],
-      allPortfolios: [],
-      positions: [],
-      accounts: [],
-      xirr: 0,
-      isLoaded: false,
-      privateMode: false,
-      fromDate: TRANSACTIONS_FROM_DATE,
-      toDate: moment().format('YYYY-MM-DD'),
-    };
-  }
-
-  getAddon = (): any => {
+  const getAddon = (): any => {
     try {
       const addon = new Addon(
         (window.location.search || '').includes('?developer') ? {} : { id: 'mani-coder/wealthica-portfolio-addon' },
@@ -90,7 +74,8 @@ class App extends Component<Props, State> {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        this.load(options);
+        currencyRef.current.setCurrencyCache(options.currency);
+        load(options);
         initTracking(options.authUser && options.authUser.id);
       });
 
@@ -102,8 +87,9 @@ class App extends Component<Props, State> {
       addon.on('update', (options) => {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
-        this.setState({ isLoadingOnUpdate: true });
-        this.load(options);
+        updateState({ isLoadingOnUpdate: true });
+        currencyRef.current.setCurrencyCache(options.currency);
+        load(options);
         trackEvent('update');
       });
 
@@ -115,10 +101,30 @@ class App extends Component<Props, State> {
     return null;
   };
 
-  async loadCurrenciesCache(currencies: string[]) {
-    const validCurrencies = currencies.filter((currency) => currency !== 'cad');
+  const [state, setState] = useState<State>({
+    addon: getAddon(),
+    securityTransactions: [],
+    accountTransactions: [],
+    portfolios: [],
+    allPortfolios: [],
+    positions: [],
+    accounts: [],
+    cashflows: [],
+    xirr: 0,
+    isLoaded: false,
+    privateMode: false,
+    fromDate: TRANSACTIONS_FROM_DATE,
+    toDate: moment().format('YYYY-MM-DD'),
+  });
+
+  function updateState(_state: Partial<State>) {
+    setState({ ...state, ..._state });
+  }
+
+  async function loadCurrenciesCache(_baseCurrency: string, currencies: string[]) {
+    const validCurrencies = currencies.filter((currency) => currency !== _baseCurrency);
     const loadCurrency = (currency: string) => {
-      return fetch(`https://app.wealthica.com/api/currencies/cad/history?base=${currency}`)
+      return fetch(`https://app.wealthica.com/api/currencies/${_baseCurrency}/history?base=${currency}`)
         .then((response) => response.json())
         .then((response) => parseCurrencyReponse(response))
         .catch((error) => console.error(`Failed to load currency for ${currency}`, error));
@@ -132,46 +138,45 @@ class App extends Component<Props, State> {
       }, {});
     }
 
-    const loadedCurrencies = new Set(Object.keys(this.state.currencyCache ?? {}));
-    if (this.state.currencyCache && validCurrencies.every((currency) => loadedCurrencies.has(currency))) {
+    const loadedCurrencies = new Set(Object.keys(currencyRef.current.currencyCache ?? {}));
+    if (currencyRef.current.currencyCache && validCurrencies.every((currency) => loadedCurrencies.has(currency))) {
       console.debug('Skip loading currencies afresh...', currencies);
-      return this.state.currencyCache;
+      return currencyRef.current.currencyCache;
     }
-
     console.debug('Loading currencies data...', validCurrencies);
     const values = await _loadCurrencies();
     return values;
   }
 
-  load = _.debounce((options: any) => this.loadData(options), 100, { leading: true });
+  const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
 
-  mergeOptions(options) {
-    if (!this.state.options) {
-      this.setState({ options });
+  function mergeOptions(options) {
+    if (!state.options) {
+      updateState({ options });
     }
-    const oldOptions = this.state.options;
+    const oldOptions = state.options;
     Object.keys(options).forEach((key) => {
       oldOptions[key] = options[key];
     });
-    this.setState({ options: oldOptions });
+    updateState({ options: oldOptions });
     return oldOptions;
   }
 
-  async loadData(options) {
-    options = this.mergeOptions(options);
-    this.setState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
+  async function loadData(options) {
+    options = mergeOptions(options);
+    updateState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
-      this.loadPositions(options),
-      this.loadPortfolioData(options),
-      this.loadTransactions(options),
-      this.loadInstitutionsData(options),
+      loadPositions(options),
+      loadPortfolioData(options),
+      loadTransactions(options),
+      loadInstitutionsData(options),
     ]);
 
-    const currencyCache = await this.loadCurrenciesCache(
+    const currencyCache = await loadCurrenciesCache(
+      options.currency ?? currencyRef.current.baseCurrency,
       Array.from(new Set(accounts.map((account) => account.currency))),
     );
-
     console.debug('Loaded data', {
       positions,
       portfolioByDate,
@@ -179,19 +184,20 @@ class App extends Component<Props, State> {
       accounts,
       currencyCache,
     });
-
-    this.computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
+    computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
   }
 
-  computePortfolios = (
+  function computePortfolios(
     positions: Position[],
     portfolioByDate: any,
     transactions: any,
     accounts: Account[],
-    currencyCache: CurrencyCache,
-  ) => {
+    _currencyCache: CurrencyCache,
+  ) {
+    currencyRef.current.setCurrencyCache(_currencyCache);
+
     // Security transactions & XIRR computation
-    const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyCache);
+    const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyRef.current);
     const securityTransactionsBySymbol = securityTransactions.reduce((hash, transaction) => {
       if (!hash[transaction.symbol]) {
         hash[transaction.symbol] = [];
@@ -203,19 +209,18 @@ class App extends Component<Props, State> {
     positions.forEach((position) => {
       if (position.security.type === 'crypto') {
         position.currency = position.security.currency = 'cad';
-        position.security.last_price = getCurrencyInCAD(
-          position.security?.last_date ? moment(position.security.last_date.slice(0, 10)) : moment(),
+        position.security.last_price = currencyRef.current.getValue(
+          'USD',
           position.security.last_price,
-          currencyCache,
-          'usd',
+          moment(position.security.last_date?.slice(0, 10)),
         );
       }
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
       position.xirr = computeXIRR(position);
-      computeBookValue(position, currencyCache);
+      computeBookValue(position, currencyRef.current);
     });
 
-    const cashFlowByDate = computeCashFlowByDate(transactions, currencyCache);
+    const cashFlowByDate = computeCashFlowByDate(transactions, currencyRef.current);
 
     // Portfolio computation
     const portfolios: Portfolio[] = [];
@@ -263,22 +268,23 @@ class App extends Component<Props, State> {
       console.warn('Unable to compute portfolio xirr -- ', error, values);
     }
 
-    this.setState({
+    updateState({
       positions,
       securityTransactions,
-      accountTransactions: parseAccountTransactionsResponse(transactions, currencyCache),
-
+      accountTransactions: parseAccountTransactionsResponse(transactions, currencyRef.current),
       allPortfolios: portfolios,
+
+      cashflows: Object.values(cashFlowByDate),
       xirr: xirrRate,
       portfolios: portfolios.filter((portfolio) => moment(portfolio.date).isoWeekday() <= 5),
+
       isLoaded: true,
       isLoadingOnUpdate: false,
       accounts,
-      currencyCache,
     });
-  };
+  }
 
-  loadPortfolioData(options) {
+  function loadPortfolioData(options) {
     console.debug('Loading portfolio data.');
     const query = {
       from: options.fromDate,
@@ -288,7 +294,7 @@ class App extends Component<Props, State> {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return this.state.addon
+    return state.addon
       .request({
         query,
         method: 'GET',
@@ -300,7 +306,7 @@ class App extends Component<Props, State> {
       });
   }
 
-  loadPositions(options) {
+  function loadPositions(options) {
     console.debug('Loading positions data.');
     const query = {
       assets: false,
@@ -308,7 +314,7 @@ class App extends Component<Props, State> {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return this.state.addon
+    return state.addon
       .request({
         query,
         method: 'GET',
@@ -320,7 +326,7 @@ class App extends Component<Props, State> {
       });
   }
 
-  loadInstitutionsData(options) {
+  function loadInstitutionsData(options) {
     console.debug('Loading institutions data..');
     const query = {
       assets: false,
@@ -328,7 +334,7 @@ class App extends Component<Props, State> {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return this.state.addon
+    return state.addon
       .request({
         query,
         method: 'GET',
@@ -346,7 +352,7 @@ class App extends Component<Props, State> {
       });
   }
 
-  loadTransactions(options) {
+  function loadTransactions(options) {
     console.debug('Loading transactions data.');
     const fromDate = options.fromDate;
     const query = {
@@ -356,7 +362,7 @@ class App extends Component<Props, State> {
       institutions: options.institutionsFilter,
       investments: options.investmentsFilter === 'all' ? null : options.investmentsFilter,
     };
-    return this.state.addon
+    return state.addon
       .request({
         query,
         method: 'GET',
@@ -368,7 +374,7 @@ class App extends Component<Props, State> {
       });
   }
 
-  async loadStaticPortfolioData() {
+  async function loadStaticPortfolioData() {
     let institutionsData, portfolioData, positionsData, transactionsData;
     if (process.env.NODE_ENV === 'development') {
       [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
@@ -388,49 +394,48 @@ class App extends Component<Props, State> {
       ]);
     }
 
-    // Dev testing filters
-    const testInstitution = undefined;
-    const portfolioByDate = parsePortfolioResponse(portfolioData, testInstitution);
-    if (testInstitution) {
-      transactionsData = transactionsData.filter((transaction) => transaction.institution === testInstitution);
-    }
-
+    const portfolioByDate = parsePortfolioResponse(portfolioData);
     const positions = parsePositionsResponse(positionsData);
     const accounts = parseInstitutionsResponse(institutionsData);
 
-    const currencyCache = await this.loadCurrenciesCache(
+    const currencyCache = await loadCurrenciesCache(
+      currencyRef.current.baseCurrency,
       Array.from(new Set(accounts.map((account) => account.currency))),
     );
-    this.computePortfolios(positions, portfolioByDate, transactionsData, accounts, currencyCache);
-    console.debug('State:', this.state);
+
+    computePortfolios(positions, portfolioByDate, transactionsData, accounts, currencyCache);
+
+    console.debug('State:', state);
   }
 
-  componentDidMount() {
-    if (!this.state.addon) {
-      setTimeout(() => this.loadStaticPortfolioData(), 0);
+  useEffect(() => {
+    if (!state.addon) {
+      setTimeout(() => loadStaticPortfolioData(), 0);
     }
 
-    setTimeout(() => this.computeChangeLogCount(), 1000);
-  }
+    setTimeout(() => computeChangeLogCount(), 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.addon]);
 
-  computeChangeLogCount() {
+  function computeChangeLogCount() {
     const newChangeLogsCount = getNewChangeLogsCount();
     if (newChangeLogsCount) {
-      this.setState({ newChangeLogsCount });
+      updateState({ newChangeLogsCount });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }
 
-  render() {
-    if (this.state.isLoaded) {
-      console.debug('[DEBUG] Loaded State', this.state);
-    }
+  if (state.isLoaded) {
+    console.debug('[DEBUG] Loaded State', state);
+  }
 
-    return (
+  return (
+    <CurrencyContextProvider currencyRef={currencyRef}>
       <Flex width={1} justifyContent="center">
-        <div style={{ padding: 4, maxWidth: this.state.addon ? '100%' : 1100, width: '100%' }}>
-          {this.state.isLoaded ? (
+        <div style={{ padding: 4, maxWidth: state.addon ? '100%' : 1100, width: '100%' }}>
+          {state.isLoaded ? (
             <>
-              {!this.state.addon && (
+              {!state.addon && (
                 <>
                   <p
                     style={{
@@ -451,7 +456,7 @@ class App extends Component<Props, State> {
                   </p>
                 </>
               )}
-              {this.state.isLoadingOnUpdate && (
+              {state.isLoadingOnUpdate && (
                 <Flex width={1} justifyContent="center" alignItems="center">
                   <Spin size="small" />
                 </Flex>
@@ -460,9 +465,9 @@ class App extends Component<Props, State> {
               <Tabs
                 defaultActiveKey="pnl"
                 onChange={(tab) => {
-                  if (tab === 'change-log' && this.state.newChangeLogsCount) {
+                  if (tab === 'change-log' && state.newChangeLogsCount) {
                     setChangeLogViewDate();
-                    this.setState({ newChangeLogsCount: undefined });
+                    updateState({ newChangeLogsCount: undefined });
                   }
                   trackEvent('tab-change', { tab });
                 }}
@@ -470,88 +475,79 @@ class App extends Component<Props, State> {
               >
                 <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key="pnl">
                   <PnLStatistics
-                    xirr={this.state.xirr}
-                    portfolios={this.state.allPortfolios}
-                    privateMode={this.state.privateMode}
-                    positions={this.state.positions}
-                    fromDate={this.state.fromDate}
-                    toDate={this.state.toDate}
+                    xirr={state.xirr}
+                    portfolios={state.allPortfolios}
+                    privateMode={state.privateMode}
+                    positions={state.positions}
+                    fromDate={state.fromDate}
+                    toDate={state.toDate}
                   />
 
                   <DepositVsPortfolioValueTimeline
-                    portfolios={this.state.portfolios}
-                    isPrivateMode={this.state.privateMode}
+                    portfolios={state.portfolios}
+                    cashflows={state.cashflows}
+                    isPrivateMode={state.privateMode}
                   />
 
-                  <YoYPnLChart portfolios={this.state.allPortfolios} isPrivateMode={this.state.privateMode} />
-                  <ProfitLossPercentageTimeline
-                    portfolios={this.state.portfolios}
-                    isPrivateMode={this.state.privateMode}
-                  />
-                  <ProfitLossTimeline portfolios={this.state.portfolios} isPrivateMode={this.state.privateMode} />
+                  <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={state.privateMode} />
+                  <ProfitLossPercentageTimeline portfolios={state.portfolios} isPrivateMode={state.privateMode} />
+                  <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={state.privateMode} />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane forceRender tab="Holdings Analyzer" key="holdings">
-                  {!!this.state.positions.length ? (
+                <Tabs.TabPane tab="Holdings Analyzer" key="holdings">
+                  {!!state.positions.length ? (
                     <HoldingsCharts
-                      currencyCache={this.state.currencyCache || {}}
-                      positions={this.state.positions}
-                      accounts={this.state.accounts}
-                      isPrivateMode={this.state.privateMode}
-                      addon={this.state.addon}
+                      positions={state.positions}
+                      accounts={state.accounts}
+                      isPrivateMode={state.privateMode}
+                      addon={state.addon}
                     />
                   ) : (
                     <Empty description="No Holdings" />
                   )}
 
-                  <CashTable
-                    accounts={this.state.accounts}
-                    currencyCache={this.state.currencyCache || {}}
-                    isPrivateMode={this.state.privateMode}
-                  />
+                  <CashTable accounts={state.accounts} isPrivateMode={state.privateMode} />
 
-                  {!!this.state.positions.length && (
+                  {!!state.positions.length && (
                     <>
-                      <PortfolioVisualizer positions={this.state.positions} />
-                      <HoldingsTable positions={this.state.positions} isPrivateMode={this.state.privateMode} />
+                      <PortfolioVisualizer positions={state.positions} />
+                      <HoldingsTable positions={state.positions} isPrivateMode={state.privateMode} />
                     </>
                   )}
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key="gainers-losers">
                   <TopGainersLosers
-                    positions={this.state.positions}
-                    isPrivateMode={this.state.privateMode}
-                    addon={this.state.addon}
-                    accounts={this.state.accounts}
-                    currencyCache={this.state.currencyCache || {}}
+                    positions={state.positions}
+                    isPrivateMode={state.privateMode}
+                    addon={state.addon}
+                    accounts={state.accounts}
                   />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Realized P&L" key="realized-pnl">
                   <RealizedPnL
-                    currencyCache={this.state.currencyCache || {}}
-                    fromDate={this.state.fromDate}
-                    toDate={this.state.toDate}
-                    transactions={this.state.securityTransactions}
-                    accountTransactions={this.state.accountTransactions}
-                    accounts={this.state.accounts}
-                    isPrivateMode={this.state.privateMode}
+                    fromDate={state.fromDate}
+                    toDate={state.toDate}
+                    transactions={state.securityTransactions}
+                    accountTransactions={state.accountTransactions}
+                    accounts={state.accounts}
+                    isPrivateMode={state.privateMode}
                   />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="News" key="news">
-                  <News positions={this.state.positions} />
+                  <News positions={state.positions} />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane destroyInactiveTabPane tab="Events" key="events">
-                  <Events positions={this.state.positions} />
+                  <Events positions={state.positions} />
                 </Tabs.TabPane>
 
                 <Tabs.TabPane
                   destroyInactiveTabPane
                   tab={
-                    <Badge count={this.state.newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
+                    <Badge count={state.newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
                       Latest Changes
                     </Badge>
                   }
@@ -598,8 +594,6 @@ class App extends Component<Props, State> {
           <hr />
         </div>
       </Flex>
-    );
-  }
+    </CurrencyContextProvider>
+  );
 }
-
-export default App;
