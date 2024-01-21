@@ -25,7 +25,7 @@ type SecurityHistoryTimeline = {
 
 function StockTimeline(props: Props) {
   const [loading, setLoading] = useState<boolean>(false);
-  const { getValue, baseCurrencyDisplay } = useCurrency();
+  const { baseCurrencyDisplay } = useCurrency();
   const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
 
   const accountById = useMemo(() => {

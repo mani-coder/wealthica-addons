@@ -30,7 +30,7 @@ type StockPrice = {
 const POINT_FORMAT = `P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />`;
 
 function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, accounts }: Props) {
-  const { getValue, baseCurrencyDisplay } = useCurrency();
+  const { baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<StockPrice[]>([]);
 
