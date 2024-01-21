@@ -153,7 +153,7 @@ export default function App() {
   function mergeOptions(options) {
     if (!state.options) {
       updateState({ options });
-      return;
+      return options;
     }
 
     const oldOptions = state.options;
