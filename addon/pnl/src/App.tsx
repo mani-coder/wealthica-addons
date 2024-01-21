@@ -207,14 +207,6 @@ export default function App() {
     }, {});
 
     positions.forEach((position) => {
-      if (position.security.type.includes('crypto')) {
-        position.currency = position.security.currency = 'cad';
-        position.security.last_price = currencyRef.current.getValue(
-          'USD',
-          position.security.last_price,
-          moment(position.security.last_date?.slice(0, 10)),
-        );
-      }
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
       position.xirr = computeXIRR(position);
       computeBookValue(position, currencyRef.current);

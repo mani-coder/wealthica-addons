@@ -100,11 +100,10 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
       const buyRecord = transaction.type === 'buy' ? transaction : position;
       const sellRecord = transaction.type === 'sell' ? transaction : position;
 
-      const crypto = transaction.securityType === 'crypto';
       const buyValue = closedShares * buyRecord.price;
       const sellValue = closedShares * sellRecord.price;
-      const buyCost = getValue(crypto ? 'cad' : transaction.currency, buyValue, buyRecord.date);
-      const sellCost = getValue(crypto ? 'cad' : transaction.currency, sellValue, sellRecord.date);
+      const buyCost = getValue(transaction.currency, buyValue, buyRecord.date);
+      const sellCost = getValue(transaction.currency, sellValue, sellRecord.date);
 
       const pnl = sellCost - buyCost;
       const pnlRatio = (pnl / buyCost) * 100;
@@ -129,7 +128,6 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         buyCost,
         sellCost,
         pnl,
-        crypto,
         pnlRatio,
       };
 

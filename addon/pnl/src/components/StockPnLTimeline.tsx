@@ -33,7 +33,6 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
   const { getValue, baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<StockPrice[]>([]);
-  const crypto = position.security?.type === 'crypto';
 
   const accountById = useMemo(() => {
     return accounts.reduce((hash, account) => {
@@ -63,12 +62,8 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           closePrice = prevPrice;
         }
 
-        // Only weekdays for non-crypto stocks.
-        if (to.isoWeekday() <= 5 || crypto) {
-          data.push({
-            timestamp: to.clone(),
-            closePrice: crypto ? getValue('USD', closePrice, to) : closePrice,
-          });
+        if (to.isoWeekday() <= 5) {
+          data.push({ timestamp: to.clone(), closePrice });
         }
 
         // Move the date forward.
@@ -140,7 +135,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           return;
         }
 
-        const date = crypto ? t.date.format('YYYY-MM-DD') : getNextWeekday(t.date.clone());
+        const date = getNextWeekday(t.date.clone());
         let accountBook = book[t.account];
         if (!accountBook) {
           accountBook = [];

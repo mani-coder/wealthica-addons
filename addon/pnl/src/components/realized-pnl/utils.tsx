@@ -8,7 +8,6 @@ export type ClosedPosition = {
   date: Moment;
   symbol: string;
   currency: string;
-  crypto: boolean;
   shares: number;
 
   buyDate: Moment;

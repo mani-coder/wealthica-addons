@@ -40,44 +40,37 @@ function StockTimeline(props: Props) {
     return account ? account.name : accountById;
   }
 
-  const parseSecuritiesResponse = useCallback(
-    (response) => {
-      const crypto = props.position.security.type === 'crypto';
-      const to = getDate(response.to);
-      const data: SecurityHistoryTimeline[] = [];
-      let prevPrice;
-      response.data
-        .filter((closePrice) => closePrice)
-        .reverse()
-        .forEach((closePrice: number) => {
-          if (!prevPrice) {
-            prevPrice = closePrice;
-          }
-          const changePercentage = Math.abs((closePrice - prevPrice) / closePrice) * 100;
-          if (changePercentage > 200) {
-            closePrice = prevPrice;
-          }
-          // Only weekdays.
-          if (to.isoWeekday() <= 5 || crypto) {
-            data.push({
-              timestamp: to.clone(),
-              closePrice: crypto ? getValue('usd', closePrice, to) : closePrice,
-            });
-          }
-
-          // Move the date forward.
-          to.subtract(1, 'days');
+  const parseSecuritiesResponse = useCallback((response) => {
+    const to = getDate(response.to);
+    const data: SecurityHistoryTimeline[] = [];
+    let prevPrice;
+    response.data
+      .filter((closePrice) => closePrice)
+      .reverse()
+      .forEach((closePrice: number) => {
+        if (!prevPrice) {
           prevPrice = closePrice;
-        });
+        }
+        const changePercentage = Math.abs((closePrice - prevPrice) / closePrice) * 100;
+        if (changePercentage > 200) {
+          closePrice = prevPrice;
+        }
 
-      const sortedData = data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
+        if (to.isoWeekday() <= 5) {
+          data.push({ timestamp: to.clone(), closePrice });
+        }
 
-      // console.debug('Loaded the securities data --', sortedData);
-      setLoading(false);
-      setSecurityTimeline(sortedData);
-    },
-    [getValue, props.position.security.type],
-  );
+        // Move the date forward.
+        to.subtract(1, 'days');
+        prevPrice = closePrice;
+      });
+
+    const sortedData = data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
+
+    // console.debug('Loaded the securities data --', sortedData);
+    setLoading(false);
+    setSecurityTimeline(sortedData);
+  }, []);
 
   const fetchData = useCallback(() => {
     setLoading(true);

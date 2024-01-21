@@ -1,5 +1,5 @@
 export const DATE_FORMAT = 'YYYY-MM-DD';
-export const DEFAULT_BASE_CURRENCY = 'usd';
+export const DEFAULT_BASE_CURRENCY = 'cad';
 export const TRANSACTIONS_FROM_DATE = '2010-01-01';
 
 export const TYPE_TO_COLOR = {
