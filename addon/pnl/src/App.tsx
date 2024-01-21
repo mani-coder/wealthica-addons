@@ -147,19 +147,19 @@ export default function App() {
 
   const load = _.debounce((options: any, isUpdate?: boolean) => loadData(options, isUpdate), 100, { leading: true });
 
-  function mergeOptions(options) {
-    if (!state.options) {
-      return options;
+  async function loadData(options: any, isUpdate?: boolean) {
+    function mergeOptions(_options) {
+      if (!state.options) {
+        return _options;
+      }
+
+      const oldOptions = state.options;
+      Object.keys(options).forEach((key) => {
+        oldOptions[key] = _options[key];
+      });
+      return oldOptions;
     }
 
-    const oldOptions = state.options;
-    Object.keys(options).forEach((key) => {
-      oldOptions[key] = options[key];
-    });
-    return oldOptions;
-  }
-
-  async function loadData(options: any, isUpdate?: boolean) {
     options = mergeOptions(options);
     console.debug('Loading data with addon options -- ', options);
     updateState({
