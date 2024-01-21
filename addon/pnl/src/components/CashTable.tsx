@@ -94,7 +94,7 @@ function CashTable(props: Props) {
     <div className="zero-padding">
       <Collapsible title="Cash Table">
         <Table<Account>
-          rowKey="id"
+          rowKey={(row) => `${row.id}:${row.institution}:${row.name}:${row.currency}`}
           pagination={false}
           scroll={{ y: 500 }}
           summary={(accounts) => {

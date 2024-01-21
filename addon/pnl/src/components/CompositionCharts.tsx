@@ -170,7 +170,7 @@ export default function CompositionCharts(props: Props) {
             tooltip: POSITION_TOOLTIP,
           };
     },
-    [getColor, props.accounts, props.isPrivateMode, showHoldings],
+    [baseCurrencyDisplay, getColor, props.accounts, props.isPrivateMode, showHoldings],
   );
 
   const getAccountsCompositionSeries = useCallback(

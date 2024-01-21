@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { Badge } from 'antd';
+import { Alert, Badge } from 'antd';
 import Typography from 'antd/es/typography';
 import Text from 'antd/es/typography/Text';
 import Empty from 'antd/lib/empty';
@@ -207,7 +207,7 @@ export default function App() {
     }, {});
 
     positions.forEach((position) => {
-      if (position.security.type === 'crypto') {
+      if (position.security.type.includes('crypto')) {
         position.currency = position.security.currency = 'cad';
         position.security.last_price = currencyRef.current.getValue(
           'USD',
@@ -404,8 +404,6 @@ export default function App() {
     );
 
     computePortfolios(positions, portfolioByDate, transactionsData, accounts, currencyCache);
-
-    console.debug('State:', state);
   }
 
   useEffect(() => {
@@ -456,9 +454,24 @@ export default function App() {
                   </p>
                 </>
               )}
-              {state.isLoadingOnUpdate && (
+              {state.isLoadingOnUpdate ? (
                 <Flex width={1} justifyContent="center" alignItems="center">
                   <Spin size="small" />
+                </Flex>
+              ) : (
+                <Flex width={1} justifyContent="center" alignItems="center">
+                  <Alert
+                    style={{ width: '100%', textAlign: 'center' }}
+                    type="info"
+                    banner
+                    closable
+                    message={
+                      <>
+                        All amounts displayed in <b>{currencyRef.current.baseCurrency.toUpperCase()}</b> as per your
+                        currency preference.
+                      </>
+                    }
+                  />
                 </Flex>
               )}
 

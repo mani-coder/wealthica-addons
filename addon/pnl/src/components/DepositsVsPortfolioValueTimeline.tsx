@@ -20,10 +20,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
       .map((cashflow) => ({ ...cashflow, date: moment(cashflow.date, DATE_FORMAT) }))
       .sort((a, b) => a.date.valueOf() - b.date.valueOf());
   }, [props.cashflows]);
-  console.debug(
-    '[DEBUG] Cash Flows',
-    props.cashflows.filter((t) => t.deposit || t.withdrawal),
-  );
+  console.debug('[DEBUG] Cash Flows', { cashflows: props.cashflows.filter((t) => t.deposit || t.withdrawal) });
 
   function getFlags(type: string): Highcharts.SeriesFlagsOptions {
     return {

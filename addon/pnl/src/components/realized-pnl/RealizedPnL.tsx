@@ -405,7 +405,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
 
       return individualSeries.length === 1 ? individualSeries : [getSeries('all', gains)].concat(individualSeries);
     },
-    [expenseTransactions, incomeTransactions, isPrivateMode, timeline, types],
+    [baseCurrencyDisplay, expenseTransactions, incomeTransactions, isPrivateMode, timeline, types],
   );
 
   const getClosedPnLByAccountSeries = useCallback(
