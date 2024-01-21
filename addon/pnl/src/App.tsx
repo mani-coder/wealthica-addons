@@ -87,9 +87,8 @@ export default function App() {
       addon.on('update', (options) => {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
-        updateState({ isLoadingOnUpdate: true });
         currencyRef.current.setBaseCurrency(options.currency);
-        load(options);
+        load(options, isUpdate);
         trackEvent('update');
       });
 
@@ -148,11 +147,10 @@ export default function App() {
     return values;
   }
 
-  const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
+  const load = _.debounce((options: any, isUpdate?: boolean) => loadData(options, isUpdate), 100, { leading: true });
 
   function mergeOptions(options) {
     if (!state.options) {
-      updateState({ options });
       return options;
     }
 
@@ -160,14 +158,19 @@ export default function App() {
     Object.keys(options).forEach((key) => {
       oldOptions[key] = options[key];
     });
-    updateState({ options: oldOptions });
     return oldOptions;
   }
 
-  async function loadData(options) {
+  async function loadData(options: any, isUpdate?: boolean) {
     options = mergeOptions(options);
     console.debug('Loading data with addon options -- ', options);
-    updateState({ privateMode: options.privateMode, fromDate: options.fromDate, toDate: options.toDate });
+    updateState({
+      options,
+      isLoadingOnUpdate: !!isUpdate,
+      privateMode: options.privateMode,
+      fromDate: options.fromDate,
+      toDate: options.toDate,
+    });
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
       loadPositions(options),
