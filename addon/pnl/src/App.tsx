@@ -74,7 +74,6 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        currencyRef.current.setBaseCurrency(options.currency);
         load(options);
         initTracking(options.authUser && options.authUser.id);
       });
@@ -87,8 +86,7 @@ export default function App() {
       addon.on('update', (options) => {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
-        currencyRef.current.setBaseCurrency(options.currency);
-        load(options, isUpdate);
+        load(options, true);
         trackEvent('update');
       });
 
@@ -171,6 +169,7 @@ export default function App() {
       fromDate: options.fromDate,
       toDate: options.toDate,
     });
+    currencyRef.current.setBaseCurrency(options.currency);
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
       loadPositions(options),
