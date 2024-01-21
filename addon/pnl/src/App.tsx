@@ -74,7 +74,7 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        currencyRef.current.setCurrencyCache(options.currency);
+        currencyRef.current.setBaseCurrency(options.currency);
         load(options);
         initTracking(options.authUser && options.authUser.id);
       });
@@ -88,7 +88,7 @@ export default function App() {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
         updateState({ isLoadingOnUpdate: true });
-        currencyRef.current.setCurrencyCache(options.currency);
+        currencyRef.current.setBaseCurrency(options.currency);
         load(options);
         trackEvent('update');
       });
