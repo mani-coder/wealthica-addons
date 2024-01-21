@@ -53,10 +53,11 @@ type State = {
   xirr: number;
   isLoaded: boolean;
 };
+type Record = { [K: string]: any };
 
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
-  const addOnOptionsRef = useRef<{ [K: string]: any }>({
+  const addOnOptionsRef = useRef<Record>({
     currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
@@ -65,12 +66,13 @@ export default function App() {
   const addOnOptions = addOnOptionsRef.current;
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
-  const getAddon = (addOnOptionsRef: React.RefObject<{ [K: string]: any }>): any => {
-    function updateOptions(_addOnOptions, options) {
+  const getAddon = (addOnOptionsRef: React.RefObject<Record>): any => {
+    function updateOptions(_addOnOptions: Record | null, options: Record) {
+      if (!_addOnOptions) return;
+
       Object.keys(options).forEach((option) => {
         _addOnOptions[option] = options[option];
       });
-      return _addOnOptions;
     }
 
     try {
@@ -80,7 +82,8 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        load(updateOptions(addOnOptionsRef.current, options));
+        updateOptions(addOnOptionsRef.current, options);
+        load();
         initTracking(options.authUser && options.authUser.id);
       });
 
@@ -93,7 +96,8 @@ export default function App() {
         // Update according to the received options
         console.debug('Addon update - options: ', options);
         setLoadingOnUpdate(true);
-        load(updateOptions(addOnOptionsRef.current, options));
+        updateOptions(addOnOptionsRef.current, options);
+        load();
         trackEvent('update');
       });
 
@@ -150,20 +154,20 @@ export default function App() {
     return values;
   }
 
-  const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
+  const load = _.debounce(() => loadData(), 100, { leading: true });
 
-  async function loadData(options: any) {
-    console.debug('[DEBUG] Load Data being state: ', { state, options, addOnOptions });
-    currencyRef.current.setBaseCurrency(options.currency);
+  async function loadData() {
+    console.debug('[DEBUG] Load data begin --', { addOnOptions });
+    currencyRef.current.setBaseCurrency(addOnOptions.currency);
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
-      loadPositions(options),
-      loadPortfolioData(options),
-      loadTransactions(options),
-      loadInstitutionsData(options),
+      loadPositions(addOnOptions),
+      loadPortfolioData(addOnOptions),
+      loadTransactions(addOnOptions),
+      loadInstitutionsData(addOnOptions),
     ]);
 
     const currencyCache = await loadCurrenciesCache(
-      options.currency ?? currencyRef.current.baseCurrency,
+      addOnOptions.currency,
       Array.from(new Set(accounts.map((account) => account.currency))),
     );
     console.debug('Loaded data', {
