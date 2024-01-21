@@ -65,6 +65,7 @@ export default function App() {
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
   function mergeOptions(newOptions) {
+    console.log('merging options', { addOnOptions, newOptions });
     const finalOptions = { ...(addOnOptions || {}) };
     Object.keys(newOptions).forEach((key) => {
       finalOptions[key] = newOptions[key];
@@ -80,7 +81,7 @@ export default function App() {
 
       addon.on('init', (options) => {
         console.debug('Addon initialization', options);
-        setAddOnOptions(options);
+        setAddOnOptions({ ...options });
         load(options);
         initTracking(options.authUser && options.authUser.id);
       });
@@ -156,7 +157,7 @@ export default function App() {
   const load = _.debounce((options: any) => loadData(options), 100, { leading: true });
 
   async function loadData(options: any) {
-    console.debug('[DEBUG] Load Data being state: ', { state, options });
+    console.debug('[DEBUG] Load Data being state: ', { state, options, addOnOptions });
     currencyRef.current.setBaseCurrency(options.currency);
 
     const [positions, portfolioByDate, transactions, accounts] = await Promise.all([
@@ -408,7 +409,7 @@ export default function App() {
   }
 
   if (state.isLoaded) {
-    console.debug('[DEBUG] Loaded State', state);
+    console.debug('[DEBUG] Loaded State', { state, addOnOptions, isLoadingOnUpdate });
   }
 
   return (
