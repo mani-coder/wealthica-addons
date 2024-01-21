@@ -58,7 +58,7 @@ type State = {
   fromDate: string;
   toDate: string;
 
-  options?: any;
+  options: any;
   isLoaded: boolean;
   isLoadingOnUpdate?: boolean;
 };
@@ -112,6 +112,7 @@ export default function App() {
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
     toDate: moment().format('YYYY-MM-DD'),
+    options: {},
   });
 
   function updateState(_state: Partial<State>) {
@@ -155,7 +156,7 @@ export default function App() {
       });
       return finalOptions;
     }
-
+    console.debug('[DEBUG] Load Data being state: ', { state });
     const options = mergeOptions(_options);
     console.debug('Loading data with addon options -- ', options);
     updateState({
