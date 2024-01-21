@@ -461,8 +461,8 @@ export default function App() {
                     closable
                     message={
                       <>
-                        All amounts displayed in <b>{currencyRef.current.baseCurrency.toUpperCase()}</b> as per your
-                        currency preference.
+                        All amounts are displayed in <b>{currencyRef.current.baseCurrency.toUpperCase()}</b>, as per
+                        your currency preference.
                       </>
                     }
                   />
