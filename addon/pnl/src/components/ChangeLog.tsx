@@ -9,10 +9,9 @@ import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { CHANGE_LOG_DATE_CACHE_KEY, TabKeysEnum } from '../constants';
+import { CHANGE_LOG_DATE_CACHE_KEY } from '../constants';
 import AutoReSizer from '../hooks/useResizeHook';
 import { getLocalCache, setLocalCache } from '../utils';
-import { startCase } from 'lodash';
 
 const LOGS: {
   title: string;
