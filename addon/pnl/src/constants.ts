@@ -17,3 +17,14 @@ export const TYPE_TO_COLOR = {
 };
 
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';
+
+export enum TabKeysEnum {
+  PNL = 'pnl',
+  HOLDINGS = 'holdings',
+  GAINERS_LOSERS = 'gainers-losers',
+  REALIZED_PNL = 'realized-pnl',
+  NEWS = 'news',
+  EVENTS = 'events',
+  CHANGE_LOG = 'change-log',
+  DASHBOARD_WIDGETS = 'dashboard-widgets',
+}

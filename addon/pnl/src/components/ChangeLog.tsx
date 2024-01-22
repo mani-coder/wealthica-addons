@@ -9,9 +9,10 @@ import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { CHANGE_LOG_DATE_CACHE_KEY } from '../constants';
+import { CHANGE_LOG_DATE_CACHE_KEY, TabKeysEnum } from '../constants';
 import AutoReSizer from '../hooks/useResizeHook';
 import { getLocalCache, setLocalCache } from '../utils';
+import { startCase } from 'lodash';
 
 const LOGS: {
   title: string;
@@ -22,6 +23,24 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2024-01-22',
+    tab: 'P&L Charts',
+    title: 'Deposit & Withdrawal Flags',
+    description:
+      'The Deposit Vs Portfolio Value chart now shows the deposits & withdrawls made by you in the timeline.',
+    images: ['https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Deposit_Flags_Timeline__ogTZcFJn.png'],
+  },
+  {
+    date: '2024-01-22',
+    tab: 'P&L Charts',
+    title: 'Base Currency Support',
+    description: 'PnL addon now supports showing amounts in the base currency selected by your profile settings.',
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Base_Currency_USD_bvPAbD4fVq.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Base_Currency_CAD_6UwgywmXaX.png',
+    ],
+  },
+  {
     date: '2022-03-01',
     tab: 'Realized P&L',
     title: 'ACB & Proceeds For Tax Filling',
@@ -31,7 +50,7 @@ const LOGS: {
   },
   {
     date: '2021-11-04',
-    tab: 'Holdings',
+    tab: 'Holdings Analyzer',
     title: 'Cash Table',
     description:
       'We have added a cash table to the Holdings tab. The new cash table will help to go through the remaining cash in all your accounts and run some quick filters and sort for analysis.',
@@ -42,7 +61,7 @@ const LOGS: {
   },
   {
     date: '2021-06-17',
-    tab: 'Dashboard Widgets',
+    tab: 'P&L Widgets',
     title: 'P&L % Change Widget',
     description:
       'P&L Ratio (%) Change widget is now published to wealthica and is available under widgets. You can add the widget by selecting manage widgets option and adding P&L % Change widget to the top.',
@@ -173,7 +192,7 @@ const LOGS: {
   },
   {
     date: '2021-03-20',
-    title: 'P/L Ratio (%) Change Developer Widget',
+    title: 'P&L Widgets',
     description:
       'P/L Ratio (%) Change chart in the P/L charts is written as an elegant developer widget. The widget is submitted to wealthica team for publication. Incase you are interested in trying it out, click on the link below.',
     link: (

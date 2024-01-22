@@ -36,7 +36,7 @@ import ProfitLossTimeline from './components/ProfitLossTimeline';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
-import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE } from './constants';
+import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
@@ -460,7 +460,7 @@ export default function App() {
               )}
 
               <Tabs
-                defaultActiveKey="pnl"
+                defaultActiveKey={TabKeysEnum.PNL}
                 onChange={(tab) => {
                   if (tab === 'change-log' && state.newChangeLogsCount) {
                     setChangeLogViewDate();
@@ -470,7 +470,7 @@ export default function App() {
                 }}
                 size="large"
               >
-                <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key="pnl">
+                <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key={TabKeysEnum.PNL}>
                   <PnLStatistics
                     xirr={state.xirr}
                     portfolios={state.allPortfolios}
@@ -494,7 +494,7 @@ export default function App() {
                   <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane forceRender tab="Holdings Analyzer" key="holdings">
+                <Tabs.TabPane forceRender tab="Holdings Analyzer" key={TabKeysEnum.HOLDINGS}>
                   {!!state.positions.length ? (
                     <HoldingsCharts
                       positions={state.positions}
@@ -516,7 +516,7 @@ export default function App() {
                   )}
                 </Tabs.TabPane>
 
-                <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key="gainers-losers">
+                <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key={TabKeysEnum.GAINERS_LOSERS}>
                   <TopGainersLosers
                     positions={state.positions}
                     isPrivateMode={addOnOptions.privateMode}
@@ -525,7 +525,7 @@ export default function App() {
                   />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane destroyInactiveTabPane tab="Realized P&L" key="realized-pnl">
+                <Tabs.TabPane destroyInactiveTabPane tab="Realized P&L" key={TabKeysEnum.REALIZED_PNL}>
                   <RealizedPnL
                     fromDate={addOnOptions.fromDate}
                     toDate={addOnOptions.toDate}
@@ -536,11 +536,11 @@ export default function App() {
                   />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane destroyInactiveTabPane tab="News" key="news">
+                <Tabs.TabPane destroyInactiveTabPane tab="News" key={TabKeysEnum.NEWS}>
                   <News positions={state.positions} />
                 </Tabs.TabPane>
 
-                <Tabs.TabPane destroyInactiveTabPane tab="Events" key="events">
+                <Tabs.TabPane destroyInactiveTabPane tab="Events" key={TabKeysEnum.EVENTS}>
                   <Events positions={state.positions} />
                 </Tabs.TabPane>
 
@@ -551,7 +551,7 @@ export default function App() {
                       Latest Changes
                     </Badge>
                   }
-                  key="change-log"
+                  key={TabKeysEnum.CHANGE_LOG}
                 >
                   <ChangeLog />
                 </Tabs.TabPane>
