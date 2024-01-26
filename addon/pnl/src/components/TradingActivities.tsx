@@ -1,4 +1,4 @@
-import { DatePicker, Divider, Table, Typography } from 'antd';
+import { DatePicker, Divider, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import moment, { Moment } from 'moment';
 import { useCallback, useMemo, useState } from 'react';
@@ -61,12 +61,14 @@ export default function TradingActivities(props: Props) {
         title: 'Last Price',
         dataIndex: 'lastPrice',
         render: (value) => formatMoney(value),
+        align: 'right',
       },
       {
         key: 'price',
         title: 'Price',
         dataIndex: 'price',
         render: (value) => <Typography.Text strong>{formatMoney(value)}</Typography.Text>,
+        align: 'right',
       },
       {
         key: 'shares',
@@ -81,7 +83,7 @@ export default function TradingActivities(props: Props) {
         render: (value) => formatMoney(value),
         defaultSortOrder: 'descend',
         sorter: (a, b) => a.value - b.value,
-        width: 175,
+        width: 200,
         align: 'right',
       },
       {
@@ -98,7 +100,7 @@ export default function TradingActivities(props: Props) {
           );
         },
         align: 'right',
-        width: 125,
+        width: 150,
       },
     ];
     return columns;
@@ -156,13 +158,19 @@ export default function TradingActivities(props: Props) {
         bordered
         title={() => (
           <Flex justifyContent="space-between">
-            <Typography.Title level={5}>Securities {title}</Typography.Title>
-            <DatePicker
-              defaultValue={fromDate}
-              disabledDate={(date) => date.isAfter(moment())}
-              size="large"
-              onChange={(date) => setFromDate(date ?? moment(props.fromDate))}
-            />
+            <Typography.Title level={3}>Securities {title}</Typography.Title>
+            <Space direction="horizontal">
+              <Typography.Text strong type="secondary">
+                Filter activities
+              </Typography.Text>
+              <DatePicker
+                defaultValue={fromDate}
+                value={fromDate}
+                disabledDate={(date) => date.isAfter(moment())}
+                size="large"
+                onChange={(date) => setFromDate(date ?? moment(props.fromDate))}
+              />
+            </Space>
           </Flex>
         )}
         pagination={false}
