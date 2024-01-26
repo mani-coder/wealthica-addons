@@ -14,7 +14,7 @@ type Props = {
 };
 
 function HoldingsTable(props: Props) {
-  const { baseCurrencyDisplay } = useCurrency();
+  const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
   }, 0);
@@ -37,14 +37,14 @@ function HoldingsTable(props: Props) {
         sorter: (a, b) => getSymbol(a.security).localeCompare(getSymbol(b.security)),
       },
       {
-        key: 'country',
-        title: 'Country',
+        key: 'currency',
+        title: 'Currency',
         dataIndex: 'security.currency',
-        filters: ['US', 'CA'].map((country) => ({ text: country, value: `${country.toLowerCase()}d` })),
+        filters: allCurrencies.map((value) => ({ text: value.toUpperCase(), value: value.toLocaleLowerCase() })),
         onFilter: (value, position) => position.security.currency === value,
-        render: (text, position) => (position.security.currency === 'usd' ? 'US' : 'CA'),
+        render: (text, position) => position.security.currency.toLocaleUpperCase(),
         sorter: (a, b) => a.security.currency.localeCompare(b.security.currency),
-        width: 75,
+        width: 125,
       },
       {
         key: 'lastPrice',

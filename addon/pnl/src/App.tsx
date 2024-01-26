@@ -40,6 +40,7 @@ import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './co
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
+import TradingActivities from './components/TradingActivities';
 
 type State = {
   securityTransactions: Transaction[];
@@ -533,6 +534,14 @@ export default function App() {
                     accountTransactions={state.accountTransactions}
                     accounts={state.accounts}
                     isPrivateMode={addOnOptions.privateMode}
+                  />
+                </Tabs.TabPane>
+
+                <Tabs.TabPane destroyInactiveTabPane tab="Activities" key={TabKeysEnum.ACTIVITIES}>
+                  <TradingActivities
+                    fromDate={addOnOptions.fromDate}
+                    transactions={state.securityTransactions.filter((t) => ['buy', 'sell'].includes(t.originalType))}
+                    positions={state.positions}
                   />
                 </Tabs.TabPane>
 

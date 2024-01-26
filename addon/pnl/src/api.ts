@@ -201,6 +201,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
             : 0,
         type: isSecuritiesAccountsTransfer(transaction) ? (amount < 0 ? 'sell' : 'buy') : transaction.type,
         amount: Math.abs(amount),
+        currencyAmount: Math.abs(transaction.currency_amount),
         currency: transaction.security ? transaction.security.currency : 'USD',
         shares: transaction.quantity || 0,
         fees: transaction.fee,

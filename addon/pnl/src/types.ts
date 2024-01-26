@@ -43,6 +43,7 @@ export type Transaction = {
   date: Moment;
   symbol: string;
   amount: number;
+  currencyAmount: number;
   currency: string;
   type: string;
   price: number;

@@ -12,6 +12,8 @@ export const getDate = (date: string): Moment => {
   return moment(date.slice(0, 10), DATE_FORMAT);
 };
 
+export const formatDate = (date: Moment, format?: string): string => date.format(format ?? 'MMM DD, YYYY');
+
 export const formatMoney = (amount?: number, precision?: number): string => {
   precision = precision === undefined || precision === null ? 2 : precision;
   if (amount === undefined || amount === null) {
