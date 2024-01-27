@@ -43,7 +43,6 @@ export default function TradingActivities(props: Props) {
         title: 'Symbol',
         dataIndex: 'symbol',
         render: (symbol, security) => renderSymbol(symbol),
-        width: 125,
         sorter: (a, b) => a.symbol.localeCompare(b.symbol),
       },
       {
@@ -54,7 +53,6 @@ export default function TradingActivities(props: Props) {
         onFilter: (value, security) => security.currency === value,
         render: (text, security) => security.currency.toLocaleUpperCase(),
         sorter: (a, b) => a.currency.localeCompare(b.currency),
-        width: 125,
       },
       {
         key: 'lastPrice',
@@ -83,7 +81,6 @@ export default function TradingActivities(props: Props) {
         render: (value) => formatMoney(value),
         defaultSortOrder: 'descend',
         sorter: (a, b) => a.value - b.value,
-        width: 200,
         align: 'right',
       },
       {
@@ -100,7 +97,6 @@ export default function TradingActivities(props: Props) {
           );
         },
         align: 'right',
-        width: 150,
       },
     ];
     return columns;
