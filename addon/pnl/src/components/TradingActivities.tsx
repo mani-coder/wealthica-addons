@@ -26,7 +26,6 @@ type Security = {
 };
 
 export default function TradingActivities(props: Props) {
-  console.log('mani is cool', props.transactions);
   const [fromDate, setFromDate] = useState<Moment>(moment(props.fromDate).startOf('D'));
   const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const symbolPriceCache = useMemo(() => {
@@ -72,7 +71,7 @@ export default function TradingActivities(props: Props) {
         key: 'shares',
         title: 'Shares',
         dataIndex: 'shares',
-        render: (value) => <Typography.Text strong>{value}</Typography.Text>,
+        render: (value) => <Typography.Text strong>{Math.round(value * 100) / 100}</Typography.Text>,
       },
       {
         key: 'value',
