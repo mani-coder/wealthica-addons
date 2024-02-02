@@ -34,13 +34,13 @@ import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
 import { TopGainersLosers } from './components/TopGainersLosers';
+import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
-import TradingActivities from './components/TradingActivities';
 
 type State = {
   securityTransactions: Transaction[];
@@ -125,6 +125,7 @@ export default function App() {
   });
 
   function updateState(_state: Partial<State>) {
+    console.debug('[DEBUG] Update state', { newState: _state, state });
     setState({ ...state, ..._state });
   }
 
@@ -396,7 +397,7 @@ export default function App() {
       setTimeout(() => loadStaticPortfolioData(), 0);
     }
 
-    setTimeout(() => computeChangeLogCount(), 1000);
+    setTimeout(() => computeChangeLogCount(), 500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addon.current]);
 
@@ -441,7 +442,7 @@ export default function App() {
               )}
               {isLoadingOnUpdate ? (
                 <Flex width={1} justifyContent="center" alignItems="center">
-                  <Spin size="small" />
+                  <Spin size="large" />
                 </Flex>
               ) : (
                 <Flex width={1} justifyContent="center" alignItems="center">
@@ -568,7 +569,7 @@ export default function App() {
             </>
           ) : (
             <Flex justifyContent="center" width={1}>
-              <Spin size="large" />
+              <Spin size="large" spinning />
             </Flex>
           )}
 

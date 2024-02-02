@@ -54,7 +54,11 @@ export function shuffle(s: string) {
   return s; // Return shuffled string
 }
 
-export const getSymbol = (security: Security): string => {
+export const getSymbol = (security: Security, ticker?: boolean): string => {
+  if (security.currency === 'jpy' && !ticker) {
+    return security.name;
+  }
+
   return `${security.symbol || security.name}${security.currency === 'cad' && security.type !== 'crypto' ? '.TO' : ''}`;
 };
 

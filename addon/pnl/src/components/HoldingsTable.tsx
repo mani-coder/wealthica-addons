@@ -27,12 +27,13 @@ function HoldingsTable(props: Props) {
         render: (text, position) => (
           <Typography.Link
             rel="noreferrer noopener"
-            href={`https://finance.yahoo.com/quote/${getSymbol(position.security)}`}
+            href={`https://finance.yahoo.com/quote/${getSymbol(position.security, true)}`}
             target="_blank"
           >
             {getSymbol(position.security)}
           </Typography.Link>
         ),
+        ellipsis: true,
         width: 100,
         sorter: (a, b) => getSymbol(a.security).localeCompare(getSymbol(b.security)),
       },
