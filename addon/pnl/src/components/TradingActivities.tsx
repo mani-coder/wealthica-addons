@@ -44,7 +44,6 @@ export default function TradingActivities(props: Props) {
         dataIndex: 'symbol',
         render: (symbol, security) => renderSymbol(symbol, undefined, security.ticker),
         sorter: (a, b) => a.symbol.localeCompare(b.symbol),
-        ellipsis: true,
       },
       {
         key: 'currency',
