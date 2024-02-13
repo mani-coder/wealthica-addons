@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Position, Transaction } from '../types';
-import { formatMoney, getSymbol } from '../utils';
+import { formatMoney, getSymbol, sumOf } from '../utils';
 import { renderSymbol } from './realized-pnl/utils';
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
 
 type Security = {
   symbol: string;
+  ticker: string;
   lastPrice: number;
   price: number;
   currency: string;
@@ -41,8 +42,9 @@ export default function TradingActivities(props: Props) {
         key: 'symbol',
         title: 'Symbol',
         dataIndex: 'symbol',
-        render: (symbol, security) => renderSymbol(symbol),
+        render: (symbol, security) => renderSymbol(symbol, undefined, security.ticker),
         sorter: (a, b) => a.symbol.localeCompare(b.symbol),
+        ellipsis: true,
       },
       {
         key: 'currency',
@@ -110,6 +112,7 @@ export default function TradingActivities(props: Props) {
           if (!hash[symbol]) {
             hash[symbol] = {
               symbol,
+              ticker: transaction.ticker,
               lastPrice: symbolPriceCache[symbol],
               price: transaction.currencyAmount / transaction.shares,
               currency: transaction.currency,
@@ -172,9 +175,28 @@ export default function TradingActivities(props: Props) {
         scroll={{ y: 500 }}
         dataSource={securities}
         columns={columns}
+        summary={(transactions) => {
+          const total = sumOf(...transactions.map((t) => t.value));
+
+          return (
+            <Table.Summary fixed>
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0} colSpan={5} align="right">
+                  <Typography.Text strong>Total</Typography.Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1} colSpan={2} align="center">
+                  <Typography.Text strong>
+                    {formatMoney(total)} {baseCurrencyDisplay}
+                  </Typography.Text>
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            </Table.Summary>
+          );
+        }}
       />
     );
   }
+  console.log('mani is cool', boughtSecurities);
 
   return (
     <div className="zero-padding">

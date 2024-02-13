@@ -25,10 +25,14 @@ export type ClosedPosition = {
 
 export const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 
-export function renderSymbol(symbol: string, currency?: string) {
+export function renderSymbol(symbol: string, currency?: string, ticker?: string) {
   return (
     <>
-      <Typography.Link rel="noreferrer noopener" href={`https://finance.yahoo.com/quote/${symbol}`} target="_blank">
+      <Typography.Link
+        rel="noreferrer noopener"
+        href={`https://finance.yahoo.com/quote/${ticker ?? symbol}`}
+        target="_blank"
+      >
         {symbol}
       </Typography.Link>
       {currency && <div style={{ fontSize: 10 }}>{currency.toUpperCase()}</div>}
