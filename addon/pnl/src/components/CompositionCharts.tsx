@@ -38,20 +38,27 @@ export default function CompositionCharts(props: Props) {
             mergedAccount = { name, value: 0, positions: {}, accounts: [] };
             hash[name] = mergedAccount;
           }
-          mergedAccount.value += account.positions.reduce((sum, position) => sum + position.market_value, 0);
+          mergedAccount.value += sumOf(
+            ...account.positions.map((position) => getValue(position.currency, position.market_value)),
+          );
 
           account.positions.forEach((position) => {
             const symbol = getSymbol(position.security);
             const existingPosition = mergedAccount.positions[symbol];
             if (!existingPosition) {
-              mergedAccount.positions[symbol] = position;
+              mergedAccount.positions[symbol] = {
+                ...position,
+                market_value: getValue(position.currency, position.market_value),
+                gain_amount: getValue(position.currency, position.gain_amount),
+              };
             } else {
-              const value = existingPosition.market_value + position.market_value;
-              const gain_amount = existingPosition.gain_amount + position.gain_amount;
+              const value = existingPosition.market_value + getValue(position.currency, position.market_value);
+              const gain_amount = existingPosition.gain_amount + getValue(position.currency, position.gain_amount);
+
               mergedAccount.positions[symbol] = {
                 ...existingPosition,
                 book_value: existingPosition.book_value + position.book_value,
-                market_value: existingPosition.market_value + position.market_value,
+                market_value: value,
                 quantity: existingPosition.quantity + position.quantity,
                 gain_currency_amount: existingPosition.gain_currency_amount + position.gain_currency_amount,
                 gain_amount,
@@ -170,7 +177,7 @@ export default function CompositionCharts(props: Props) {
             tooltip: POSITION_TOOLTIP,
           };
     },
-    [baseCurrencyDisplay, getColor, props.accounts, props.isPrivateMode, showHoldings],
+    [baseCurrencyDisplay, getColor, props.accounts, props.isPrivateMode, showHoldings, getValue],
   );
 
   const getAccountsCompositionSeries = useCallback(

@@ -42,6 +42,7 @@ export type Transaction = {
   id: string;
   date: Moment;
   symbol: string;
+  ticker: string;
   amount: number;
   currencyAmount: number;
   currency: string;

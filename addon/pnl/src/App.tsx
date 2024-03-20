@@ -125,6 +125,7 @@ export default function App() {
   });
 
   function updateState(_state: Partial<State>) {
+    console.debug('[DEBUG] Update state', { newState: _state, state });
     setState({ ...state, ..._state });
   }
 
@@ -440,7 +441,7 @@ export default function App() {
               )}
               {isLoadingOnUpdate ? (
                 <Flex width={1} justifyContent="center" alignItems="center">
-                  <Spin size="small" />
+                  <Spin size="large" />
                 </Flex>
               ) : (
                 <Flex width={1} justifyContent="center" alignItems="center">
@@ -567,7 +568,7 @@ export default function App() {
             </>
           ) : (
             <Flex justifyContent="center" width={1}>
-              <Spin size="large" />
+              <Spin size="large" spinning />
             </Flex>
           )}
 

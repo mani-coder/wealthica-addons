@@ -195,10 +195,11 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         : undefined;
 
       const _transaction: Transaction = {
-        symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,
         date,
         id: transaction.id,
         account: transaction.investment,
+        symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,
+        ticker: transaction.security ? getSymbol(transaction.security, true) : transaction.symbol,
         price:
           currencyAmount && transaction.quantity
             ? Number(Math.abs(currencyAmount / transaction.quantity).toFixed(3))
