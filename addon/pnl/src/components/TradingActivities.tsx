@@ -172,7 +172,7 @@ export default function TradingActivities(props: Props) {
           </Flex>
         )}
         pagination={false}
-        scroll={{ y: 500 }}
+        scroll={{ y: 750 }}
         dataSource={securities}
         columns={columns}
         summary={(transactions) => {
@@ -196,7 +196,6 @@ export default function TradingActivities(props: Props) {
       />
     );
   }
-  console.log('mani is cool', boughtSecurities);
 
   return <div className="zero-padding">{renderTable(securities)}</div>;
 }
