@@ -190,26 +190,31 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         }
       }
 
+      const currencyAmount = transaction.currency_amount
+        ? Math.abs(transaction.currency_amount + (transaction.fee || 0))
+        : undefined;
+
       const _transaction: Transaction = {
-        id: transaction.id,
-        date,
-        account: transaction.investment,
         symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,
+        date,
+        id: transaction.id,
+        account: transaction.investment,
         price:
-          transaction.currency_amount && transaction.quantity
-            ? Number(Math.abs(transaction.currency_amount / transaction.quantity).toFixed(3))
+          currencyAmount && transaction.quantity
+            ? Number(Math.abs(currencyAmount / transaction.quantity).toFixed(3))
             : 0,
         type: isSecuritiesAccountsTransfer(transaction) ? (amount < 0 ? 'sell' : 'buy') : transaction.type,
         amount: Math.abs(amount),
-        currencyAmount: Math.abs(transaction.currency_amount),
+        currencyAmount: currencyAmount ?? 0,
         currency: transaction.security ? transaction.security.currency : 'USD',
-        shares: transaction.quantity || 0,
+        shares: transaction.quantity ?? 0,
         fees: transaction.fee,
         description: transaction.description,
         splitRatio,
         originalType: transaction.type,
         securityType: transaction.security?.type,
       };
+
       return _transaction;
     })
     .sort((a, b) => a.date.valueOf() - b.date.valueOf());

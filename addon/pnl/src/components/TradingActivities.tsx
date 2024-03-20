@@ -1,4 +1,4 @@
-import { DatePicker, Divider, Space, Table, Typography } from 'antd';
+import { DatePicker, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import moment, { Moment } from 'moment';
 import { useCallback, useMemo, useState } from 'react';
@@ -24,6 +24,7 @@ type Security = {
   shares: number;
   accounts: { [K: string]: number };
 };
+const TRANSACTION_TYPES = ['buy', 'sell'];
 
 export default function TradingActivities(props: Props) {
   const [fromDate, setFromDate] = useState<Moment>(moment(props.fromDate).startOf('D'));
@@ -101,51 +102,51 @@ export default function TradingActivities(props: Props) {
     return columns;
   }, [baseCurrencyDisplay, allCurrencies]);
 
-  const getSecurities = useCallback(
-    (type: 'buy' | 'sell') => {
-      const securitiesCache = props.transactions
-        .filter((transaction) => transaction.date.isSameOrAfter(fromDate) && transaction.originalType === type)
-        .reduce((hash, transaction) => {
-          const symbol = transaction.symbol;
-          if (!hash[symbol]) {
-            hash[symbol] = {
-              symbol,
-              lastPrice: symbolPriceCache[symbol],
-              price: transaction.currencyAmount / transaction.shares,
-              currency: transaction.currency,
-              value: transaction.amount,
-              currencyValue: transaction.currencyAmount,
-              shares: transaction.shares,
-              accounts: { [transaction.account]: transaction.shares },
-            };
-            return hash;
-          }
-
-          const security = hash[symbol];
-          security.shares = security.shares + transaction.shares;
-          security.currencyValue = security.currencyValue + transaction.currencyAmount;
-          security.value = security.value + transaction.amount;
-
-          if (!security.accounts[transaction.account]) {
-            security.accounts[transaction.account] = 0;
-          }
-          security.accounts[transaction.account] += transaction.shares;
-          security.price = security.currencyValue / security.shares;
-
+  const getSecurities = useCallback(() => {
+    const securitiesCache = props.transactions
+      .filter(
+        (transaction) =>
+          transaction.date.isSameOrAfter(fromDate) && TRANSACTION_TYPES.includes(transaction.originalType),
+      )
+      .reduce((hash, transaction) => {
+        const symbol = transaction.symbol;
+        if (!hash[symbol]) {
+          hash[symbol] = {
+            symbol,
+            lastPrice: symbolPriceCache[symbol],
+            price: transaction.currencyAmount / transaction.shares,
+            currency: transaction.currency,
+            value: transaction.amount,
+            currencyValue: transaction.currencyAmount,
+            shares: transaction.shares,
+            accounts: { [transaction.account]: transaction.shares },
+          };
           return hash;
-        }, {} as { [K: string]: Security });
+        }
 
-      return Object.values(securitiesCache)
-        .map((security) => ({ ...security, shares: Math.abs(security.shares), price: Math.abs(security.price) }))
-        .sort((a, b) => b.value - a.value);
-    },
-    [symbolPriceCache, props.transactions, fromDate],
-  );
+        const security = hash[symbol];
+        security.shares = security.shares + transaction.shares;
+        security.currencyValue =
+          security.currencyValue + transaction.currencyAmount * (transaction.type === 'buy' ? 1 : -1);
+        security.value = security.value + transaction.amount * (transaction.type === 'buy' ? 1 : -1);
 
-  const boughtSecurities: Security[] = useMemo(() => getSecurities('buy'), [getSecurities]);
-  const soldSecurities: Security[] = useMemo(() => getSecurities('sell'), [getSecurities]);
+        if (!security.accounts[transaction.account]) {
+          security.accounts[transaction.account] = 0;
+        }
+        security.accounts[transaction.account] += transaction.shares;
+        security.price = security.currencyValue / security.shares;
 
-  function renderTable(title: string, securities: Security[]) {
+        return hash;
+      }, {} as { [K: string]: Security });
+
+    return Object.values(securitiesCache)
+      .map((security) => ({ ...security, shares: Math.abs(security.shares), price: Math.abs(security.price) }))
+      .sort((a, b) => b.value - a.value);
+  }, [symbolPriceCache, props.transactions, fromDate]);
+
+  const securities: Security[] = useMemo(() => getSecurities(), [getSecurities]);
+
+  function renderTable(securities: Security[]) {
     return (
       <Table<Security>
         rowKey="symbol"
@@ -153,7 +154,7 @@ export default function TradingActivities(props: Props) {
         bordered
         title={() => (
           <Flex justifyContent="space-between">
-            <Typography.Title level={3}>Securities {title}</Typography.Title>
+            <Typography.Title level={3}>Trading Activities</Typography.Title>
             <Space direction="horizontal">
               <Typography.Text strong type="secondary">
                 Filter activities
@@ -176,11 +177,5 @@ export default function TradingActivities(props: Props) {
     );
   }
 
-  return (
-    <div className="zero-padding">
-      {renderTable('Bought', boughtSecurities)}
-      <Divider />
-      {renderTable('Sold', soldSecurities)}
-    </div>
-  );
+  return <div className="zero-padding">{renderTable(securities)}</div>;
 }

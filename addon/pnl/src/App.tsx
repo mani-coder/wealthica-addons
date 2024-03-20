@@ -34,13 +34,13 @@ import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
 import { TopGainersLosers } from './components/TopGainersLosers';
+import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
-import TradingActivities from './components/TradingActivities';
 
 type State = {
   securityTransactions: Transaction[];
@@ -50,7 +50,6 @@ type State = {
   positions: Position[];
   accounts: Account[];
   cashflows: CashFlow[];
-  newChangeLogsCount?: number;
   xirr: number;
   isLoaded: boolean;
 };
@@ -65,6 +64,7 @@ export default function App() {
     toDate: moment().format('YYYY-MM-DD'),
   });
   const addOnOptions = addOnOptionsRef.current;
+  const [newChangeLogsCount, setNewChangeLogsCount] = useState<number>();
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
   const getAddon = (addOnOptionsRef: React.RefObject<Record>): any => {
@@ -393,19 +393,18 @@ export default function App() {
 
   useEffect(() => {
     if (!addon.current) {
-      setTimeout(() => loadStaticPortfolioData(), 0);
+      setTimeout(loadStaticPortfolioData, 0);
     }
 
-    setTimeout(() => computeChangeLogCount(), 1000);
+    setTimeout(computeChangeLogCount, 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addon.current]);
 
   function computeChangeLogCount() {
     const newChangeLogsCount = getNewChangeLogsCount();
     if (newChangeLogsCount) {
-      updateState({ newChangeLogsCount });
+      setNewChangeLogsCount(newChangeLogsCount);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }
 
   if (state.isLoaded) {
@@ -463,9 +462,9 @@ export default function App() {
               <Tabs
                 defaultActiveKey={TabKeysEnum.PNL}
                 onChange={(tab) => {
-                  if (tab === 'change-log' && state.newChangeLogsCount) {
+                  if (tab === 'change-log' && newChangeLogsCount) {
                     setChangeLogViewDate();
-                    updateState({ newChangeLogsCount: undefined });
+                    setNewChangeLogsCount(undefined);
                   }
                   trackEvent('tab-change', { tab });
                 }}
@@ -556,7 +555,7 @@ export default function App() {
                 <Tabs.TabPane
                   destroyInactiveTabPane
                   tab={
-                    <Badge count={state.newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
+                    <Badge count={newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
                       Latest Changes
                     </Badge>
                   }

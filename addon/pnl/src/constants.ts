@@ -1,6 +1,6 @@
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const DEFAULT_BASE_CURRENCY = 'cad';
-export const TRANSACTIONS_FROM_DATE = '2010-01-01';
+export const TRANSACTIONS_FROM_DATE = '2024-03-10';
 
 export const TYPE_TO_COLOR = {
   buy: '#9948d1',

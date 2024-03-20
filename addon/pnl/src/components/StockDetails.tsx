@@ -1,9 +1,9 @@
 import Typography from 'antd/es/typography';
 import { TextProps } from 'antd/es/typography/Text';
 import { Flex, FlexProps } from 'rebass';
-import { Account, Position } from '../types';
-import { formatMoney, getSymbol } from '../utils';
 import useCurrency from '../hooks/useCurrency';
+import { Account, Position } from '../types';
+import { formatMoney, getSymbol, sumOf } from '../utils';
 
 type Props = {
   symbol: string;
@@ -80,11 +80,7 @@ export default function StockDetails(props: Props) {
       <LabelValue label="Currency" value={currency} />
       <LabelValue
         label="Buy Price"
-        value={formatMoney(
-          position.investments.reduce((cost, investment) => {
-            return cost + investment.book_value;
-          }, 0) / position.quantity,
-        )}
+        value={formatMoney(sumOf(position.investments.map((investment) => investment.book_value)) / position.quantity)}
       />
       <LabelValue label="Last Price" value={formatMoney(position.security.last_price)} />
       <LabelValue
