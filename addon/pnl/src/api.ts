@@ -191,7 +191,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
       }
 
       const currencyAmount = transaction.currency_amount
-        ? Math.abs(transaction.currency_amount + (transaction.fee || 0))
+        ? Math.abs(transaction.currency_amount + (transaction.fee || 0) * (transaction.type === 'buy' ? 1 : -1))
         : undefined;
 
       const _transaction: Transaction = {
