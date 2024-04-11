@@ -80,7 +80,9 @@ export default function StockDetails(props: Props) {
       <LabelValue label="Currency" value={currency} />
       <LabelValue
         label="Buy Price"
-        value={formatMoney(sumOf(position.investments.map((investment) => investment.book_value)) / position.quantity)}
+        value={formatMoney(
+          sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity,
+        )}
       />
       <LabelValue label="Last Price" value={formatMoney(position.security.last_price)} />
       <LabelValue
