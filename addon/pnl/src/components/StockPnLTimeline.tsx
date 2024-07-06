@@ -46,7 +46,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
   }
 
   function parseSecuritiesResponse(response) {
-    const to = getDate(response.to);
+    let to = getDate(response.to);
     const data: StockPrice[] = [];
     let prevPrice;
     response.data
@@ -66,12 +66,11 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         }
 
         // Move the date forward.
-        to.subtract(1, 'days');
+        to = to.subtract(1, 'days');
         prevPrice = closePrice;
       });
 
-    const sortedData = data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
-    setPrices(sortedData);
+    setPrices(data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf()));
   }
 
   useEffect(() => {
@@ -86,11 +85,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       )}&to=${dayjs().format('YYYY-MM-DD')}`;
       if (addon) {
         addon
-          .request({
-            query: {},
-            method: 'GET',
-            endpoint,
-          })
+          .request({ query: {}, method: 'GET', endpoint })
           .then((response) => parseSecuritiesResponse(response))
           .catch((error) => {
             console.log('Failed to load stock prices.', error);
@@ -99,10 +94,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           .finally(() => setLoading(false));
       } else {
         const url = `https://app.wealthica.com/api/${endpoint}`;
-        fetch(buildCorsFreeUrl(url), {
-          cache: 'force-cache',
-          headers: { 'Content-Type': 'application/json' },
-        })
+        fetch(buildCorsFreeUrl(url), { cache: 'force-cache', headers: { 'Content-Type': 'application/json' } })
           .then((response) => response.json())
           .then((response) => parseSecuritiesResponse(response))
           .catch((error) => {

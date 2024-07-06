@@ -41,7 +41,7 @@ function StockTimeline(props: Props) {
   }
 
   const parseSecuritiesResponse = useCallback((response) => {
-    const to = getDate(response.to);
+    let to = getDate(response.to);
     const data: SecurityHistoryTimeline[] = [];
     let prevPrice;
     response.data
@@ -61,15 +61,11 @@ function StockTimeline(props: Props) {
         }
 
         // Move the date forward.
-        to.subtract(1, 'days');
+        to = to.subtract(1, 'days');
         prevPrice = closePrice;
       });
 
-    const sortedData = data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
-
-    // console.debug('Loaded the securities data --', sortedData);
-    setLoading(false);
-    setSecurityTimeline(sortedData);
+    setSecurityTimeline(data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf()));
   }, []);
 
   const fetchData = useCallback(() => {
@@ -100,7 +96,8 @@ function StockTimeline(props: Props) {
         .then((response) => {
           parseSecuritiesResponse(response);
         })
-        .catch((error) => console.log(error));
+        .catch((error) => console.log(error))
+        .finally(() => setLoading(false));
     } else {
       const url = `https://app.wealthica.com/api/${endpoint}`;
 
@@ -115,7 +112,8 @@ function StockTimeline(props: Props) {
         .then((response) => {
           parseSecuritiesResponse(response);
         })
-        .catch((error) => console.log(error));
+        .catch((error) => console.log(error))
+        .finally(() => setLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parseSecuritiesResponse, props.position.security.id]);
