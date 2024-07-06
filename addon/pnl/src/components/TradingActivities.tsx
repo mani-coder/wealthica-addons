@@ -158,7 +158,7 @@ export default function TradingActivities(props: Props) {
     }, {} as { [K: string]: Dayjs });
     return Object.keys(dates)
       .map((label) => ({ label, value: dates[label] }))
-      .sort((a, b) => (a.value.isSameOrBefore(b.value) ? -1 : 1));
+      .sort((a, b) => (a.value.isSameOrAfter(b.value) ? -1 : 1));
   }, []);
 
   function renderTable(securities: Security[]) {
