@@ -1,9 +1,6 @@
 import CaretDownOutlined from '@ant-design/icons/CaretDownOutlined';
 import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined';
-import Empty from 'antd/es/empty';
-import Typography from 'antd/es/typography';
-import Radio from 'antd/lib/radio';
-import Spin from 'antd/lib/spin';
+import { Empty, Radio, Spin, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex } from 'rebass';

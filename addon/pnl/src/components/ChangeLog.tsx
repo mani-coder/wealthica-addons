@@ -1,9 +1,4 @@
-import Typography from 'antd/es/typography';
-import Divider from 'antd/lib/divider';
-import Image from 'antd/lib/image';
-import Modal from 'antd/lib/modal/Modal';
-import Tag from 'antd/lib/tag';
-import Timeline from 'antd/lib/timeline';
+import { Divider, Image, Modal, Tag, Timeline, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';

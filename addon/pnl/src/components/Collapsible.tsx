@@ -1,4 +1,4 @@
-import Collapse from 'antd/lib/collapse';
+import { Collapse } from 'antd';
 import { Box } from 'rebass';
 import { trackEvent } from '../analytics';
 

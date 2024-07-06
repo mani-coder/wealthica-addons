@@ -1,5 +1,4 @@
-import Typography from 'antd/es/typography';
-import Table, { ColumnProps } from 'antd/lib/table';
+import { Table, TableColumnProps, Typography } from 'antd';
 import { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React from 'react';
@@ -25,7 +24,7 @@ const ExpenseTable = React.memo(
     toDate: Dayjs;
   }) => {
     const { baseCurrencyDisplay } = useCurrency();
-    function getColumns(): ColumnProps<AccountTransaction>[] {
+    function getColumns(): TableColumnProps<AccountTransaction>[] {
       return [
         {
           key: 'date',

@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Typography from 'antd/es/typography';
-import Table, { ColumnProps } from 'antd/lib/table';
+import { Table, TableColumnProps, Typography } from 'antd';
 import React, { useMemo } from 'react';
 import { Box, Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
@@ -22,7 +21,7 @@ function CashTable(props: Props) {
     return allCurrencies.map((currency) => ({ value: currency, text: currency.toUpperCase() }));
   }, [allCurrencies]);
 
-  function getColumns(): ColumnProps<Account>[] {
+  function getColumns(): TableColumnProps<Account>[] {
     return [
       {
         key: 'institution',

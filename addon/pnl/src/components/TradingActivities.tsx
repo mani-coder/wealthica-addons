@@ -1,5 +1,4 @@
-import { DatePicker, Space, Table, Typography } from 'antd';
-import { ColumnsType } from 'antd/lib/table';
+import { DatePicker, Space, Table, TableColumnsType, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
@@ -39,7 +38,7 @@ export default function TradingActivities(props: Props) {
   }, [props.positions]);
 
   const columns = useMemo(() => {
-    const columns: ColumnsType<Security> = [
+    const columns: TableColumnsType<Security> = [
       {
         key: 'symbol',
         title: 'Symbol',

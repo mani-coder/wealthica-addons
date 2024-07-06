@@ -1,5 +1,5 @@
 import Heart from '@ant-design/icons/HeartFilled';
-import Button from 'antd/lib/button';
+import { Button } from 'antd';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 

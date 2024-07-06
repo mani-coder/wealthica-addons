@@ -1,9 +1,7 @@
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
 import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
-import { Divider, Tooltip, Typography } from 'antd';
-import Card from 'antd/lib/card';
-import Statistic, { StatisticProps } from 'antd/lib/statistic';
+import { Card, Divider, Statistic, StatisticProps, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
 import { Box, Flex } from 'rebass';

@@ -1,10 +1,6 @@
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
-import Typography from 'antd/es/typography';
-import Checkbox from 'antd/lib/checkbox';
-import Empty from 'antd/lib/empty';
-import Radio from 'antd/lib/radio';
-import Statistic from 'antd/lib/statistic';
+import { Checkbox, Empty, Radio, Statistic, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import * as Highcharts from 'highcharts';
 import React, { useCallback, useMemo, useState } from 'react';

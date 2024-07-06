@@ -1,4 +1,4 @@
-import Typography from 'antd/es/typography';
+import { Typography } from 'antd';
 import React from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';

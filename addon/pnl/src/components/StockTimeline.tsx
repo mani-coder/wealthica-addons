@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import Spin from 'antd/lib/spin';
+import { Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';

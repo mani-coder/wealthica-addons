@@ -1,12 +1,6 @@
 import LeftOutlined from '@ant-design/icons/LeftOutlined';
 import RightOutlined from '@ant-design/icons/RightOutlined';
-import { Card } from 'antd';
-import Button from 'antd/es/button';
-import Typography from 'antd/es/typography';
-import Calendar from 'antd/lib/calendar';
-import Spin from 'antd/lib/spin';
-import Table, { ColumnProps } from 'antd/lib/table';
-import Tag from 'antd/lib/tag';
+import { Button, Calendar, Card, Spin, Table, TableColumnProps, Tag, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
@@ -148,7 +142,7 @@ export function Events({ positions }: { positions: Position[] }) {
     );
   }
 
-  function getColumns(): ColumnProps<Earning>[] {
+  function getColumns(): TableColumnProps<Earning>[] {
     return [
       {
         key: 'date',
@@ -310,9 +304,11 @@ export function Events({ positions }: { positions: Position[] }) {
       {events?.earnings && !!events?.earnings.length && (
         <Card
           title={<>Upcoming Earnings (Starting {date.format('MMM DD, YYYY')})</>}
-          headStyle={{ paddingLeft: 16, fontSize: 18, fontWeight: 'bold' }}
+          styles={{
+            header: { paddingLeft: 16, fontSize: 18, fontWeight: 'bold' },
+            body: { padding: 0 },
+          }}
           style={{ marginTop: 16, marginBottom: 16 }}
-          bodyStyle={{ padding: 0 }}
         >
           <Table<Earning>
             columns={getColumns()}

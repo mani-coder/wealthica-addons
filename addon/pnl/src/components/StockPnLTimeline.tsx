@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-template-curly-in-string */
-import Empty from 'antd/lib/empty';
-import Spin from 'antd/lib/spin';
+import { Empty, Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';

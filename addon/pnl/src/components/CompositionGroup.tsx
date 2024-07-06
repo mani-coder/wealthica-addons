@@ -1,5 +1,4 @@
-import Typography from 'antd/es/typography';
-import Radio from 'antd/lib/radio';
+import { Radio, Typography } from 'antd';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Account } from '../types';

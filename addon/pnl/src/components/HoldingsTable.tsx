@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Typography from 'antd/es/typography';
-import Table, { ColumnProps } from 'antd/lib/table';
+import { Table, TableColumnProps, Typography } from 'antd';
 import React from 'react';
 import { Box } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
@@ -18,7 +17,7 @@ function HoldingsTable(props: Props) {
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
   }, 0);
-  function getColumns(): ColumnProps<Position>[] {
+  function getColumns(): TableColumnProps<Position>[] {
     return [
       {
         key: 'symbol',

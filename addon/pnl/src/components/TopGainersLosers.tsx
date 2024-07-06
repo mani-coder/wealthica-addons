@@ -1,7 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import Typography from 'antd/es/typography';
-import Empty from 'antd/lib/empty';
-import Switch from 'antd/lib/switch';
+import { Empty, Switch, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';

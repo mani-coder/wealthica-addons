@@ -1,7 +1,5 @@
 import QuestionCircleTwoTone from '@ant-design/icons/QuestionCircleTwoTone';
-import Tooltip from 'antd/es/tooltip';
-import Typography from 'antd/es/typography';
-import Table, { ColumnProps, ColumnType } from 'antd/lib/table';
+import { Table, TableColumnProps, TableColumnType, Tooltip, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React from 'react';
@@ -14,7 +12,7 @@ import PrintableTable from '../PrintableTable';
 import { ClosedPosition, DATE_DISPLAY_FORMAT, renderSymbol } from './utils';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
-  const columns: ColumnType<Transaction>[] = [
+  const columns: TableColumnType<Transaction>[] = [
     { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => dayjs(text).format('YYYY-MM-DD') },
     { key: 'type', title: 'Type', dataIndex: 'type', render: (text) => text.toUpperCase() },
     {
@@ -52,7 +50,7 @@ const RealizedPnLTable = React.memo(
     toDate: Dayjs;
   }) => {
     const { baseCurrencyDisplay } = useCurrency();
-    function getColumns(): ColumnProps<ClosedPosition>[] {
+    function getColumns(): TableColumnProps<ClosedPosition>[] {
       return [
         {
           key: 'date',

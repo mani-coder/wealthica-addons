@@ -1,5 +1,5 @@
-import Typography from 'antd/es/typography';
-import { TextProps } from 'antd/es/typography/Text';
+import { Typography } from 'antd';
+import type { TextProps } from 'antd/es/typography/Text';
 import { Flex, FlexProps } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';

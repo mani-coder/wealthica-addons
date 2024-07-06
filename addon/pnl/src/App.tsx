@@ -1,10 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { Alert, Badge } from 'antd';
-import Typography from 'antd/es/typography';
-import Text from 'antd/es/typography/Text';
-import Empty from 'antd/lib/empty';
-import Spin from 'antd/lib/spin';
-import Tabs from 'antd/lib/tabs';
+import { Alert, Badge, Empty, Spin, Tabs, Typography } from 'antd';
 import _ from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { Flex } from 'rebass';
@@ -582,7 +577,7 @@ export default function App() {
           <Typography.Title level={4} type="secondary">
             Disclaimer
           </Typography.Title>
-          <Text type="secondary">
+          <Typography.Text type="secondary">
             This tool is simply a calculator of profit and loss using the deposits/withdrawals and daily portfolio
             values. Results provided by this tool do not constitute investment advice. The makers of this tool are not
             responsible for the consequences of any decisions or actions taken in reliance upon or as a result of the
@@ -600,7 +595,7 @@ export default function App() {
               here
             </a>
             .
-          </Text>
+          </Typography.Text>
           <br />
           <hr />
         </div>

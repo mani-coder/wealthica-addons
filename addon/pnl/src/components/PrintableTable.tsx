@@ -1,7 +1,5 @@
 import PrinterFilled from '@ant-design/icons/PrinterFilled';
-import { Typography } from 'antd';
-import Button from 'antd/lib/button';
-import Table, { TableProps } from 'antd/lib/table';
+import { Button, Table, TableProps, Typography } from 'antd';
 import { Flex } from 'rebass';
 import { usePrint } from '../hooks/usePrint';
 import { isChrome } from '../utils';

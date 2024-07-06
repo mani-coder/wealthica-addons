@@ -1,5 +1,4 @@
-import Typography from 'antd/es/typography';
-import Table, { ColumnProps } from 'antd/lib/table';
+import { Table, TableColumnProps, Typography } from 'antd';
 import _ from 'lodash';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
@@ -24,7 +23,7 @@ const IncomeTable = React.memo(
     isPrivateMode: boolean;
   }) => {
     const { baseCurrencyDisplay } = useCurrency();
-    function getColumns(): ColumnProps<IncomeTransaction>[] {
+    function getColumns(): TableColumnProps<IncomeTransaction>[] {
       return [
         {
           key: 'date',

@@ -1,13 +1,9 @@
-// import HC_exporting from 'highcharts/modules/exporting';
-// import HC_ExportData from 'highcharts/modules/export-data';
-import ErrorBoundary from 'antd/lib/alert/ErrorBoundary';
+import ErrorBoundary from 'antd/es/alert/ErrorBoundary';
 import HighchartsReact from 'highcharts-react-official';
 import * as Highcharts from 'highcharts/highstock';
 import HC_DrillDown from 'highcharts/modules/drilldown';
 import React from 'react';
 
-// HC_exporting(Highcharts);
-// HC_ExportData(Highcharts);
 HC_DrillDown(Highcharts);
 
 const TZ_OFFSET = new Date().getTimezoneOffset();
