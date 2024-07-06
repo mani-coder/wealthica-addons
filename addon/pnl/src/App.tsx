@@ -4,7 +4,6 @@ import _ from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { Flex } from 'rebass';
 import xirr from 'xirr';
-import './App.less';
 import { initTracking, trackEvent } from './analytics';
 import {
   computeCashFlowByDate,
