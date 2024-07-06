@@ -84,14 +84,14 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
 export const parsePortfolioResponse = (response: any) => {
   const data = response.history.total;
 
-  const date = getDate(data.from);
+  let date = getDate(data.from);
   return data.data.reduce((hash, value) => {
     if (value !== null && value !== undefined) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
 
     // Move the date forward.
-    date.add(1, 'days');
+    date = date.add(1, 'days');
     return hash;
   }, {});
 };

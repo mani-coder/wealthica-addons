@@ -1,6 +1,7 @@
 import { DatePicker, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import dayjs, { Dayjs } from 'dayjs';
+import _ from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
@@ -28,7 +29,7 @@ type Security = {
 const TRANSACTION_TYPES = ['buy', 'sell'];
 
 export default function TradingActivities(props: Props) {
-  const [fromDate, setFromDate] = useState<Dayjs>(dayjs(props.fromDate).startOf('D'));
+  const [fromDate, setFromDate] = useState<Dayjs>(dayjs().startOf('month'));
   const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const symbolPriceCache = useMemo(() => {
     return props.positions.reduce((hash, position) => {
@@ -147,6 +148,18 @@ export default function TradingActivities(props: Props) {
   }, [symbolPriceCache, props.transactions, fromDate]);
 
   const securities: Security[] = useMemo(() => getSecurities(), [getSecurities]);
+  const presets = useMemo(() => {
+    const dates = [
+      dayjs().startOf('year'),
+      ..._.range(6).map((num) => dayjs().subtract(num, 'month').startOf('month')),
+    ].reduce((hash, date: Dayjs) => {
+      hash[date.format("MMMM' YY")] = date;
+      return hash;
+    }, {} as { [K: string]: Dayjs });
+    return Object.keys(dates)
+      .map((label) => ({ label, value: dates[label] }))
+      .sort((a, b) => (a.value.isSameOrBefore(b.value) ? -1 : 1));
+  }, []);
 
   function renderTable(securities: Security[]) {
     return (
@@ -167,6 +180,7 @@ export default function TradingActivities(props: Props) {
                 disabledDate={(date) => date.isAfter(dayjs())}
                 size="large"
                 onChange={(date) => setFromDate(date ?? dayjs(props.fromDate))}
+                presets={presets}
               />
             </Space>
           </Flex>

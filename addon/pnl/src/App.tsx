@@ -172,13 +172,6 @@ export default function App() {
       addOnOptions.currency,
       Array.from(new Set(accounts.map((account) => account.currency))),
     );
-    console.debug('Loaded data', {
-      positions,
-      portfolioByDate,
-      transactions,
-      accounts,
-      currencyCache,
-    });
     computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
   }
 
@@ -189,6 +182,14 @@ export default function App() {
     accounts: Account[],
     _currencyCache: CurrencyCache,
   ) {
+    console.debug('Computing porfolios', {
+      positions,
+      portfolioByDate,
+      transactions,
+      accounts,
+      _currencyCache,
+    });
+
     currencyRef.current.setCurrencyCache(_currencyCache);
 
     // Security transactions & XIRR computation
@@ -444,7 +445,7 @@ export default function App() {
                   <Spin size="large" />
                 </Flex>
               ) : (
-                <Flex width={1} justifyContent="center" alignItems="center">
+                <Flex width={1} justifyContent="center" alignItems="center" marginY={1}>
                   <Alert
                     style={{ width: '100%', textAlign: 'center' }}
                     type="info"
@@ -461,6 +462,7 @@ export default function App() {
               )}
 
               <Tabs
+                type="card"
                 defaultActiveKey={TabKeysEnum.PNL}
                 onChange={(tab) => {
                   if (tab === 'change-log' && newChangeLogsCount) {
