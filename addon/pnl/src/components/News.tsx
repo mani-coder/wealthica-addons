@@ -4,7 +4,7 @@ import Empty from 'antd/es/empty';
 import Typography from 'antd/es/typography';
 import Radio from 'antd/lib/radio';
 import Spin from 'antd/lib/spin';
-import moment, { Moment } from 'moment';
+import dayjs, { Dayjs } from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
@@ -12,7 +12,7 @@ import { Position } from '../types';
 import { buildCorsFreeUrl, getNasdaqTicker, getSymbol, getSymbolFromNasdaqTicker } from '../utils';
 
 type NewsResult = {
-  timestamp: Moment;
+  timestamp: Dayjs;
   name: string;
   symbol: string;
   sentiment: string;
@@ -45,7 +45,7 @@ function NewsItem({ news }: { news: NewsResult }) {
       <div style={{ fontSize: 13, color: '#8c8c8c' }}>
         {news.source}
         <Dot />
-        {moment(news.timestamp).format('MMM DD, YYYY hh:mm A')} EDT
+        {dayjs(news.timestamp).format('MMM DD, YYYY hh:mm A')} EDT
         <Dot />
         {news.name} <Dot />
         {news.symbol}
@@ -107,7 +107,7 @@ function News({ positions }: { positions: Position[] }) {
               const symbol = getSymbolFromNasdaqTicker(newsRecord.ticker);
               validSymbols.add(symbol);
               const newsResult = {
-                timestamp: moment(newsRecord.articleTimestamp || newsRecord.addedOn),
+                timestamp: dayjs(newsRecord.articleTimestamp || newsRecord.addedOn),
                 name: newsRecord.companyName,
                 symbol,
                 sentiment: newsRecord.sentiment,

@@ -1,4 +1,4 @@
-import moment, { Moment } from 'moment';
+import dayjs, { Dayjs } from 'dayjs';
 import xirr from 'xirr';
 import { DATE_FORMAT } from './constants';
 import { Currencies } from './context/CurrencyContext';
@@ -8,11 +8,11 @@ export const isValidPortfolioData = (data: PortfolioData): boolean => {
   return Boolean(data.deposit || data.income || data.interest || data.value || data.withdrawal);
 };
 
-export const getDate = (date: string): Moment => {
-  return moment(date.slice(0, 10), DATE_FORMAT);
+export const getDate = (date: string): Dayjs => {
+  return dayjs(date.slice(0, 10), DATE_FORMAT);
 };
 
-export const formatDate = (date: Moment, format?: string): string => date.format(format ?? 'MMM DD, YYYY');
+export const formatDate = (date: Dayjs, format?: string): string => date.format(format ?? 'MMM DD, YYYY');
 
 export const formatMoney = (amount?: number, precision?: number): string => {
   precision = precision === undefined || precision === null ? 2 : precision;
@@ -118,7 +118,7 @@ export function buildCorsFreeUrl(target: string): string {
 }
 
 export function getPreviousWeekday(date) {
-  const referenceDate = moment(date);
+  const referenceDate = dayjs(date);
   let day = referenceDate.day();
   let diff = 1; // returns yesterday
   if (day === 0 || day === 1) {

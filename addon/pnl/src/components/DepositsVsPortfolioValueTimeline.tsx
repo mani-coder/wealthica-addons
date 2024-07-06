@@ -1,5 +1,5 @@
+import dayjs from 'dayjs';
 import { startCase } from 'lodash';
-import moment from 'moment';
 import React, { useMemo } from 'react';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import type { CashFlow, Portfolio } from '../types';
@@ -17,7 +17,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
   const cashflows = useMemo(() => {
     return props.cashflows
       .filter((cashflow) => cashflow.deposit || cashflow.withdrawal)
-      .map((cashflow) => ({ ...cashflow, date: moment(cashflow.date, DATE_FORMAT) }))
+      .map((cashflow) => ({ ...cashflow, date: dayjs(cashflow.date, DATE_FORMAT) }))
       .sort((a, b) => a.date.valueOf() - b.date.valueOf());
   }, [props.cashflows]);
   console.debug('[DEBUG] Cash Flows', { cashflows: props.cashflows.filter((t) => t.deposit || t.withdrawal) });
@@ -61,7 +61,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
         name: 'Portfolio',
         data: props.portfolios.map((portfolio) => {
           return {
-            x: moment(portfolio.date).valueOf(),
+            x: dayjs(portfolio.date).valueOf(),
             y: portfolio.value,
             displayValue: props.isPrivateMode ? '-' : Number(portfolio.value.toFixed(2)).toLocaleString(),
           };
@@ -74,7 +74,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
         name: 'Deposits',
         data: props.portfolios.map((portfolio) => {
           return {
-            x: moment(portfolio.date).valueOf(),
+            x: dayjs(portfolio.date).valueOf(),
             y: portfolio.deposits,
             displayValue: props.isPrivateMode ? '-' : Number(portfolio.deposits.toFixed(2)).toLocaleString(),
           };

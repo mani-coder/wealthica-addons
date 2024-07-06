@@ -1,4 +1,4 @@
-import { Moment } from 'moment';
+import { Dayjs } from 'dayjs';
 
 export type CurrencyCache = { [key: string]: { [key: string]: number } };
 
@@ -40,7 +40,7 @@ export type Investment = {
 
 export type Transaction = {
   id: string;
-  date: Moment;
+  date: Dayjs;
   symbol: string;
   ticker: string;
   amount: number;
@@ -67,7 +67,7 @@ export type CashFlow = {
 
 export type AccountTransaction = {
   id: string;
-  date: Moment;
+  date: Dayjs;
   amount: number;
   type: string;
   account: string;
@@ -98,7 +98,7 @@ export type Account = {
   cash: number;
   value: number;
   currency_value: number;
-  created_at: Moment;
+  created_at: Dayjs;
   institution: string;
   instutitionName: string;
   positions: (Position & { symbol: string })[];

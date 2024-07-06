@@ -5,9 +5,8 @@ import Checkbox from 'antd/lib/checkbox';
 import Empty from 'antd/lib/empty';
 import Radio from 'antd/lib/radio';
 import Statistic from 'antd/lib/statistic';
+import dayjs, { Dayjs } from 'dayjs';
 import * as Highcharts from 'highcharts';
-import moment, { Moment } from 'moment';
-import 'moment-precise-range-plugin';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
@@ -35,7 +34,7 @@ type Props = {
 type CurrentPosition = {
   shares: number;
   price: number;
-  date: Moment;
+  date: Dayjs;
   transactions: Transaction[];
 };
 
@@ -46,8 +45,8 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
   const { getValue, baseCurrencyDisplay } = useCurrency();
 
   const { transactions, accountTransactions, fromDate, toDate } = useMemo(() => {
-    const fromDate = moment(props.fromDate);
-    const toDate = moment(props.toDate);
+    const fromDate = dayjs(props.fromDate);
+    const toDate = dayjs(props.toDate);
     return {
       transactions: props.transactions.filter((t) => t.date.isSameOrAfter(fromDate) && t.date.isSameOrBefore(toDate)),
       accountTransactions: props.accountTransactions.filter(
@@ -292,15 +291,15 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
   const getData = useCallback(
     (closedPositions: ClosedPosition[]): Highcharts.SeriesColumnOptions[] => {
       function getBarLabel(date: string) {
-        const startDate = moment(date);
+        const startDate = dayjs(date);
 
         switch (timeline) {
           case 'month':
             return startDate.format('MMM YY');
           case 'week':
-            return `${startDate.format('MMM DD')} - ${moment(date)
-              .endOf(timeline)
-              .format('MMM DD')}, ${startDate.format('YY')}`;
+            return `${startDate.format('MMM DD')} - ${dayjs(date).endOf(timeline).format('MMM DD')}, ${startDate.format(
+              'YY',
+            )}`;
           case 'year':
             return startDate.format('YYYY');
           case 'day':
@@ -312,14 +311,14 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         const data = Object.keys(values)
           .map((date) => ({ date, label: getBarLabel(date), pnl: values[date] }))
           .filter((value) => value.pnl)
-          .sort((a, b) => moment(a.date).valueOf() - moment(b.date).valueOf())
+          .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf())
           .map((value) => {
             return {
               date: value.date,
               label: value.label,
               pnl: value.pnl,
-              startDate: moment(value.date).startOf(timeline).format(DATE_DISPLAY_FORMAT),
-              endDate: moment(value.date).endOf(timeline).format(DATE_DISPLAY_FORMAT),
+              startDate: dayjs(value.date).startOf(timeline).format(DATE_DISPLAY_FORMAT),
+              endDate: dayjs(value.date).endOf(timeline).format(DATE_DISPLAY_FORMAT),
             };
           });
 

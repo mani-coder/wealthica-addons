@@ -4,7 +4,7 @@ import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
 import { Divider, Tooltip, Typography } from 'antd';
 import Card from 'antd/lib/card';
 import Statistic, { StatisticProps } from 'antd/lib/statistic';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import React from 'react';
 import { Box, Flex } from 'rebass';
 import { Portfolio, Position } from '../types';
@@ -63,8 +63,8 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
     timelinePnlChangeRatio = endRatio - startRatio;
   }
 
-  const fromDateDisplay = moment(fromDate).format('MMM DD, YY');
-  const toDateDisplay = moment(toDate).format('MMM DD, YY');
+  const fromDateDisplay = dayjs(fromDate).format('MMM DD, YY');
+  const toDateDisplay = dayjs(toDate).format('MMM DD, YY');
 
   console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, portfolios });
 

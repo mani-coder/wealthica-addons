@@ -4,7 +4,7 @@ import Image from 'antd/lib/image';
 import Modal from 'antd/lib/modal/Modal';
 import Tag from 'antd/lib/tag';
 import Timeline from 'antd/lib/timeline';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import { Box, Flex } from 'rebass';
@@ -234,7 +234,7 @@ function LogItem({ index, style }) {
       <Timeline.Item key={index}>
         <Typography.Title level={4}>{log.title}</Typography.Title>
         <Flex pb={3}>
-          <Tag color="magenta">{moment(log.date).format('MMM DD, YYYY')}</Tag>
+          <Tag color="magenta">{dayjs(log.date).format('MMM DD, YYYY')}</Tag>
           {log.tab && <Tag color="purple">{log.tab} Tab</Tag>}
         </Flex>
         {log.description && <Typography.Text>{log.description}</Typography.Text>}
@@ -305,8 +305,8 @@ export default function ChangeLog() {
 export function getNewChangeLogsCount(): number {
   const changeLogDate = getLocalCache(CHANGE_LOG_DATE_CACHE_KEY);
   if (changeLogDate) {
-    const date = moment(changeLogDate);
-    return LOGS.filter((log) => moment(log.date).isAfter(date)).length;
+    const date = dayjs(changeLogDate);
+    return LOGS.filter((log) => dayjs(log.date).isAfter(date)).length;
   }
   return LOGS.length;
 }

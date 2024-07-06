@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-target-blank */
 /* eslint-disable react-hooks/exhaustive-deps */
-import moment, { Moment } from 'moment';
+import dayjs, { Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../analytics';
 import { Portfolio } from '../types';
@@ -112,7 +112,7 @@ function YoYPnLChart(props: Props) {
 
   const getData = () => {
     let currentPortfolio = props.portfolios[props.portfolios.length - 1];
-    const currentDate = moment().utc();
+    const currentDate = dayjs().utc();
     if (
       currentDate.format('YYYY-MM-DD') === currentPortfolio.date &&
       currentDate.hour() < 20 &&
@@ -120,7 +120,7 @@ function YoYPnLChart(props: Props) {
     ) {
       currentPortfolio = props.portfolios[props.portfolios.length - 2];
     }
-    if (moment(currentPortfolio.date).isoWeekday() > 5) {
+    if (dayjs(currentPortfolio.date).isoWeekday() > 5) {
       const weekday = getPreviousWeekday(currentPortfolio.date).format('YYYY-MM-DD');
       currentPortfolio = portfoliosByDate[weekday];
     }
@@ -131,24 +131,24 @@ function YoYPnLChart(props: Props) {
     const portfolioValues: {
       id: string;
       label: string;
-      date: Moment;
+      date: Dayjs;
       startPortfolio: Portfolio;
       endPortfolio: Portfolio;
     }[] = [];
 
     [
       { id: '1D', label: '1 Day', date: getPreviousWeekday(lastDate) },
-      { id: '1W', label: '1 Week', date: moment(lastDate).subtract(1, 'weeks') },
-      { id: '1M', label: '1 Month', date: moment(lastDate).subtract(1, 'months').add(1, 'days') },
-      { id: '3M', label: '3 Months', date: moment(lastDate).subtract(3, 'months').add(1, 'days') },
-      { id: '6M', label: '6 Months', date: moment(lastDate).subtract(6, 'months').add(1, 'days') },
-      { id: '1Y', label: '1 Year', date: moment(lastDate).subtract(1, 'years').add(1, 'days') },
-      { id: '2Y', label: '2 Years', date: moment(lastDate).subtract(2, 'years').add(1, 'days') },
-      { id: '3Y', label: '3 Years', date: moment(lastDate).subtract(3, 'years').add(1, 'days') },
-      { id: '5Y', label: '5 Years', date: moment(lastDate).subtract(5, 'years').add(1, 'days') },
-      { id: 'MTD', label: 'Month To Date', date: moment(lastDate).startOf('month') },
-      { id: 'WTD', label: 'Week To Date', date: moment(lastDate).startOf('week') },
-      { id: 'YTD', label: 'Year To Date', date: moment(lastDate).startOf('year') },
+      { id: '1W', label: '1 Week', date: dayjs(lastDate).subtract(1, 'weeks') },
+      { id: '1M', label: '1 Month', date: dayjs(lastDate).subtract(1, 'months').add(1, 'days') },
+      { id: '3M', label: '3 Months', date: dayjs(lastDate).subtract(3, 'months').add(1, 'days') },
+      { id: '6M', label: '6 Months', date: dayjs(lastDate).subtract(6, 'months').add(1, 'days') },
+      { id: '1Y', label: '1 Year', date: dayjs(lastDate).subtract(1, 'years').add(1, 'days') },
+      { id: '2Y', label: '2 Years', date: dayjs(lastDate).subtract(2, 'years').add(1, 'days') },
+      { id: '3Y', label: '3 Years', date: dayjs(lastDate).subtract(3, 'years').add(1, 'days') },
+      { id: '5Y', label: '5 Years', date: dayjs(lastDate).subtract(5, 'years').add(1, 'days') },
+      { id: 'MTD', label: 'Month To Date', date: dayjs(lastDate).startOf('month') },
+      { id: 'WTD', label: 'Week To Date', date: dayjs(lastDate).startOf('week') },
+      { id: 'YTD', label: 'Year To Date', date: dayjs(lastDate).startOf('year') },
     ].map((value) => {
       const portfolio = getNearestPortfolioDate(value.date.format('YYYY-MM-DD'));
       if (portfolio) {
@@ -168,12 +168,10 @@ function YoYPnLChart(props: Props) {
     });
 
     [1, 2, 3, 4].forEach((value) => {
-      const year = moment(lastDate).subtract(value, 'years').year();
-      const startDate = moment().year(year).month('Jan').startOf('month');
+      const year = dayjs(lastDate).subtract(value, 'years').year();
+      const startDate = dayjs().year(year).startOf('year');
       const startPortfolio = getNearestPortfolioDate(startDate.format('YYYY-MM-DD'));
-      const endPortfolio = getNearestPortfolioDate(
-        moment().year(year).month('Dec').endOf('month').format('YYYY-MM-DD'),
-      );
+      const endPortfolio = getNearestPortfolioDate(dayjs().year(year).endOf('year').format('YYYY-MM-DD'));
 
       if (startPortfolio && endPortfolio) {
         const key = `${startPortfolio.date}-${endPortfolio.date}`;
@@ -207,8 +205,8 @@ function YoYPnLChart(props: Props) {
           id: value.id,
           label: value.label,
           date: value.date.format(DATE_DISPLAY_FORMAT),
-          startDate: moment(value.startPortfolio.date).format(DATE_DISPLAY_FORMAT),
-          endDate: moment(value.endPortfolio.date).format(DATE_DISPLAY_FORMAT),
+          startDate: dayjs(value.startPortfolio.date).format(DATE_DISPLAY_FORMAT),
+          endDate: dayjs(value.endPortfolio.date).format(DATE_DISPLAY_FORMAT),
           startPnl,
           startRatio,
           endPnl,

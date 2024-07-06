@@ -2,21 +2,20 @@ import QuestionCircleTwoTone from '@ant-design/icons/QuestionCircleTwoTone';
 import Tooltip from 'antd/es/tooltip';
 import Typography from 'antd/es/typography';
 import Table, { ColumnProps, ColumnType } from 'antd/lib/table';
+import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
-import moment, { Moment } from 'moment';
-import 'moment-precise-range-plugin';
 import React from 'react';
 import { Box, Flex } from 'rebass';
+import useCurrency from '../../hooks/useCurrency';
 import { Account, Transaction } from '../../types';
 import { formatMoney, formatMoneyWithCurrency } from '../../utils';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
 import { ClosedPosition, DATE_DISPLAY_FORMAT, renderSymbol } from './utils';
-import useCurrency from '../../hooks/useCurrency';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
   const columns: ColumnType<Transaction>[] = [
-    { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => moment(text).format('YYYY-MM-DD') },
+    { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => dayjs(text).format('YYYY-MM-DD') },
     { key: 'type', title: 'Type', dataIndex: 'type', render: (text) => text.toUpperCase() },
     {
       key: 'shares',
@@ -49,8 +48,8 @@ const RealizedPnLTable = React.memo(
   }: {
     closedPositions: ClosedPosition[];
     isPrivateMode: boolean;
-    fromDate: Moment;
-    toDate: Moment;
+    fromDate: Dayjs;
+    toDate: Dayjs;
   }) => {
     const { baseCurrencyDisplay } = useCurrency();
     function getColumns(): ColumnProps<ClosedPosition>[] {
@@ -185,7 +184,7 @@ const RealizedPnLTable = React.memo(
               </div>
               <div>
                 {position.buyDate.diff(position.sellDate)
-                  ? moment.duration(position.buyDate.diff(position.sellDate)).humanize()
+                  ? dayjs.duration(position.buyDate.diff(position.sellDate)).humanize()
                   : 'Same Day'}
               </div>
             </>

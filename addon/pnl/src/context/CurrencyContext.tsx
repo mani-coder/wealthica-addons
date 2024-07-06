@@ -1,4 +1,4 @@
-import type { Moment } from 'moment';
+import type { Dayjs } from 'dayjs';
 import { createContext, ReactNode, useCallback } from 'react';
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY } from '../constants';
 import { CurrencyCache } from '../types';
@@ -9,7 +9,7 @@ interface CurrencyContextType {
   baseCurrency: string;
   baseCurrencyDisplay: string;
   allCurrencies: string[];
-  getValue: (from: string, value: number, date?: string | Moment) => number;
+  getValue: (from: string, value: number, date?: string | Dayjs) => number;
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
@@ -25,7 +25,7 @@ function getCurrencyValue(
   latestCurrencies: { [K: string]: number },
   from: string,
   value: number,
-  date?: string | Moment,
+  date?: string | Dayjs,
 ) {
   const currency = from.toLowerCase();
   if (currency === baseCurrency || !value) return value;
@@ -66,7 +66,7 @@ export class Currencies {
     );
   }
 
-  getValue(from: string, value: number, date?: string | Moment): number {
+  getValue(from: string, value: number, date?: string | Dayjs): number {
     return getCurrencyValue(this.baseCurrency, this.currencyCache, this.latestCurrencies, from, value, date);
   }
 }
@@ -79,7 +79,7 @@ export const CurrencyContextProvider = ({
   currencyRef: CurrencyRef;
 }) => {
   const getValue = useCallback(
-    (from: string, value: number, date?: string | Moment): number => {
+    (from: string, value: number, date?: string | Dayjs): number => {
       return getCurrencyValue(
         currencyRef.current.baseCurrency,
         currencyRef.current.currencyCache,

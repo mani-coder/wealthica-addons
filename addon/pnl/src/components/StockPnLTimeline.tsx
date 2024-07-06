@@ -2,8 +2,8 @@
 /* eslint-disable no-template-curly-in-string */
 import Empty from 'antd/lib/empty';
 import Spin from 'antd/lib/spin';
+import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
-import moment, { Moment } from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
@@ -23,7 +23,7 @@ type Props = {
 };
 
 type StockPrice = {
-  timestamp: Moment;
+  timestamp: Dayjs;
   closePrice: number;
 };
 
@@ -81,11 +81,10 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
 
       trackEvent('stock-pnl-timeline');
 
-      const startDate =
-        position.transactions && position.transactions.length ? position.transactions[0].date : moment();
+      const startDate = position.transactions && position.transactions.length ? position.transactions[0].date : dayjs();
       const endpoint = `securities/${position.security.id}/history?from=${startDate.format(
         'YYYY-MM-DD',
-      )}&to=${moment().format('YYYY-MM-DD')}`;
+      )}&to=${dayjs().format('YYYY-MM-DD')}`;
       if (addon) {
         addon
           .request({
@@ -117,7 +116,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
   }, [symbol, position]);
 
   function getNextWeekday(date) {
-    const referenceDate = moment(date);
+    const referenceDate = dayjs(date);
     let day = referenceDate.day();
     let diff = day === 6 ? 2 : day === 0 ? 1 : 0;
     return (diff ? referenceDate.add(diff, 'days') : referenceDate).format('YYYY-MM-DD');

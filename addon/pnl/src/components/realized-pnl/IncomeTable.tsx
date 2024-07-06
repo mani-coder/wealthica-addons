@@ -1,7 +1,6 @@
 import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
 import _ from 'lodash';
-import 'moment-precise-range-plugin';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';

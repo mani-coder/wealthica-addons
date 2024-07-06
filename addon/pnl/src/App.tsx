@@ -6,7 +6,6 @@ import Empty from 'antd/lib/empty';
 import Spin from 'antd/lib/spin';
 import Tabs from 'antd/lib/tabs';
 import _ from 'lodash';
-import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { Flex } from 'rebass';
 import xirr from 'xirr';
@@ -39,6 +38,7 @@ import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
+import dayjs from './dayjs';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
 
@@ -61,7 +61,7 @@ export default function App() {
     currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
-    toDate: moment().format('YYYY-MM-DD'),
+    toDate: dayjs().format('YYYY-MM-DD'),
   });
   const addOnOptions = addOnOptionsRef.current;
   const [newChangeLogsCount, setNewChangeLogsCount] = useState<number>();
@@ -262,7 +262,7 @@ export default function App() {
 
       cashflows: Object.values(cashFlowByDate),
       xirr: xirrRate,
-      portfolios: portfolios.filter((portfolio) => moment(portfolio.date).isoWeekday() <= 5),
+      portfolios: portfolios.filter((portfolio) => dayjs(portfolio.date).isoWeekday() <= 5),
 
       isLoaded: true,
       accounts,

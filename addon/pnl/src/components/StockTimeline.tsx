@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
 import Spin from 'antd/lib/spin';
+import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
-import moment, { Moment } from 'moment';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
@@ -19,7 +19,7 @@ type Props = {
 };
 
 type SecurityHistoryTimeline = {
-  timestamp: Moment;
+  timestamp: Dayjs;
   closePrice: number;
 };
 
@@ -76,19 +76,20 @@ function StockTimeline(props: Props) {
     setLoading(true);
     trackEvent('stock-timeline');
 
-    const startDate = moment.min(
-      (props.position.transactions && props.position.transactions.length
-        ? props.position.transactions[0].date
-        : moment()
-      )
-        .clone()
-        .subtract(1, 'months'),
-      moment().subtract(6, 'months'),
-    );
+    const startDate =
+      dayjs.min(
+        (props.position.transactions && props.position.transactions.length
+          ? props.position.transactions[0].date
+          : dayjs()
+        )
+          .clone()
+          .subtract(1, 'months'),
+        dayjs().subtract(6, 'months'),
+      ) ?? dayjs();
 
     const endpoint = `securities/${props.position.security.id}/history?from=${startDate.format(
       'YYYY-MM-DD',
-    )}&to=${moment().format('YYYY-MM-DD')}`;
+    )}&to=${dayjs().format('YYYY-MM-DD')}`;
     if (props.addon) {
       props.addon
         .request({

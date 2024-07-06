@@ -7,7 +7,7 @@ import Calendar from 'antd/lib/calendar';
 import Spin from 'antd/lib/spin';
 import Table, { ColumnProps } from 'antd/lib/table';
 import Tag from 'antd/lib/tag';
-import moment, { Moment } from 'moment';
+import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
@@ -63,9 +63,9 @@ function EventTypes({ types, onChange }: { types: EventType[]; onChange: (types:
 export function Events({ positions }: { positions: Position[] }) {
   const [events, setEvents] = useState<{ dividends: Dividend[]; earnings: Earning[] }>();
   const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Moment>(moment().startOf('month'));
+  const [date, setDate] = useState<Dayjs>(dayjs().startOf('month'));
   const range = useMemo(() => {
-    return { start: moment().startOf('month').subtract(1, 'month'), end: moment().endOf('month').add(1, 'year') };
+    return { start: dayjs().startOf('month').subtract(1, 'month'), end: dayjs().endOf('month').add(1, 'year') };
   }, []);
   const [types, setTypes] = useState<EventType[]>(['earning', 'ex-dividend', 'pay-dividend', 'rec-dividend']);
 
@@ -113,7 +113,7 @@ export function Events({ positions }: { positions: Position[] }) {
       .finally(() => setLoading(false));
   }, [positions, date]);
 
-  function dateCellRender(date: Moment) {
+  function dateCellRender(date: Dayjs) {
     const _events = eventsByDate[date.format('YYYY-MM-DD')];
 
     return _events && _events.length ? (
@@ -154,9 +154,9 @@ export function Events({ positions }: { positions: Position[] }) {
         key: 'date',
         title: 'Date',
         dataIndex: 'date',
-        render: (text) => moment(text).format('MMM DD, YYYY'),
+        render: (text) => dayjs(text).format('MMM DD, YYYY'),
         defaultSortOrder: 'ascend',
-        sorter: (a, b) => moment(a.date).valueOf() - moment(b.date).valueOf(),
+        sorter: (a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf(),
       },
       {
         key: 'Company',
@@ -198,7 +198,7 @@ export function Events({ positions }: { positions: Position[] }) {
     } = {};
     if (types.includes('earning')) {
       result = events.earnings.reduce((hash, earning) => {
-        const earningDate = moment(earning.date).format('YYYY-MM-DD');
+        const earningDate = dayjs(earning.date).format('YYYY-MM-DD');
         let earnings = hash[earningDate];
         if (!earnings) {
           earnings = [];
@@ -223,7 +223,7 @@ export function Events({ positions }: { positions: Position[] }) {
           return;
         }
 
-        const dividendDate = moment(dividend[field]).format('YYYY-MM-DD');
+        const dividendDate = dayjs(dividend[field]).format('YYYY-MM-DD');
         let dividends = hash[dividendDate];
         if (!dividends) {
           dividends = [];
@@ -254,7 +254,7 @@ export function Events({ positions }: { positions: Position[] }) {
             setDate(startOfMonth);
           }
         }}
-        validRange={[moment().startOf('month'), moment().endOf('month').add(1, 'year')]}
+        validRange={[dayjs().startOf('month'), dayjs().endOf('month').add(1, 'year')]}
         dateCellRender={dateCellRender}
         headerRender={() => (
           <Box>
@@ -316,7 +316,7 @@ export function Events({ positions }: { positions: Position[] }) {
         >
           <Table<Earning>
             columns={getColumns()}
-            dataSource={events.earnings.filter((earning) => moment(earning.date).isSameOrAfter(date))}
+            dataSource={events.earnings.filter((earning) => dayjs(earning.date).isSameOrAfter(date))}
           />
         </Card>
       )}

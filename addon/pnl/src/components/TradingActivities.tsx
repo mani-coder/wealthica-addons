@@ -1,6 +1,6 @@
 import { DatePicker, Space, Table, Typography } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
-import moment, { Moment } from 'moment';
+import dayjs, { Dayjs } from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
@@ -28,7 +28,7 @@ type Security = {
 const TRANSACTION_TYPES = ['buy', 'sell'];
 
 export default function TradingActivities(props: Props) {
-  const [fromDate, setFromDate] = useState<Moment>(moment(props.fromDate).startOf('D'));
+  const [fromDate, setFromDate] = useState<Dayjs>(dayjs(props.fromDate).startOf('D'));
   const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const symbolPriceCache = useMemo(() => {
     return props.positions.reduce((hash, position) => {
@@ -164,9 +164,9 @@ export default function TradingActivities(props: Props) {
               <DatePicker
                 defaultValue={fromDate}
                 value={fromDate}
-                disabledDate={(date) => date.isAfter(moment())}
+                disabledDate={(date) => date.isAfter(dayjs())}
                 size="large"
-                onChange={(date) => setFromDate(date ?? moment(props.fromDate))}
+                onChange={(date) => setFromDate(date ?? dayjs(props.fromDate))}
               />
             </Space>
           </Flex>

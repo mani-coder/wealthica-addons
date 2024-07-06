@@ -1,18 +1,18 @@
 import { Typography } from 'antd';
 
-import { Moment } from 'moment';
+import { Dayjs } from 'dayjs';
 import { Account, Transaction } from '../../types';
 
 export type ClosedPosition = {
   key: string;
-  date: Moment;
+  date: Dayjs;
   symbol: string;
   currency: string;
   shares: number;
 
-  buyDate: Moment;
+  buyDate: Dayjs;
   buyPrice: number;
-  sellDate: Moment;
+  sellDate: Dayjs;
   sellPrice: number;
 
   buyCost: number;

@@ -1,8 +1,7 @@
 import Typography from 'antd/es/typography';
 import Table, { ColumnProps } from 'antd/lib/table';
+import { Dayjs } from 'dayjs';
 import _ from 'lodash';
-import { Moment } from 'moment';
-import 'moment-precise-range-plugin';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
@@ -22,8 +21,8 @@ const ExpenseTable = React.memo(
     accountById: { [K: string]: Account };
     transactions: AccountTransaction[];
     isPrivateMode: boolean;
-    fromDate: Moment;
-    toDate: Moment;
+    fromDate: Dayjs;
+    toDate: Dayjs;
   }) => {
     const { baseCurrencyDisplay } = useCurrency();
     function getColumns(): ColumnProps<AccountTransaction>[] {

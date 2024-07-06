@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import moment from 'moment';
+import dayjs from 'dayjs';
 import React from 'react';
 import { Portfolio } from '../types';
 import { formatCurrency, max, min } from '../utils';
@@ -15,7 +15,7 @@ function ProfitLossPercentageTimeline(props: Props) {
   function getSeries(): any {
     const data = props.portfolios.map((portfolio) => {
       return {
-        x: moment(portfolio.date).valueOf(),
+        x: dayjs(portfolio.date).valueOf(),
         y: ((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100,
         pnlValue: props.isPrivateMode ? '-' : formatCurrency(portfolio.value - portfolio.deposits, 2).toLocaleString(),
       };
