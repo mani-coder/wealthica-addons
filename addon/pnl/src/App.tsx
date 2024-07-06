@@ -458,7 +458,6 @@ export default function App() {
                 )}
 
                 <Tabs
-                  type="card"
                   defaultActiveKey={TabKeysEnum.PNL}
                   onChange={(tab) => {
                     if (tab === 'change-log' && newChangeLogsCount) {
