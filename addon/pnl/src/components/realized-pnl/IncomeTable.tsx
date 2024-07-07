@@ -3,7 +3,7 @@ import _ from 'lodash';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
-import { formatMoney } from '../../utils';
+import { formatDate, formatMoney } from '../../utils';
 import Collapsible from '../Collapsible';
 import { renderSymbol } from './utils';
 
@@ -29,7 +29,7 @@ const IncomeTable = React.memo(
           key: 'date',
           title: 'Date',
           dataIndex: 'date',
-          render: (text) => text.format('YYYY-MM-DD'),
+          render: (text) => formatDate(text),
           sorter: (a, b) => a.date.valueOf() - b.date.valueOf(),
           width: 125,
         },

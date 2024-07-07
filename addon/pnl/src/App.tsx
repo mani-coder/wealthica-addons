@@ -30,7 +30,7 @@ import { TopGainersLosers } from './components/TopGainersLosers';
 import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
-import { DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
+import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import dayjs from './dayjs';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
@@ -55,7 +55,7 @@ export default function App() {
     currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
-    toDate: dayjs().format('YYYY-MM-DD'),
+    toDate: dayjs().format(DATE_FORMAT),
   });
   const addOnOptions = addOnOptionsRef.current;
   const [newChangeLogsCount, setNewChangeLogsCount] = useState<number>();

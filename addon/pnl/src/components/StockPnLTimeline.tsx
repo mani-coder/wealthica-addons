@@ -6,7 +6,7 @@ import _ from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
-import { TYPE_TO_COLOR } from '../constants';
+import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate, max, min } from '../utils';
@@ -81,8 +81,8 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
 
       const startDate = position.transactions && position.transactions.length ? position.transactions[0].date : dayjs();
       const endpoint = `securities/${position.security.id}/history?from=${startDate.format(
-        'YYYY-MM-DD',
-      )}&to=${dayjs().format('YYYY-MM-DD')}`;
+        DATE_FORMAT,
+      )}&to=${dayjs().format(DATE_FORMAT)}`;
       if (addon) {
         addon
           .request({ query: {}, method: 'GET', endpoint })
@@ -110,7 +110,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     const referenceDate = dayjs(date);
     let day = referenceDate.day();
     let diff = day === 6 ? 2 : day === 0 ? 1 : 0;
-    return (diff ? referenceDate.add(diff, 'days') : referenceDate).format('YYYY-MM-DD');
+    return (diff ? referenceDate.add(diff, 'days') : referenceDate).format(DATE_FORMAT);
   }
 
   function getSeries(): any[] {
@@ -191,7 +191,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     let data: any[] = [];
     let _entry;
     prices.forEach((price) => {
-      const entry = allBook[price.timestamp.format('YYYY-MM-DD')];
+      const entry = allBook[price.timestamp.format(DATE_FORMAT)];
       _entry = entry ? entry : _entry;
       if (_entry) {
         if (_entry.shares === 0) {
@@ -204,7 +204,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
           data.push({
             x: price.timestamp.valueOf(),
             y: showValueChart ? marketValue - bookValue : pnlRatio,
-            d: price.timestamp.format('YYYY-MM-DD'),
+            d: price.timestamp.format(DATE_FORMAT),
             pnlRatio,
             pnlValue: isPrivateMode ? '-' : formatMoney(marketValue - bookValue),
             currency: position.security.currency.toUpperCase(),

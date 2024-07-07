@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
-import { TYPE_TO_COLOR } from '../constants';
+import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils';
@@ -84,8 +84,8 @@ function StockTimeline(props: Props) {
       ) ?? dayjs();
 
     const endpoint = `securities/${props.position.security.id}/history?from=${startDate.format(
-      'YYYY-MM-DD',
-    )}&to=${dayjs().format('YYYY-MM-DD')}`;
+      DATE_FORMAT,
+    )}&to=${dayjs().format(DATE_FORMAT)}`;
     if (props.addon) {
       props.addon
         .request({

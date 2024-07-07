@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
-// import advancedFormat from 'dayjs/plugin/advancedFormat';
+import duration from 'dayjs/plugin/duration';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isoWeek from 'dayjs/plugin/isoWeek';
-// import relativeTime from 'dayjs/plugin/relativeTime';
-import duration from 'dayjs/plugin/duration';
 import minMax from 'dayjs/plugin/minMax';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
@@ -16,6 +15,6 @@ dayjs.extend(isoWeek);
 dayjs.extend(minMax);
 
 // dayjs.extend(advancedFormat);
-// dayjs.extend(relativeTime);
+dayjs.extend(relativeTime);
 
 export default dayjs;

@@ -6,14 +6,14 @@ import React from 'react';
 import { Box, Flex } from 'rebass';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, Transaction } from '../../types';
-import { formatMoney, formatMoneyWithCurrency } from '../../utils';
+import { formatDate, formatMoney, formatMoneyWithCurrency } from '../../utils';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
 import { ClosedPosition, DATE_DISPLAY_FORMAT, renderSymbol } from './utils';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
   const columns: TableColumnType<Transaction>[] = [
-    { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => dayjs(text).format('YYYY-MM-DD') },
+    { key: 'date', title: 'Date', dataIndex: 'date', render: (text) => formatDate(dayjs(text)) },
     { key: 'type', title: 'Type', dataIndex: 'type', render: (text) => text.toUpperCase() },
     {
       key: 'shares',
@@ -56,7 +56,7 @@ const RealizedPnLTable = React.memo(
           key: 'date',
           title: 'Date',
           dataIndex: 'date',
-          render: (text) => text.format('YYYY-MM-DD'),
+          render: (text) => formatDate(text),
           sorter: (a, b) => a.date.valueOf() - b.date.valueOf(),
           width: 125,
         },
@@ -170,21 +170,21 @@ const RealizedPnLTable = React.memo(
           title: (
             <>
               <div>Open Date</div>
-              <div>Holding Period</div>
+              <Typography.Text style={{ color: '#8c8c8c' }}>Holding Period</Typography.Text>
             </>
           ),
           render: (text, position) => (
             <>
               <div>
-                {(position.buyDate.isAfter(position.sellDate) ? position.sellDate : position.buyDate).format(
-                  'YYYY-MM-DD',
-                )}
+                <Typography.Text>
+                  {formatDate(position.buyDate.isAfter(position.sellDate) ? position.sellDate : position.buyDate)}
+                </Typography.Text>
               </div>
-              <div>
+              <Typography.Text style={{ color: '#8c8c8c', fontWeight: 'bold' }}>
                 {position.buyDate.diff(position.sellDate)
                   ? dayjs.duration(position.buyDate.diff(position.sellDate)).humanize()
                   : 'Same Day'}
-              </div>
+              </Typography.Text>
             </>
           ),
         },

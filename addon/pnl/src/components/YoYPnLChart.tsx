@@ -3,6 +3,7 @@
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../analytics';
+import { DATE_FORMAT } from '../constants';
 import { Portfolio } from '../types';
 import { formatCurrency, getPreviousWeekday } from '../utils';
 import Charts from './Charts';
@@ -114,14 +115,14 @@ function YoYPnLChart(props: Props) {
     let currentPortfolio = props.portfolios[props.portfolios.length - 1];
     const currentDate = dayjs().utc();
     if (
-      currentDate.format('YYYY-MM-DD') === currentPortfolio.date &&
+      currentDate.format(DATE_FORMAT) === currentPortfolio.date &&
       currentDate.hour() < 20 &&
       props.portfolios.length > 1
     ) {
       currentPortfolio = props.portfolios[props.portfolios.length - 2];
     }
     if (dayjs(currentPortfolio.date).isoWeekday() > 5) {
-      const weekday = getPreviousWeekday(currentPortfolio.date).format('YYYY-MM-DD');
+      const weekday = getPreviousWeekday(currentPortfolio.date).format(DATE_FORMAT);
       currentPortfolio = portfoliosByDate[weekday];
     }
 
@@ -150,7 +151,7 @@ function YoYPnLChart(props: Props) {
       { id: 'WTD', label: 'Week To Date', date: dayjs(lastDate).startOf('week') },
       { id: 'YTD', label: 'Year To Date', date: dayjs(lastDate).startOf('year') },
     ].map((value) => {
-      const portfolio = getNearestPortfolioDate(value.date.format('YYYY-MM-DD'));
+      const portfolio = getNearestPortfolioDate(value.date.format(DATE_FORMAT));
       if (portfolio) {
         const key = `${portfolio.date}-${currentPortfolio.date}`;
         if (!portfolioKeys.has(key)) {
@@ -170,8 +171,8 @@ function YoYPnLChart(props: Props) {
     [1, 2, 3, 4].forEach((value) => {
       const year = dayjs(lastDate).subtract(value, 'years').year();
       const startDate = dayjs().year(year).startOf('year');
-      const startPortfolio = getNearestPortfolioDate(startDate.format('YYYY-MM-DD'));
-      const endPortfolio = getNearestPortfolioDate(dayjs().year(year).endOf('year').format('YYYY-MM-DD'));
+      const startPortfolio = getNearestPortfolioDate(startDate.format(DATE_FORMAT));
+      const endPortfolio = getNearestPortfolioDate(dayjs().year(year).endOf('year').format(DATE_FORMAT));
 
       if (startPortfolio && endPortfolio) {
         const key = `${startPortfolio.date}-${endPortfolio.date}`;

@@ -5,6 +5,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
+import { DATE_FORMAT } from '../constants';
 import { Position } from '../types';
 import { buildCorsFreeUrl, getNasdaqTicker, getSymbolFromNasdaqTicker } from '../utils';
 
@@ -79,11 +80,11 @@ export function Events({ positions }: { positions: Position[] }) {
       `https://portfolio.nasdaq.com/api/portfolio/getPortfolioEvents/?fromDate=${date
         .clone()
         .subtract(30, 'days')
-        .format('YYYY-MM-DD')}&toDate=${date
+        .format(DATE_FORMAT)}&toDate=${date
         .clone()
         .endOf('month')
         .add(60, 'days')
-        .format('YYYY-MM-DD')}&tickers=${_symbols}`,
+        .format(DATE_FORMAT)}&tickers=${_symbols}`,
     );
     setLoading(true);
 
@@ -108,7 +109,7 @@ export function Events({ positions }: { positions: Position[] }) {
   }, [positions, date]);
 
   function dateCellRender(date: Dayjs) {
-    const _events = eventsByDate[date.format('YYYY-MM-DD')];
+    const _events = eventsByDate[date.format(DATE_FORMAT)];
 
     return _events && _events.length ? (
       <Flex flexWrap="wrap">
@@ -192,7 +193,7 @@ export function Events({ positions }: { positions: Position[] }) {
     } = {};
     if (types.includes('earning')) {
       result = events.earnings.reduce((hash, earning) => {
-        const earningDate = dayjs(earning.date).format('YYYY-MM-DD');
+        const earningDate = dayjs(earning.date).format(DATE_FORMAT);
         let earnings = hash[earningDate];
         if (!earnings) {
           earnings = [];
@@ -217,7 +218,7 @@ export function Events({ positions }: { positions: Position[] }) {
           return;
         }
 
-        const dividendDate = dayjs(dividend[field]).format('YYYY-MM-DD');
+        const dividendDate = dayjs(dividend[field]).format(DATE_FORMAT);
         let dividends = hash[dividendDate];
         if (!dividends) {
           dividends = [];
