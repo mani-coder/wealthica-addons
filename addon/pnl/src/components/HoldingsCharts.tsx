@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
-import { formatCurrency, formatMoney, getSymbol } from '../utils';
+import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import CompositionCharts from './CompositionCharts';
 import { POSITION_TOOLTIP, StockSelector, getOptions, getOptionsV2 } from './HoldingsChartsBase';

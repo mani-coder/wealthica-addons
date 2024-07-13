@@ -2,7 +2,7 @@
 import dayjs from 'dayjs';
 import React from 'react';
 import { Portfolio } from '../types';
-import { formatCurrency, max, min } from '../utils';
+import { formatCurrency, max, min } from '../utils/common';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 

@@ -6,7 +6,7 @@ import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
-import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils';
+import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils/common';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup, { GroupType, getGroupKey } from './CompositionGroup';

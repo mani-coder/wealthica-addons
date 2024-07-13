@@ -3,7 +3,7 @@ import _ from 'lodash';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
-import { formatDate, formatMoney } from '../../utils';
+import { formatDate, formatMoney } from '../../utils/common';
 import Collapsible from '../Collapsible';
 import { renderSymbol } from './utils';
 

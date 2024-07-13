@@ -6,17 +6,17 @@ import * as Highcharts from 'highcharts';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
-import { DATE_FORMAT } from '../../constants';
+import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction, Transaction } from '../../types';
-import { formatCurrency, formatMoney } from '../../utils';
+import { formatCurrency, formatMoney } from '../../utils/common';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
 import CompositionGroup, { GroupType, getGroupKey } from '../CompositionGroup';
 import ExpenseTable from './ExpenseTable';
 import IncomeTable, { IncomeTransaction } from './IncomeTable';
 import RealizedPnLTable from './RealizedPnLTable';
-import { ClosedPosition, DATE_DISPLAY_FORMAT } from './utils';
+import { ClosedPosition } from './utils';
 
 type Props = {
   transactions: Transaction[];

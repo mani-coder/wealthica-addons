@@ -1,7 +1,7 @@
 import { Select, Typography } from 'antd';
 import { Flex } from 'rebass';
 import { Account, Position } from '../types';
-import { getSymbol } from '../utils';
+import { getSymbol } from '../utils/common';
 import StockDetails from './StockDetails';
 
 type StockSelectorProps = {

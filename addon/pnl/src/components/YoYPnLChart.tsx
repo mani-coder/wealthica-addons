@@ -3,9 +3,9 @@
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../analytics';
-import { DATE_FORMAT } from '../constants';
+import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../constants';
 import { Portfolio } from '../types';
-import { formatCurrency, getPreviousWeekday } from '../utils';
+import { formatCurrency, getPreviousWeekday } from '../utils/common';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 
@@ -13,8 +13,6 @@ type Props = {
   portfolios: Portfolio[];
   isPrivateMode: boolean;
 };
-
-const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 
 function YoYPnLChart(props: Props) {
   const portfoliosByDate = props.portfolios.reduce((hash, portfolio) => {

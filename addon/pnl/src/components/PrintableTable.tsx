@@ -2,7 +2,7 @@ import PrinterFilled from '@ant-design/icons/PrinterFilled';
 import { Button, Table, TableProps, Typography } from 'antd';
 import { Flex } from 'rebass';
 import { usePrint } from '../hooks/usePrint';
-import { isChrome } from '../utils';
+import { isChrome } from '../utils/common';
 
 const PRINT_SETTINGS = `
   @page {

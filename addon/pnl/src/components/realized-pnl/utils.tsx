@@ -23,8 +23,6 @@ export type ClosedPosition = {
   transactions: Transaction[];
 };
 
-export const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
-
 export function renderSymbol(symbol: string, currency?: string, ticker?: string) {
   return (
     <>

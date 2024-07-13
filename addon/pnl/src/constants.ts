@@ -1,4 +1,5 @@
 export const DATE_FORMAT = 'YYYY-MM-DD';
+export const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 export const DEFAULT_BASE_CURRENCY = 'cad';
 export const TRANSACTIONS_FROM_DATE = '2010-01-01';
 
@@ -17,6 +18,7 @@ export const TYPE_TO_COLOR = {
 };
 
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';
+export const CURRENCY_DISPLAY_CACHE_KEY = '__current_display_cache__';
 
 export enum TabKeysEnum {
   PNL = 'pnl',

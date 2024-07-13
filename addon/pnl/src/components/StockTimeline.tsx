@@ -7,7 +7,7 @@ import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position, Transaction } from '../types';
-import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils';
+import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils/common';
 import Charts from './Charts';
 
 type Props = {

@@ -4,7 +4,7 @@ import React from 'react';
 import { Box } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Position } from '../types';
-import { formatMoney, getSymbol } from '../utils';
+import { formatMoney, getSymbol } from '../utils/common';
 import Collapsible from './Collapsible';
 
 type Props = {

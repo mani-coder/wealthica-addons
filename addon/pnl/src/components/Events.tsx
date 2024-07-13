@@ -7,7 +7,7 @@ import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT } from '../constants';
 import { Position } from '../types';
-import { buildCorsFreeUrl, getNasdaqTicker, getSymbolFromNasdaqTicker } from '../utils';
+import { buildCorsFreeUrl, getNasdaqTicker, getSymbolFromNasdaqTicker } from '../utils/common';
 
 type Dividend = {
   company: string;

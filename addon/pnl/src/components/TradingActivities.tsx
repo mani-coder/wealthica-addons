@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Position, Transaction } from '../types';
-import { formatMoney, getSymbol, sumOf } from '../utils';
+import { formatMoney, getSymbol, sumOf } from '../utils/common';
 import { renderSymbol } from './realized-pnl/utils';
 
 type Props = {

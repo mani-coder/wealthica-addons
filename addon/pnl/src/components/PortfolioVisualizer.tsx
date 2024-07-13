@@ -3,7 +3,7 @@ import React from 'react';
 import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { Position } from '../types';
-import { getSymbol, getURLParams } from '../utils';
+import { getSymbol, getURLParams } from '../utils/common';
 import Collapsible from './Collapsible';
 
 const Link = ({ href, title }: { href: string; title: string }) => {

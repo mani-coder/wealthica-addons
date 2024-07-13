@@ -1,7 +1,7 @@
 import { DATE_FORMAT } from './constants';
 import { Currencies } from './context/CurrencyContext';
 import { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
-import { getDate, getSymbol, normalizeAccountType } from './utils';
+import { getDate, getSymbol, normalizeAccountType } from './utils/common';
 
 //
 // We can properly move the securities from one account to another by marking the description or notes

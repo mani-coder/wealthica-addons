@@ -3,7 +3,7 @@ import type { TextProps } from 'antd/es/typography/Text';
 import { Flex, FlexProps } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
-import { formatMoney, getSymbol, sumOf } from '../utils';
+import { formatMoney, getSymbol, sumOf } from '../utils/common';
 
 type Props = {
   symbol: string;

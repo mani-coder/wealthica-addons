@@ -4,12 +4,13 @@ import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React from 'react';
 import { Box, Flex } from 'rebass';
+import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, Transaction } from '../../types';
-import { formatDate, formatMoney, formatMoneyWithCurrency } from '../../utils';
+import { formatDate, formatMoney, formatMoneyWithCurrency } from '../../utils/common';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
-import { ClosedPosition, DATE_DISPLAY_FORMAT, renderSymbol } from './utils';
+import { ClosedPosition, renderSymbol } from './utils';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
   const columns: TableColumnType<Transaction>[] = [

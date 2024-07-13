@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { Box, Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Account } from '../types';
-import { formatMoney, sumOf } from '../utils';
+import { formatMoney, sumOf } from '../utils/common';
 import Collapsible from './Collapsible';
 
 type Props = { accounts: Account[]; isPrivateMode: boolean };

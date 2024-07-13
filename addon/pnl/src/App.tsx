@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { Alert, Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
+import { Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
 import _ from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { Flex } from 'rebass';
@@ -17,6 +17,7 @@ import {
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
+import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
 import HoldingsCharts from './components/HoldingsCharts';
@@ -34,7 +35,8 @@ import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import dayjs from './dayjs';
 import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
-import { computeBookValue, computeXIRR, formatMoney, getSymbol } from './utils';
+import { formatMoney, getSymbol } from './utils/common';
+import { computeBookValue, computeXIRR } from './utils/xirr';
 
 type State = {
   securityTransactions: Transaction[];
@@ -441,18 +443,7 @@ export default function App() {
                   </Flex>
                 ) : (
                   <Flex width={1} justifyContent="center" alignItems="center" marginY={1}>
-                    <Alert
-                      style={{ width: '100%', textAlign: 'center' }}
-                      type="info"
-                      banner
-                      closable
-                      message={
-                        <>
-                          All amounts are displayed in <b>{currencyRef.current.baseCurrency.toUpperCase()}</b>, as per
-                          your currency preference.
-                        </>
-                      }
-                    />
+                    <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
                   </Flex>
                 )}
 

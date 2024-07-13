@@ -5,7 +5,7 @@ import { Box, Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
-import { formatCurrency, formatMoney, getSymbol } from '../utils';
+import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import StockPnLTimeline from './StockPnLTimeline';
 
