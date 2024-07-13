@@ -15,14 +15,21 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
       return true;
     }
 
-    const date = dayjs(currencyDisplayCache['date']);
-    const _currency = currencyDisplayCache['currency'] as string;
-    // If the currency has changed or the alert has expired
-    return _currency !== currency || date.add(60, 'days').isBefore(dayjs());
+    try {
+      const data = JSON.parse(currencyDisplayCache);
+      const date = dayjs(data['date']);
+      const _currency = data['currency'] as string;
+      // If the currency has changed or the alert has expired
+      console.log('mani is cool', { data, currency });
+
+      return _currency !== currency || date.add(60, 'days').isBefore(dayjs());
+    } catch (error) {
+      return true;
+    }
   }, [currency]);
 
   function saveCurrencyDisplayInLocalCache() {
-    setLocalCache(CURRENCY_DISPLAY_CACHE_KEY, { date: formatDate(dayjs(), DATE_FORMAT), currency });
+    setLocalCache(CURRENCY_DISPLAY_CACHE_KEY, JSON.stringify({ date: formatDate(dayjs(), DATE_FORMAT), currency }));
   }
 
   return displayCurrencyAlert ? (
