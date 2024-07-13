@@ -442,9 +442,7 @@ export default function App() {
                     <Spin size="large" />
                   </Flex>
                 ) : (
-                  <Flex width={1} justifyContent="center" alignItems="center" marginY={1}>
-                    <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
-                  </Flex>
+                  <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
                 )}
 
                 <Tabs

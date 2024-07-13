@@ -1,6 +1,7 @@
 import { Alert } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
+import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { CURRENCY_DISPLAY_CACHE_KEY, DATE_FORMAT } from '../constants';
 import useCurrency from '../hooks/useCurrency';
@@ -33,21 +34,23 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
   }
 
   return displayCurrencyAlert ? (
-    <Alert
-      style={{ width: '100%', textAlign: 'center' }}
-      type="info"
-      banner
-      closable
-      onClose={() => {
-        saveCurrencyDisplayInLocalCache();
-        trackEvent('close_currency_alert', { currency });
-      }}
-      message={
-        <>
-          All amounts are displayed in <b>{baseCurrencyDisplay}</b>, as per your currency preference.
-        </>
-      }
-    />
+    <Flex width={1} justifyContent="center" alignItems="center" marginY={1}>
+      <Alert
+        style={{ width: '100%', textAlign: 'center' }}
+        type="info"
+        banner
+        closable
+        onClose={() => {
+          saveCurrencyDisplayInLocalCache();
+          trackEvent('close_currency_alert', { currency });
+        }}
+        message={
+          <>
+            All amounts are displayed in <b>{baseCurrencyDisplay}</b>, as per your currency preference.
+          </>
+        }
+      />
+    </Flex>
   ) : (
     <></>
   );
