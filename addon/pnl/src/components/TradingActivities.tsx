@@ -74,6 +74,7 @@ export default function TradingActivities(props: Props) {
         title: 'Shares',
         dataIndex: 'shares',
         render: (value) => <Typography.Text strong>{Math.round(value * 100) / 100}</Typography.Text>,
+        sorter: (a, b) => a.shares - b.shares,
       },
       {
         key: 'value',
@@ -89,7 +90,7 @@ export default function TradingActivities(props: Props) {
         title: 'Change %',
         render: (value, security) => {
           const change = security.lastPrice - security.price;
-          return security.lastPrice ? (
+          return security.shares >= 0 && security.lastPrice ? (
             <Typography.Text strong style={{ color: change > 0 ? 'green' : 'red', fontSize: 14 }}>
               {formatMoney((change / security.lastPrice) * 100, 2)}%
             </Typography.Text>
@@ -142,7 +143,7 @@ export default function TradingActivities(props: Props) {
       }, {} as { [K: string]: Security });
 
     return Object.values(securitiesCache)
-      .map((security) => ({ ...security, shares: Math.abs(security.shares), price: Math.abs(security.price) }))
+      .map((security) => ({ ...security, shares: security.shares, price: Math.abs(security.price) }))
       .sort((a, b) => b.value - a.value);
   }, [symbolPriceCache, props.transactions, fromDate]);
 
