@@ -42,7 +42,7 @@ export default function HoldingsCharts(props: Props) {
           .join('');
 
         return {
-          name: getSymbol(position.security),
+          name: getSymbol(position.security).slice(-10),
           y: position.market_value,
           baseCurrency: baseCurrencyDisplay,
           displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
