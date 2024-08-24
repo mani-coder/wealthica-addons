@@ -41,7 +41,7 @@ export function TopGainersLosers(props: {
           .sort((a, b) => (sortByValue ? a.gain_amount - b.gain_amount : a.gain_percent - b.gain_percent))
           .map((position) => {
             return {
-              name: getSymbol(position.security),
+              name: getSymbol(position.security).slice(-10),
               y: sortByValue ? position.gain_amount : position.gain_percent * 100,
               gainRatio: position.gain_percent * 100,
               baseCurrency: baseCurrencyDisplay,
