@@ -28,7 +28,7 @@ export function TopGainersLosers(props: {
           click(event) {
             if (event.point.name && pnlSymbol !== event.point.name) {
               setTimeout(() => {
-                setPnlSymbol(event.point.name);
+                setPnlSymbol((event.point as any).symbol);
               }, 50);
             }
           },
@@ -40,8 +40,10 @@ export function TopGainersLosers(props: {
           )
           .sort((a, b) => (sortByValue ? a.gain_amount - b.gain_amount : a.gain_percent - b.gain_percent))
           .map((position) => {
+            const symbol = getSymbol(position.security);
             return {
-              name: getSymbol(position.security).slice(-10),
+              name: symbol.slice(-10),
+              symbol,
               y: sortByValue ? position.gain_amount : position.gain_percent * 100,
               gainRatio: position.gain_percent * 100,
               baseCurrency: baseCurrencyDisplay,
