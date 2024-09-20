@@ -40,7 +40,9 @@ export default function StockDetails(props: Props) {
   const accounts = (props.accounts || [])
     .map((account) => {
       const position = account.positions.filter((position) => position.symbol === props.symbol)[0];
-      return position ? { name: account.name, quantity: position.quantity } : undefined;
+      return position
+        ? { name: account.name, quantity: position.quantity, price: position.book_value / position.quantity }
+        : undefined;
     })
     .filter((value) => value)
     .sort((a, b) => b!.quantity - a!.quantity);
@@ -93,7 +95,14 @@ export default function StockDetails(props: Props) {
         style={{ borderBottom: `2px solid #7b7b7b` }}
       />
       {accounts.map(
-        (account) => account && <LabelValue key={account.name} label={account.name} value={`${account.quantity}`} />,
+        (account) =>
+          account && (
+            <LabelValue
+              key={account.name}
+              label={account.name}
+              value={`${account.quantity}@${formatMoney(account.price)}`}
+            />
+          ),
       )}
     </Flex>
   );

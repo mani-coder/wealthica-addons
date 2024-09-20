@@ -34,11 +34,20 @@ export default function HoldingsCharts(props: Props) {
         const accountsTable = (props.accounts || [])
           .map((account) => {
             const position = account.positions.filter((position) => position.symbol === symbol)[0];
-            return position ? { name: account.name, quantity: position.quantity } : undefined;
+            return position
+              ? {
+                  name: account.name,
+                  quantity: position.quantity,
+                  price: formatMoney(position.book_value / position.quantity),
+                }
+              : undefined;
           })
           .filter((value) => value)
           .sort((a, b) => b!.quantity - a!.quantity)
-          .map((value) => `<tr><td>${value!.name}</td><td style="text-align: right;">${value!.quantity}</td></tr>`)
+          .map(
+            (value) =>
+              `<tr><td>${value!.name}</td><td style="text-align: right;">${value!.quantity}@${value!.price}</td></tr>`,
+          )
           .join('');
 
         return {
