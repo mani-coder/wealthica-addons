@@ -20,9 +20,8 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
       const data = JSON.parse(currencyDisplayCache);
       const date = dayjs(data['date']);
       const _currency = data['currency'] as string;
-      // If the currency has changed or the alert has expired
-      console.log('mani is cool', { data, currency });
 
+      // If the currency has changed or the alert has expired
       return _currency !== currency || date.add(60, 'days').isBefore(dayjs());
     } catch (error) {
       return true;
