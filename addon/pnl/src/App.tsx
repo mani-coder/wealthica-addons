@@ -114,10 +114,8 @@ export default function App() {
       });
 
       addon.on('update', (options) => {
-        console.debug('Received addon update call -- ', options);
-        // Update according to the received options
         const updatedOptions = updateOptions(addOnOptionsRef.current, options);
-        if (updatedOptions && Object.keys(updatedOptions).length) {
+        if (updatedOptions && Object.keys(updatedOptions).length > 0) {
           setLoadingOnUpdate(true);
           console.debug('Handling addon update - changed options: ', {
             updatedOptions,
