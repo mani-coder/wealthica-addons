@@ -83,7 +83,7 @@ export default function App() {
 
       const changedOptions: Partial<AddOnOptions> = {};
       OPTIONS.forEach((field) => {
-        const value = options[field];
+        const value = options[field] ?? undefined;
         if ((value || OPTIONAL_OPTIONS.includes(field)) && options[field] !== _addOnOptions[field]) {
           _addOnOptions[field] = options[field];
           changedOptions[field] = options[field];
