@@ -56,9 +56,20 @@ type AddOnOptions = {
   privateMode: boolean;
   fromDate: string;
   toDate: string;
+  groupsFilter?: string;
+  institutionsFilter?: string;
+  investmentsFilter?: string;
 };
 
-const OPTION_FIELDS = ['currency', 'privateMode', 'fromDate', 'toDate'];
+const OPTION_FIELDS = [
+  'currency',
+  'privateMode',
+  'fromDate',
+  'toDate',
+  'groupsFilter',
+  'institutionsFilter',
+  'investmentsFilter',
+];
 
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
