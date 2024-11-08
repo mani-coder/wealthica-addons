@@ -293,7 +293,7 @@ export default function App() {
     setLoadingOnUpdate(false);
   }
 
-  function loadPortfolioData(options) {
+  function loadPortfolioData(options: AddOnOptions) {
     console.debug('Loading portfolio data.');
     const query = {
       from: options.fromDate,
@@ -315,7 +315,7 @@ export default function App() {
       });
   }
 
-  function loadPositions(options) {
+  function loadPositions(options: AddOnOptions) {
     console.debug('Loading positions data.');
     const query = {
       assets: false,
@@ -335,7 +335,7 @@ export default function App() {
       });
   }
 
-  function loadInstitutionsData(options) {
+  function loadInstitutionsData(options: AddOnOptions) {
     console.debug('Loading institutions data..');
     const query = {
       assets: false,
@@ -361,7 +361,7 @@ export default function App() {
       });
   }
 
-  function loadTransactions(options) {
+  function loadTransactions(options: AddOnOptions) {
     console.debug('Loading transactions data.');
     const fromDate = options.fromDate;
     const query = {
