@@ -108,7 +108,10 @@ export default function App() {
         const updatedOptions = updateOptions(addOnOptionsRef.current, options);
         if (updatedOptions && Object.keys(updatedOptions).length) {
           setLoadingOnUpdate(true);
-          console.debug('Handling addon update - changed options: ', { updateOptions, addOnOptions });
+          console.debug('Handling addon update - changed options: ', {
+            updatedOptions,
+            addOnOptions: addOnOptionsRef.current,
+          });
           load();
           trackEvent('update');
         }
