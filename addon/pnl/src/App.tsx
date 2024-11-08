@@ -61,15 +61,9 @@ type AddOnOptions = {
   investmentsFilter?: string;
 };
 
-const OPTION_FIELDS = [
-  'currency',
-  'privateMode',
-  'fromDate',
-  'toDate',
-  'groupsFilter',
-  'institutionsFilter',
-  'investmentsFilter',
-];
+const MANDATORY_OPTIONS = ['currency', 'privateMode', 'fromDate', 'toDate'];
+const OPTIONAL_OPTIONS = ['groupsFilter', 'institutionsFilter', 'investmentsFilter'];
+const OPTIONS = [...MANDATORY_OPTIONS, ...OPTIONAL_OPTIONS];
 
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
@@ -88,8 +82,9 @@ export default function App() {
       if (!_addOnOptions) return;
 
       const changedOptions: Partial<AddOnOptions> = {};
-      OPTION_FIELDS.forEach((field) => {
-        if (options[field] && options[field] !== _addOnOptions[field]) {
+      OPTIONS.forEach((field) => {
+        const value = options[field];
+        if ((value || OPTIONAL_OPTIONS.includes(field)) && options[field] !== _addOnOptions[field]) {
           _addOnOptions[field] = options[field];
           changedOptions[field] = options[field];
         }
