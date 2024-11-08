@@ -78,11 +78,12 @@ export default function App() {
 
       const changedOptions: Partial<AddOnOptions> = {};
       OPTION_FIELDS.forEach((field) => {
-        if (options[field] !== _addOnOptions[field]) {
+        if (options[field] && options[field] !== _addOnOptions[field]) {
           _addOnOptions[field] = options[field];
           changedOptions[field] = options[field];
         }
       });
+
       return changedOptions;
     }
 
@@ -92,8 +93,8 @@ export default function App() {
       );
 
       addon.on('init', (options) => {
-        console.debug('Addon initialization', options);
-        updateOptions(addOnOptionsRef.current, options);
+        const newOptions = updateOptions(addOnOptionsRef.current, options);
+        console.debug('Addon initialization', { options, newOptions });
         load();
         initTracking(options.authUser && options.authUser.id);
       });
