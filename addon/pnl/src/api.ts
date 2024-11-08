@@ -252,5 +252,5 @@ export const parseAccountTransactionsResponse = (response: any, currencies: Curr
 };
 
 export const parsePositionsResponse = (response: any): Position[] => {
-  return response.map((position) => position as Position);
+  return response.filter((position) => position.book_value >= 1).map((position) => position as Position);
 };
