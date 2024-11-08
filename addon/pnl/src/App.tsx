@@ -51,9 +51,18 @@ type State = {
 };
 type Record = { [K: string]: any };
 
+type AddOnOptions = {
+  currency: string;
+  privateMode: boolean;
+  fromDate: string;
+  toDate: string;
+};
+
+const OPTION_FIELDS = ['currency', 'privateMode', 'fromDate', 'toDate'];
+
 export default function App() {
   const currencyRef = useRef<Currencies>(new Currencies(DEFAULT_BASE_CURRENCY, {}));
-  const addOnOptionsRef = useRef<Record>({
+  const addOnOptionsRef = useRef<AddOnOptions>({
     currency: DEFAULT_BASE_CURRENCY,
     privateMode: false,
     fromDate: TRANSACTIONS_FROM_DATE,
@@ -63,13 +72,18 @@ export default function App() {
   const [newChangeLogsCount, setNewChangeLogsCount] = useState<number>();
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
-  const getAddon = (addOnOptionsRef: React.RefObject<Record>): any => {
-    function updateOptions(_addOnOptions: Record | null, options: Record) {
+  const getAddon = (addOnOptionsRef: React.RefObject<AddOnOptions>): any => {
+    function updateOptions(_addOnOptions: AddOnOptions | null, options: Record) {
       if (!_addOnOptions) return;
 
-      Object.keys(options).forEach((option) => {
-        _addOnOptions[option] = options[option];
+      const changedOptions: Partial<AddOnOptions> = {};
+      OPTION_FIELDS.forEach((field) => {
+        if (options[field] !== _addOnOptions[field]) {
+          _addOnOptions[field] = options[field];
+          changedOptions[field] = options[field];
+        }
       });
+      return changedOptions;
     }
 
     try {
@@ -91,11 +105,13 @@ export default function App() {
 
       addon.on('update', (options) => {
         // Update according to the received options
-        console.debug('Addon update - options: ', options);
-        setLoadingOnUpdate(true);
-        updateOptions(addOnOptionsRef.current, options);
-        load();
-        trackEvent('update');
+        const updatedOptions = updateOptions(addOnOptionsRef.current, options);
+        if (updatedOptions && Object.keys(updatedOptions).length) {
+          setLoadingOnUpdate(true);
+          console.debug('Handling addon update - changed options: ', { updateOptions, addOnOptions });
+          load();
+          trackEvent('update');
+        }
       });
 
       return addon;
