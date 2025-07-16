@@ -249,6 +249,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         institution: book[key].security.institution || '',
         investment: book[key].security.investment || '',
         securityId: book[key].security.id,
+        currency: book[key].security.currency,
         price: book[key].price,
         shares: book[key].shares,
         amount: book[key].price * book[key].shares,
@@ -270,13 +271,14 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
       return undefined;
     }
 
-    const header = ['Symbol', 'Institution', 'Investment', 'Security Id', 'Price', 'Shares', 'Amount'];
+    const header = ['Symbol', 'Institution', 'Investment', 'Security Id', 'Currency', 'Price', 'Shares', 'Amount'];
     const rows = openBook.map((row) =>
       [
         row.symbol,
         row.institution,
         row.investment,
         row.securityId,
+        row.currency,
         row.price.toFixed(3),
         row.shares.toFixed(3),
         row.amount.toFixed(2),
