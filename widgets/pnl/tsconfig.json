@@ -17,8 +17,8 @@
     "baseUrl": "./src",
     "noImplicitAny": false,
     "sourceMap": true,
+    "types": ["node"]
   },
   "include": ["src/**/*", "ambient.d.ts", "global.d.ts"],
-  "exclude": ["node_modules/*", "public/*"],
-  "types": [ "node" ]
+  "exclude": ["node_modules/*", "public/*"]
 }

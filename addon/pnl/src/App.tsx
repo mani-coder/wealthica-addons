@@ -388,11 +388,23 @@ export default function App() {
   async function loadStaticPortfolioData() {
     let institutionsData, portfolioData, positionsData, transactionsData;
     if (process.env.NODE_ENV === 'development') {
+      const importMock = async (file: string) => {
+        try {
+          // Using a dynamic import with template string prevents the bundler from requiring the file to exist at build-time.
+          // @ts-ignore –  dynamic path; typings not required for dev mocks
+          const module = await import(/* @vite-ignore */ `./mocks/prod/${file}`);
+          return module?.default;
+        } catch (err) {
+          console.debug(`[DEV] Mock file not found`, file);
+          return undefined;
+        }
+      };
+
       [institutionsData, portfolioData, positionsData, transactionsData] = await Promise.all([
-        import('./mocks/prod/institutions-prod.json').then((response) => response.default),
-        import('./mocks/prod/portfolio-prod.json').then((response) => response.default),
-        import('./mocks/prod/positions-prod.json').then((response) => response.default),
-        import('./mocks/prod/transactions-prod.json').then((response) => response.default),
+        importMock('institutions-prod.json'),
+        importMock('portfolio-prod.json'),
+        importMock('positions-prod.json'),
+        importMock('transactions-prod.json'),
       ]);
     }
 
