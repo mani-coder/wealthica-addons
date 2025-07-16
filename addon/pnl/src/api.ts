@@ -214,7 +214,11 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         splitRatio,
         originalType: transaction.type,
         securityType: transaction.security?.type,
-        security: transaction.security,
+        security: {
+          ...transaction.security,
+          institution: transaction.institution,
+          investment: transaction.investment,
+        },
       };
 
       return _transaction;

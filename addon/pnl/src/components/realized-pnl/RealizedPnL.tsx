@@ -88,7 +88,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
     }, {} as { [K: string]: Account });
   }, [accounts]);
 
-  const closedPositions = useMemo(() => {
+  const { closedPositions, openBook } = useMemo(() => {
     function closePosition(position: CurrentPosition, transaction: Transaction) {
       position.transactions.push(transaction);
 
@@ -241,11 +241,38 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         })),
     );
 
-    return closedPositions
-      .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
-      .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
-      .reverse();
+    const openBook = Object.keys(book)
+      .filter((key) => book[key].shares !== 0)
+      .map((key) => ({
+        symbol: key,
+        securityId: book[key].security.id,
+        price: book[key].price,
+        shares: book[key].shares,
+        amount: book[key].price * book[key].shares,
+      }));
+
+    return {
+      closedPositions: closedPositions
+        .filter((position) => position.date.isSameOrAfter(fromDate) && position.date.isSameOrBefore(toDate))
+        .filter((position) => position.buyPrice.toFixed(2) !== position.sellPrice.toFixed(2))
+        .reverse(),
+      openBook,
+    };
   }, [props.transactions, getValue, accountById, fromDate, toDate]);
+
+  // CSV download for Open Book
+  const csvUrl = useMemo(() => {
+    if (!openBook?.length) {
+      return undefined;
+    }
+
+    const header = ['Symbol', 'Security Id', 'Price', 'Shares', 'Amount'];
+    const rows = openBook.map((row) =>
+      [row.symbol, row.securityId, row.price.toFixed(3), row.shares.toFixed(3), row.amount.toFixed(2)].join(','),
+    );
+    const csvContent = [header.join(','), ...rows].join('\n');
+    return `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;
+  }, [openBook]);
 
   function getDefaultTypes(): TransactionType[] {
     return [closedPositions.length ? 'pnl' : incomeTransactions.length ? 'income' : 'expense'];
@@ -599,7 +626,14 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         />
       </Flex>
 
-      <Charts key={timeline} options={options} />
+      <div style={{ position: 'relative' }}>
+        <Charts key={timeline} options={options} />
+        {csvUrl && (
+          <Typography.Link href={csvUrl} download="open-book.csv" style={{ position: 'absolute', bottom: 8, right: 8 }}>
+            Download Open Book CSV
+          </Typography.Link>
+        )}
+      </div>
 
       <Flex width={1} justifyContent="center" py={2} mb={4}>
         <Radio.Group

@@ -44,6 +44,8 @@ export type SecurityTransaction = {
   type: string;
   name: string;
   symbol: string;
+  institution?: string;
+  investment?: string;
 };
 
 export type Transaction = {
