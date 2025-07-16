@@ -2,11 +2,17 @@
 # upload-transfers.sh - Create transfer transactions in Wealthica from a CSV file.
 #
 # CSV format (no spaces):
-# Symbol,Institution,Investment,Security Id,Price,Shares,Amount
-#   TTD,5bff...,5180...:rrsp:usd,59f9...,64.217,38.000,2440.25
+# Symbol,Institution,Investment,Security Id,Currency,Price,Shares,Amount
+#   TTD,5bff...,5180...:rrsp:usd,59f9...,usd,64.217,38.000,2440.25
 #
 # Usage:
-#   WEALTHICA_TOKEN=<token> ./upload-transfers.sh ~/Downloads/open-book.csv [YYYY-MM-DD]
+#   WEALTHICA_TOKEN=<token> ./upload-transfers.sh <csv_file> <IN|OUT> <YYYY-MM-DD> [run|dry] [SYMBOL1,SYMBOL2]
+#
+#   csv_file          Path to CSV exported from addon
+#   IN|OUT            Direction (IN = incoming, OUT = outgoing)
+#   YYYY-MM-DD        Transaction & settlement date
+#   run|dry           Optional. "run" to execute API calls, otherwise dry-run (default)
+#   symbol list       Optional. Comma-separated symbols to include
 #
 # Requirements:
 #   curl, jq
@@ -16,9 +22,16 @@ set -euo pipefail
 
 # Positional args
 CSV_FILE=${1:-}
-DIRECTION=${2:-OUT}
-TX_DATE=${3:-$(date +%F)}
+DIRECTION=${2:-}
+TX_DATE=${3:-}
 MODE=${4:-dry}
+SYMBOL_FILTER=${5:-}
+
+# Basic validation
+if [[ -z "$CSV_FILE" || -z "$DIRECTION" || -z "$TX_DATE" ]]; then
+  echo "Usage: WEALTHICA_TOKEN=<token> $0 <csv_file> <IN|OUT> <YYYY-MM-DD> [run|dry] [SYMBOL1,SYMBOL2]" >&2
+  exit 1
+fi
 
 # Determine execution mode
 EXECUTE=false
@@ -35,18 +48,30 @@ if [[ "$DIRECTION" != "IN" && "$DIRECTION" != "OUT" ]]; then
   exit 1
 fi
 
+# Validate date format YYYY-MM-DD and that it's a real date
+if ! [[ "$TX_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  echo "Error: date must be in YYYY-MM-DD format." >&2
+  exit 1
+fi
+# Use GNU or BSD date to validate
+if ! (date -d "$TX_DATE" "+%F" >/dev/null 2>&1 || date -j -f "%Y-%m-%d" "$TX_DATE" "+%Y-%m-%d" >/dev/null 2>&1); then
+  echo "Error: '$TX_DATE' is not a valid calendar date." >&2
+  exit 1
+fi
+
 # Determine sign multiplier (-1 for OUT, +1 for IN)
 SIGN_MULT="1"
 if [[ "$DIRECTION" == "OUT" ]]; then
   SIGN_MULT="-1"
 fi
 
-API_URL="https://app.wealthica.com/api/transactions"
-
-if [[ -z "$CSV_FILE" ]]; then
-  echo "Error: CSV file path required." >&2
-  exit 1
+# Parse symbol filter
+IFS=',' read -ra FILTER_SYMBOLS <<< "$SYMBOL_FILTER"
+if [[ -n "$SYMBOL_FILTER" ]]; then
+  echo "Filtering symbols: $SYMBOL_FILTER"
 fi
+
+API_URL="https://app.wealthica.com/api/transactions"
 
 if [[ ! -f "$CSV_FILE" ]]; then
   echo "Error: CSV file '$CSV_FILE' does not exist." >&2
@@ -70,7 +95,24 @@ tail -n +2 "$CSV_FILE" | while IFS=',' read -r SYMBOL INSTITUTION INVESTMENT SEC
   # Trim whitespace (in case)
   SYMBOL="${SYMBOL//\r/}"
 
-  QTY=$(awk -v s="$SHARES" -v m="$SIGN_MULT" 'BEGIN{printf("%.0f", s*m)}')
+  # Skip comment lines
+  if [[ "$SYMBOL" == \#* ]]; then
+    continue
+  fi
+
+  if [[ -n "$SYMBOL_FILTER" ]]; then
+    match=false
+    for sym in "${FILTER_SYMBOLS[@]}"; do
+      if [[ "$sym" == "$SYMBOL" ]]; then
+        match=true; break
+      fi
+    done
+    if [[ "$match" == false ]]; then
+      continue
+    fi
+  fi
+
+  QTY=$(awk -v s="$SHARES" -v m="$SIGN_MULT" 'BEGIN{printf("%.3f", s*m)}')
   AMT=$(awk -v a="$AMOUNT" -v m="$SIGN_MULT" 'BEGIN{printf("%.2f", a*m)}')
 
   JSON_BODY=$(jq -n \
