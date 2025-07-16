@@ -265,10 +265,6 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
 
   // CSV download for Open Book
   const csvUrl = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
     const debugEnabled = !!getLocalCache(DEBUG_LOCAL_STORAGE_KEY);
     if (!debugEnabled || !openBook?.length) {
       return undefined;
