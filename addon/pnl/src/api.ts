@@ -214,6 +214,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         splitRatio,
         originalType: transaction.type,
         securityType: transaction.security?.type,
+        security: transaction.security,
       };
 
       return _transaction;

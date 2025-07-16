@@ -8,7 +8,7 @@ import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
-import { Account, AccountTransaction, Transaction } from '../../types';
+import { Account, AccountTransaction, SecurityTransaction, Transaction } from '../../types';
 import { formatCurrency, formatMoney } from '../../utils/common';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
@@ -32,6 +32,7 @@ type CurrentPosition = {
   price: number;
   date: Dayjs;
   transactions: Transaction[];
+  security: SecurityTransaction;
 };
 
 type TransactionType = 'income' | 'pnl' | 'expense';
@@ -197,7 +198,13 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
       const key = `${transaction.account}-${transaction.symbol}`;
       let position = book[key];
       if (!position) {
-        position = { shares: 0, price: 0, date: transaction.date, transactions: [] };
+        position = {
+          shares: 0,
+          price: 0,
+          date: transaction.date,
+          transactions: [],
+          security: transaction.security,
+        };
         book[key] = position;
       }
 
@@ -226,7 +233,12 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
       '[DEBUG] Open Book',
       Object.keys(book)
         .filter((key) => book[key].shares !== 0)
-        .map((key) => ({ symbol: key, amount: book[key].price * book[key].shares, ...book[key] })),
+        .map((key) => ({
+          symbol: key,
+          securityId: book[key].security.id,
+          amount: book[key].price * book[key].shares,
+          ...book[key],
+        })),
     );
 
     return closedPositions

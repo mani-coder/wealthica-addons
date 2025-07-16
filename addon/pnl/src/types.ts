@@ -38,6 +38,14 @@ export type Investment = {
   currency: string;
 };
 
+export type SecurityTransaction = {
+  id: string;
+  currency: string;
+  type: string;
+  name: string;
+  symbol: string;
+};
+
 export type Transaction = {
   id: string;
   date: Dayjs;
@@ -53,6 +61,7 @@ export type Transaction = {
   fees?: number;
   account: string;
   splitRatio?: number;
+  security: SecurityTransaction;
   securityType?: string;
   originalType: string;
 };
