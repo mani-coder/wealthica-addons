@@ -5,7 +5,8 @@
   "main": "public/index.html",
   "scripts": {
     "build": "./build.sh",
-    "deploy": "npm run build && npx firebase deploy --only hosting:mani-coder"
+    "deploy": "npm run build && npx firebase deploy --only hosting:mani-coder",
+    "download-prod-data": "ts-node scripts/download-prod-data.ts"
   },
   "repository": {
     "type": "git",
@@ -26,7 +27,10 @@
   },
   "homepage": "https://github.com/mani-coder/wealthica-addons#readme",
   "devDependencies": {
-    "prettier": "^2.3.1"
+    "prettier": "^2.3.1",
+    "typescript": "^4.9.5",
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.11.30"
   },
   "dependencies": {
     "http": "*"
