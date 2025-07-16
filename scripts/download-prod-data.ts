@@ -98,6 +98,16 @@ async function ensureOutputDir(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  const token = process.env.WEALTHICA_TOKEN;
+  if (!token) {
+    console.error(
+      `\nERROR: The WEALTHICA_TOKEN environment variable is not set.\n` +
+        `Please provide a valid token, e.g.\n` +
+        `  WEALTHICA_TOKEN=<your-token> npm run download-prod-data\n`,
+    );
+    process.exit(1);
+  }
+
   await ensureOutputDir();
 
   for (const { filename, url } of resources) {
@@ -116,4 +126,4 @@ async function main(): Promise<void> {
 main().catch((err) => {
   console.error('Unexpected error:', err);
   process.exit(1);
-}); 
+});
