@@ -231,7 +231,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
     });
 
     console.debug(
-      '[DEBUG] Open Book',
+      `[DEBUG] Open Book, csv download enabled: ${getLocalCache(DEBUG_LOCAL_STORAGE_KEY)}`,
       Object.keys(book)
         .filter((key) => book[key].shares !== 0)
         .map((key) => ({
@@ -264,13 +264,12 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
     };
   }, [props.transactions, getValue, accountById, fromDate, toDate]);
 
-  // CSV download for Open Book
-  const csvUrl = useMemo(() => {
+  const enableOpenBookCsvDownload = useMemo(() => {
     const debugEnabled = !!getLocalCache(DEBUG_LOCAL_STORAGE_KEY);
-    if (!debugEnabled || !openBook?.length) {
-      return undefined;
-    }
+    return debugEnabled && openBook?.length;
+  }, [openBook]);
 
+  const computeCsvUrl = useCallback(() => {
     const header = ['Symbol', 'Institution', 'Investment', 'Security Id', 'Currency', 'Price', 'Shares', 'Amount'];
     const rows = openBook.map((row) =>
       [
@@ -642,8 +641,12 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
 
       <div style={{ position: 'relative' }}>
         <Charts key={timeline} options={options} />
-        {csvUrl && (
-          <Typography.Link href={csvUrl} download="open-book.csv" style={{ position: 'absolute', bottom: 8, right: 8 }}>
+        {enableOpenBookCsvDownload && (
+          <Typography.Link
+            href={computeCsvUrl()}
+            download="open-book.csv"
+            style={{ position: 'absolute', bottom: 8, right: 8 }}
+          >
             Download Open Book CSV
           </Typography.Link>
         )}
