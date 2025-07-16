@@ -6,7 +6,8 @@ import * as Highcharts from 'highcharts';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Flex } from 'rebass';
 import { trackEvent } from '../../analytics';
-import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../../constants';
+import { DATE_DISPLAY_FORMAT, DATE_FORMAT, DEBUG_LOCAL_STORAGE_KEY } from '../../constants';
+import { getLocalCache } from '../../utils/common';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction, SecurityTransaction, Transaction } from '../../types';
 import { formatCurrency, formatMoney } from '../../utils/common';
@@ -244,7 +245,9 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
     const openBook = Object.keys(book)
       .filter((key) => book[key].shares !== 0)
       .map((key) => ({
-        symbol: key,
+        symbol: book[key].security.symbol || key,
+        institution: book[key].security.institution || '',
+        investment: book[key].security.investment || '',
         securityId: book[key].security.id,
         price: book[key].price,
         shares: book[key].shares,
@@ -262,13 +265,26 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
 
   // CSV download for Open Book
   const csvUrl = useMemo(() => {
-    if (!openBook?.length) {
+    if (typeof window === 'undefined') {
       return undefined;
     }
 
-    const header = ['Symbol', 'Security Id', 'Price', 'Shares', 'Amount'];
+    const debugEnabled = !!getLocalCache(DEBUG_LOCAL_STORAGE_KEY);
+    if (!debugEnabled || !openBook?.length) {
+      return undefined;
+    }
+
+    const header = ['Symbol', 'Institution', 'Investment', 'Security Id', 'Price', 'Shares', 'Amount'];
     const rows = openBook.map((row) =>
-      [row.symbol, row.securityId, row.price.toFixed(3), row.shares.toFixed(3), row.amount.toFixed(2)].join(','),
+      [
+        row.symbol,
+        row.institution,
+        row.investment,
+        row.securityId,
+        row.price.toFixed(3),
+        row.shares.toFixed(3),
+        row.amount.toFixed(2),
+      ].join(','),
     );
     const csvContent = [header.join(','), ...rows].join('\n');
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`;

@@ -20,6 +20,9 @@ export const TYPE_TO_COLOR = {
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';
 export const CURRENCY_DISPLAY_CACHE_KEY = '__current_display_cache__';
 
+// LocalStorage key that, when present, enables developer/debug-specific UI features
+export const DEBUG_LOCAL_STORAGE_KEY = '__debug__';
+
 export enum TabKeysEnum {
   PNL = 'pnl',
   HOLDINGS = 'holdings',
