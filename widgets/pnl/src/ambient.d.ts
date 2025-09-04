@@ -37,3 +37,8 @@ declare module "*.webp" {
 	const value: string;
 	export = value;
 }
+
+declare module "*.svelte" {
+	import { SvelteComponentTyped } from "svelte";
+	export default class extends SvelteComponentTyped<any, any, any> {}
+}
