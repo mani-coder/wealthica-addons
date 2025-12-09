@@ -23,10 +23,13 @@ interface Resource {
   url: string;
 }
 
+// Generate today's date in YYYY-MM-DD format
+const today = new Date().toISOString().split('T')[0];
+
 const resources: Resource[] = [
   {
     filename: 'portfolio-prod.json',
-    url: 'https://app.wealthica.com/api/portfolio?from=2010-01-01&to=2025-07-15&assets=false',
+    url: `https://app.wealthica.com/api/portfolio?from=2010-01-01&to=${today}&assets=false`,
   },
   {
     filename: 'institutions-prod.json',
