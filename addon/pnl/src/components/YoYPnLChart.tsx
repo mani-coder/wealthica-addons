@@ -126,6 +126,11 @@ function YoYPnLChart(props: Props) {
 
     const lastDate = currentPortfolio.date;
 
+    // Calculate the time range between earliest and latest portfolio dates
+    const earliestPortfolioDate = props.portfolios.length > 0 ? dayjs(props.portfolios[0].date) : dayjs(lastDate);
+    const dataRangeMonths = dayjs(lastDate).diff(earliestPortfolioDate, 'months', true);
+    const showShortPeriods = dataRangeMonths < 12;
+
     const portfolioKeys = new Set();
     const portfolioValues: {
       id: string;
@@ -135,20 +140,22 @@ function YoYPnLChart(props: Props) {
       endPortfolio: Portfolio;
     }[] = [];
 
-    [
+    const timePeriods = [
       { id: '1D', label: '1 Day', date: getPreviousWeekday(lastDate) },
-      { id: '1W', label: '1 Week', date: dayjs(lastDate).subtract(1, 'weeks') },
-      { id: '1M', label: '1 Month', date: dayjs(lastDate).subtract(1, 'months').add(1, 'days') },
-      { id: '3M', label: '3 Months', date: dayjs(lastDate).subtract(3, 'months').add(1, 'days') },
-      { id: '6M', label: '6 Months', date: dayjs(lastDate).subtract(6, 'months').add(1, 'days') },
-      { id: '1Y', label: '1 Year', date: dayjs(lastDate).subtract(1, 'years').add(1, 'days') },
-      { id: '2Y', label: '2 Years', date: dayjs(lastDate).subtract(2, 'years').add(1, 'days') },
-      { id: '3Y', label: '3 Years', date: dayjs(lastDate).subtract(3, 'years').add(1, 'days') },
-      { id: '5Y', label: '5 Years', date: dayjs(lastDate).subtract(5, 'years').add(1, 'days') },
+      ...(showShortPeriods
+        ? [
+            { id: '1M', label: '1 Month', date: dayjs(lastDate).subtract(1, 'months').add(1, 'days') },
+            { id: '3M', label: '3 Months', date: dayjs(lastDate).subtract(3, 'months').add(1, 'days') },
+            { id: '6M', label: '6 Months', date: dayjs(lastDate).subtract(6, 'months').add(1, 'days') },
+            { id: '1Y', label: '1 Year', date: dayjs(lastDate).subtract(1, 'years').add(1, 'days') },
+          ]
+        : []),
       { id: 'MTD', label: 'Month To Date', date: dayjs(lastDate).startOf('month') },
       { id: 'WTD', label: 'Week To Date', date: dayjs(lastDate).startOf('week') },
       { id: 'YTD', label: 'Year To Date', date: dayjs(lastDate).startOf('year') },
-    ].map((value) => {
+    ];
+
+    timePeriods.map((value) => {
       const portfolio = getNearestPortfolioDate(value.date.format(DATE_FORMAT));
       if (portfolio) {
         const key = `${portfolio.date}-${currentPortfolio.date}`;
@@ -166,8 +173,14 @@ function YoYPnLChart(props: Props) {
       return null;
     });
 
-    [1, 2, 3, 4].forEach((value) => {
-      const year = dayjs(lastDate).subtract(value, 'years').year();
+    // Calculate how many fiscal years we can go back based on available data
+    const currentYear = dayjs(lastDate).year();
+    const earliestYear = earliestPortfolioDate.year();
+    const yearsToGoBack = currentYear - earliestYear;
+
+    // Generate fiscal years for all available years
+    for (let i = 1; i <= yearsToGoBack; i++) {
+      const year = dayjs(lastDate).subtract(i, 'years').year();
       const startDate = dayjs().year(year).startOf('year');
       const startPortfolio = getNearestPortfolioDate(startDate.format(DATE_FORMAT));
       const endPortfolio = getNearestPortfolioDate(dayjs().year(year).endOf('year').format(DATE_FORMAT));
@@ -185,7 +198,7 @@ function YoYPnLChart(props: Props) {
           portfolioKeys.add(key);
         }
       }
-    });
+    }
 
     const data = portfolioValues
       .filter((value) => value.endPortfolio.date !== value.startPortfolio.date)
