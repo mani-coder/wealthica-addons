@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { VariableSizeList as List } from 'react-window';
 
 import { trackEvent } from '../analytics';
-import { CHANGE_LOG_DATE_CACHE_KEY } from '../constants';
 import AutoReSizer from '../hooks/useResizeHook';
-import { getLocalCache, setLocalCache } from '../utils/common';
+import {
+  getNewChangeLogsCount as getNewChangeLogsCountHelper,
+  setChangeLogViewDate as setChangeLogViewDateHelper,
+} from '../utils/changeLogHelpers';
 
 const LOGS: {
   title: string;
@@ -294,15 +296,13 @@ export default function ChangeLog() {
   );
 }
 
+// Re-export helper functions for backward compatibility
+// eslint-disable-next-line react-refresh/only-export-components
 export function getNewChangeLogsCount(): number {
-  const changeLogDate = getLocalCache(CHANGE_LOG_DATE_CACHE_KEY);
-  if (changeLogDate) {
-    const date = dayjs(changeLogDate);
-    return LOGS.filter((log) => dayjs(log.date).isAfter(date)).length;
-  }
-  return LOGS.length;
+  return getNewChangeLogsCountHelper(LOGS);
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function setChangeLogViewDate() {
-  setLocalCache(CHANGE_LOG_DATE_CACHE_KEY, LOGS[0].date);
+  setChangeLogViewDateHelper(LOGS);
 }
