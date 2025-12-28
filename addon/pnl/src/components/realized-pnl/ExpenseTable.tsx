@@ -1,7 +1,7 @@
 import { Table, TableColumnProps, Typography } from 'antd';
 import { Dayjs } from 'dayjs';
-import _ from 'lodash';
 import React from 'react';
+import { startCase, sumBy } from '../../utils/lodash-replacements';
 import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, AccountTransaction } from '../../types';
@@ -45,10 +45,10 @@ const ExpenseTable = React.memo(
           key: 'type',
           title: 'Type',
           dataIndex: 'type',
-          render: (type) => <Typography.Text strong>{_.startCase(type)}</Typography.Text>,
+          render: (type) => <Typography.Text strong>{startCase(type)}</Typography.Text>,
           width: 100,
           filters: Array.from(new Set(transactions.map((t) => t.type))).map((value) => ({
-            text: _.startCase(value),
+            text: startCase(value),
             value: value,
           })),
           onFilter: (value, transaction) => transaction.type.indexOf(value as any) === 0,
@@ -83,7 +83,7 @@ const ExpenseTable = React.memo(
               DATE_DISPLAY_FORMAT,
             )}`}
             summary={(transactions) => {
-              const total = _.sumBy(transactions, 'amount');
+              const total = sumBy(transactions, 'amount');
               return (
                 <Table.Summary fixed>
                   <Table.Summary.Row style={{ backgroundColor: '#fff1f0' }}>

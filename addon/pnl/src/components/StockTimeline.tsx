@@ -1,7 +1,7 @@
 import { Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { startCase } from '../utils/lodash-replacements';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
@@ -210,7 +210,7 @@ function StockTimeline(props: Props) {
     const _type = type === 'transfer' ? 'buy' : type;
 
     return {
-      name: _.startCase(type),
+      name: startCase(type),
       shape: 'squarepin',
       type: 'flags',
       onSeries: onSeries ? undefined : 'dataseries',
@@ -262,8 +262,8 @@ function StockTimeline(props: Props) {
             x: transaction.date.valueOf(),
             title: isBuySell ? Math.round(shares).toLocaleString() : type.charAt(0).toUpperCase(),
             text: isBuySell
-              ? `${_.startCase(type)}: ${shares}@${transaction.price}`
-              : `${_.startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
+              ? `${startCase(type)}: ${shares}@${transaction.price}`
+              : `${startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
             account: getAccountName(transaction.account),
           };
         }),

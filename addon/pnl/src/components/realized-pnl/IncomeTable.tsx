@@ -1,7 +1,7 @@
 import { Table, TableColumnProps, Typography } from 'antd';
-import _ from 'lodash';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
+import { startCase, sumBy } from '../../utils/lodash-replacements';
 import { Account, AccountTransaction } from '../../types';
 import { formatDate, formatMoney } from '../../utils/common';
 import Collapsible from '../Collapsible';
@@ -61,9 +61,9 @@ const IncomeTable = React.memo(
           title: 'Type',
           dataIndex: 'type',
           width: 125,
-          render: (type) => <Typography.Text strong>{_.startCase(type || '-')}</Typography.Text>,
+          render: (type) => <Typography.Text strong>{startCase(type || '-')}</Typography.Text>,
           filters: Array.from(new Set(transactions.map((t) => t.type))).map((value) => ({
-            text: _.startCase(value),
+            text: startCase(value),
             value: value,
           })),
           onFilter: (value, transaction) => transaction.type.indexOf(value as any) === 0,
@@ -96,7 +96,7 @@ const IncomeTable = React.memo(
             dataSource={transactions}
             columns={getColumns()}
             summary={(transactions) => {
-              const total = _.sumBy(transactions, 'amount');
+              const total = sumBy(transactions, 'amount');
               return (
                 <Table.Summary fixed>
                   <Table.Summary.Row style={{ backgroundColor: '#f6ffed' }}>

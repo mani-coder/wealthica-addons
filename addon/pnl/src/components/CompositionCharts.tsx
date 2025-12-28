@@ -1,7 +1,7 @@
 import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
-import { startCase } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
+import { startCase } from '../utils/lodash-replacements';
 
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';

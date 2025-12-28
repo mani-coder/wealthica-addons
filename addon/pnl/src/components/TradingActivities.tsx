@@ -1,7 +1,7 @@
 import { DatePicker, Space, Table, TableColumnsType, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import _ from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
+import { range } from '../utils/lodash-replacements';
 
 import useCurrency from '../hooks/useCurrency';
 import { Position, Transaction } from '../types';
@@ -151,7 +151,7 @@ export default function TradingActivities(props: Props) {
   const presets = useMemo(() => {
     const dates = [
       dayjs().startOf('year'),
-      ..._.range(6).map((num) => dayjs().subtract(num, 'month').startOf('month')),
+      ...range(6).map((num) => dayjs().subtract(num, 'month').startOf('month')),
     ].reduce((hash: { [key: string]: any }, date: Dayjs) => {
       hash[date.format("MMMM' YY")] = date;
       return hash;

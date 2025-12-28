@@ -1,7 +1,7 @@
 import { Addon } from '@wealthica/wealthica.js/index';
 import { Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
-import _ from 'lodash';
 import { useEffect, useRef, useState } from 'react';
+import { debounce } from './utils/lodash-replacements';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
 import {
@@ -180,7 +180,7 @@ export default function App() {
     return values;
   }
 
-  const load = _.debounce(() => loadData(), 100, { leading: true });
+  const load = debounce(() => loadData(), 100, { leading: true });
 
   async function loadData() {
     console.debug('[DEBUG] Load data begin --', { addOnOptions });

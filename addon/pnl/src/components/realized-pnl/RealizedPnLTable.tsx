@@ -1,8 +1,8 @@
 import QuestionCircleTwoTone from '@ant-design/icons/QuestionCircleTwoTone';
 import { Table, TableColumnProps, TableColumnType, Tooltip, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import _ from 'lodash';
 import React from 'react';
+import { sumBy } from '../../utils/lodash-replacements';
 
 import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
@@ -210,9 +210,9 @@ const RealizedPnLTable = React.memo(
             pagination={false}
             dataSource={closedPositions}
             summary={(positions) => {
-              const totalPnL = _.sumBy(positions, 'pnl');
-              const totalBuyCost = _.sumBy(positions, 'buyCost');
-              const totalSellCost = _.sumBy(positions, 'sellCost');
+              const totalPnL = sumBy(positions, 'pnl');
+              const totalBuyCost = sumBy(positions, 'buyCost');
+              const totalSellCost = sumBy(positions, 'sellCost');
 
               return (
                 <Table.Summary fixed>
