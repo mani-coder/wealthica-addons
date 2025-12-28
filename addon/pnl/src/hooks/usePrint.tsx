@@ -30,7 +30,6 @@ export function usePrint({ title, children }: Props) {
       setPrinting(true);
 
       if (render) {
-         
         ReactDOM.render(component, document.getElementById('pnl-addon-printable-content')!);
       }
 

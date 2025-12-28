@@ -32,7 +32,7 @@ export function range(n: number): number[] {
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
-  options?: { leading?: boolean; trailing?: boolean }
+  options?: { leading?: boolean; trailing?: boolean },
 ): T & { cancel: () => void } {
   let timeout: NodeJS.Timeout | null = null;
   let lastArgs: any[] | null = null;
@@ -43,6 +43,7 @@ export function debounce<T extends (...args: any[]) => any>(
 
   const debounced = function (this: any, ...args: any[]) {
     lastArgs = args;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
 
     const shouldCallNow = leading && !timeout;

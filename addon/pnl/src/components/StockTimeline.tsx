@@ -28,10 +28,13 @@ function StockTimeline(props: Props) {
   const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
 
   const accountById = useMemo(() => {
-    return props.accounts.reduce((hash: { [key: string]: any }, account) => {
-      hash[account.id] = account;
-      return hash;
-    }, {} as { [K: string]: Account });
+    return props.accounts.reduce(
+      (hash: { [key: string]: any }, account) => {
+        hash[account.id] = account;
+        return hash;
+      },
+      {} as { [K: string]: Account },
+    );
   }, [props.accounts]);
 
   function getAccountName(accountId: string) {
@@ -127,7 +130,10 @@ function StockTimeline(props: Props) {
     }
 
     const data: { x: number; y: number }[] = [];
-    let minPrice: number | undefined, maxPrice: number | undefined, minTimestamp: number | undefined, maxTimestamp: number | undefined;
+    let minPrice: number | undefined,
+      maxPrice: number | undefined,
+      minTimestamp: number | undefined,
+      maxTimestamp: number | undefined;
     securityTimeline.forEach((_data, index) => {
       const timestamp = _data.timestamp.valueOf();
       const closePrice = _data.closePrice;
@@ -293,17 +299,18 @@ function StockTimeline(props: Props) {
         text: props.isPrivateMode
           ? 'Shares: -, Market Value: -, Profit: -'
           : `Shares: ${props.position.quantity}@${formatMoney(
-            props.position.investments.reduce((cost, investment) => {
-              return cost + investment.book_value;
-            }, 0) / props.position.quantity,
-          )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
-            props.position.market_value,
-            2,
-          )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
-            props.position.gain_percent * 100,
-            2,
-          )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
-          }`,
+              props.position.investments.reduce((cost, investment) => {
+                return cost + investment.book_value;
+              }, 0) / props.position.quantity,
+            )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
+              props.position.market_value,
+              2,
+            )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
+              props.position.gain_percent * 100,
+              2,
+            )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${
+              dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
+            }`,
         style: {
           color: '#1F2A33',
           fontWeight: 'bold',

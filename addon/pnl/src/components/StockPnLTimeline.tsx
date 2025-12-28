@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
- 
+
 import { Empty, Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -34,10 +34,13 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
   const [prices, setPrices] = useState<StockPrice[]>([]);
 
   const accountById = useMemo(() => {
-    return accounts.reduce((hash, account) => {
-      hash[account.id] = account;
-      return hash;
-    }, {} as { [K: string]: Account });
+    return accounts.reduce(
+      (hash, account) => {
+        hash[account.id] = account;
+        return hash;
+      },
+      {} as { [K: string]: Account },
+    );
   }, [accounts]);
 
   function getAccountName(accountId: string) {
@@ -147,10 +150,10 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
             isBuy && newPositionShares
               ? (lastBuySell.price * lastBuySell.shares + tPrice * t.shares) / newPositionShares
               : isSplit
-              ? lastBuySell.price * splitRatio
-              : newPositionShares
-              ? lastBuySell.price
-              : 0,
+                ? lastBuySell.price * splitRatio
+                : newPositionShares
+                  ? lastBuySell.price
+                  : 0,
           shares: newPositionShares,
           date,
         };
@@ -184,10 +187,13 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         book.all.push(allEntry);
       });
 
-    const allBook = book.all.reduce((hash, entry) => {
-      hash[entry.date] = { shares: entry.shares, price: entry.price };
-      return hash;
-    }, {} as { [K: string]: { shares: number; price: number } });
+    const allBook = book.all.reduce(
+      (hash, entry) => {
+        hash[entry.date] = { shares: entry.shares, price: entry.price };
+        return hash;
+      },
+      {} as { [K: string]: { shares: number; price: number } },
+    );
     let data: any[] = [];
     let _entry: any;
     prices.forEach((price) => {

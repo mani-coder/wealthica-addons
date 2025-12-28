@@ -311,11 +311,11 @@ export default function CompositionCharts(props: Props) {
             const point = this.options as any;
             return `<table>
           <tr><td>Value</td><td style="text-align: right;" class="position-tooltip-value">${point.baseCurrency} ${
-              point.displayValue
-            }</td></tr>
+            point.displayValue
+          }</td></tr>
           <tr><td>Total Value</td><td style="text-align: right;" class="position-tooltip-value">${point.baseCurrency} ${
-              point.totalValue
-            }</td></tr>
+            point.totalValue
+          }</td></tr>
           <tr><td>Unrealized P/L ($) </td><td style="text-align: right;" style="color:${
             point.pnlColor
           };" class="position-tooltip-value">${point.gain}</td></tr>

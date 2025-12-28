@@ -83,10 +83,13 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('type');
 
   const accountById = useMemo(() => {
-    return accounts.reduce((hash, account) => {
-      hash[account.id] = account;
-      return hash;
-    }, {} as { [K: string]: Account });
+    return accounts.reduce(
+      (hash, account) => {
+        hash[account.id] = account;
+        return hash;
+      },
+      {} as { [K: string]: Account },
+    );
   }, [accounts]);
 
   const { closedPositions, openBook } = useMemo(() => {
@@ -374,12 +377,12 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
           type === 'pnl'
             ? 'Realized P&L'
             : type === 'expense'
-            ? 'Expenses (Interest, Fee)'
-            : type === 'income'
-            ? 'Income (Dividends)'
-            : `${types.includes('pnl') ? `P&L  ${types.includes('income') ? '+' : ''} ` : ''}${
-                types.includes('income') ? 'Income' : ''
-              }${types.includes('expense') ? ' - Expenses' : ''}`;
+              ? 'Expenses (Interest, Fee)'
+              : type === 'income'
+                ? 'Income (Dividends)'
+                : `${types.includes('pnl') ? `P&L  ${types.includes('income') ? '+' : ''} ` : ''}${
+                    types.includes('income') ? 'Income' : ''
+                  }${types.includes('expense') ? ' - Expenses' : ''}`;
         const color =
           type === 'pnl' ? '#b37feb' : type === 'expense' ? '#ff7875' : type === 'income' ? '#95de64' : '#5cdbd3';
         const _series: Highcharts.SeriesColumnOptions = {

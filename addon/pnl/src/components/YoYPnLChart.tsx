@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-target-blank */
 /* eslint-disable react-hooks/exhaustive-deps */
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';

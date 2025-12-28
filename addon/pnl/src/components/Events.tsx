@@ -120,19 +120,19 @@ export function Events({ positions }: { positions: Position[] }) {
                 item.type === 'earning'
                   ? 'magenta'
                   : item.type === 'ex-dividend'
-                  ? 'blue'
-                  : item.type === 'pay-dividend'
-                  ? 'green'
-                  : 'geekblue'
+                    ? 'blue'
+                    : item.type === 'pay-dividend'
+                      ? 'green'
+                      : 'geekblue'
               }
             >
               {item.type === 'earning'
                 ? ''
                 : item.type === 'ex-dividend'
-                ? 'ED: '
-                : item.type === 'pay-dividend'
-                ? 'PD: '
-                : 'RD: '}
+                  ? 'ED: '
+                  : item.type === 'pay-dividend'
+                    ? 'PD: '
+                    : 'RD: '}
               {item.ticker}
             </Tag>
           </div>

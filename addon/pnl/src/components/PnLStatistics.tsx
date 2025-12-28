@@ -15,10 +15,12 @@ function StatisticBox(props: StatisticProps & { tooltip?: string }) {
         title={
           props.tooltip ? (
             <Tooltip title={props.tooltip}>
-              <span className="text-xs text-gray-600">{props.title} <QuestionCircleOutlined className='text-gray-400 text-[10px]' /></span>
+              <span className="text-xs text-gray-600">
+                {props.title} <QuestionCircleOutlined className="text-gray-400 text-[10px]" />
+              </span>
             </Tooltip>
           ) : (
-            <span className='text-xs text-gray-600'>{props.title}</span>
+            <span className="text-xs text-gray-600">{props.title}</span>
           )
         }
       />
@@ -67,7 +69,10 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
   console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, portfolios });
 
   return (
-    <Card styles={{ body: { backgroundColor: '#ecfdf5', padding: '12px 16px' } }} className="rounded-md border-[#a7f3d0]">
+    <Card
+      styles={{ body: { backgroundColor: '#ecfdf5', padding: '12px 16px' } }}
+      className="rounded-md border-[#a7f3d0]"
+    >
       <div className="flex w-full justify-between flex-wrap">
         <StatisticBox
           title="Current Portfolio Value"
@@ -126,7 +131,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
 
         {startPortfolio && (
           <>
-            <Divider style={{ marginTop: 8, marginBottom: 8 }} />
+            <Divider className="my-2" />
 
             <div className="flex w-full justify-center mb-1">
               <Typography.Text strong style={{ fontSize: '13px' }}>
@@ -153,7 +158,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
             <StatisticBox
               title="P/L $ Change"
               tooltip={`P/L Value change from ${fromDateDisplay} to ${toDateDisplay}`}
-              valueStyle={{ color: timelinePnlChangeValue ? timelinePnlChangeValue >= 0 ? 'green' : 'red' : 'grey' }}
+              valueStyle={{ color: timelinePnlChangeValue ? (timelinePnlChangeValue >= 0 ? 'green' : 'red') : 'grey' }}
               value={privateMode ? '--' : timelinePnlChangeValue}
               precision={privateMode ? undefined : 2}
               prefix="$"

@@ -63,8 +63,8 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
                 account.type
                   ? account.type
                   : account.name && account.name.includes('-')
-                  ? account.name.split('-')[1].trim()
-                  : account.name,
+                    ? account.name.split('-')[1].trim()
+                    : account.name,
               ),
               groups: account.groups,
               cash: account.cash,

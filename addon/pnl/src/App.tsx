@@ -256,14 +256,17 @@ export default function App() {
 
     // XIRR computation
     let xirrRate = 0;
-    const values = Object.keys(cashFlowByDate).reduce((transactions, date) => {
-      const portfolio = cashFlowByDate[date];
-      const amount = portfolio.withdrawal - portfolio.deposit;
-      if (amount !== 0) {
-        transactions.push({ amount, when: new Date(date) });
-      }
-      return transactions;
-    }, [] as { amount: number; when: Date }[]);
+    const values = Object.keys(cashFlowByDate).reduce(
+      (transactions, date) => {
+        const portfolio = cashFlowByDate[date];
+        const amount = portfolio.withdrawal - portfolio.deposit;
+        if (amount !== 0) {
+          transactions.push({ amount, when: new Date(date) });
+        }
+        return transactions;
+      },
+      [] as { amount: number; when: Date }[],
+    );
 
     const portfolio = portfolios[portfolios.length - 1];
     if (portfolio.value) {
@@ -391,10 +394,9 @@ export default function App() {
       const importMock = async (file: string) => {
         try {
           // Using a dynamic import with template string prevents the bundler from requiring the file to exist at build-time.
-          // @ts-ignore –  dynamic path; typings not required for dev mocks
           const module = await import(/* @vite-ignore */ `./mocks/prod/${file}`);
           return module?.default;
-        } catch (err) {
+        } catch {
           console.debug(`[DEV] Mock file not found`, file);
           return undefined;
         }
@@ -586,7 +588,9 @@ export default function App() {
                       children: (
                         <TradingActivities
                           fromDate={addOnOptions.fromDate}
-                          transactions={state.securityTransactions.filter((t) => ['buy', 'sell'].includes(t.originalType))}
+                          transactions={state.securityTransactions.filter((t) =>
+                            ['buy', 'sell'].includes(t.originalType),
+                          )}
                           positions={state.positions}
                         />
                       ),
@@ -606,7 +610,7 @@ export default function App() {
                     {
                       label: (
                         <Badge count={newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
-                          Latest Changes
+                          Change Log
                         </Badge>
                       ),
                       key: TabKeysEnum.CHANGE_LOG,

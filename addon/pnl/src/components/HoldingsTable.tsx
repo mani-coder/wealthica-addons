@@ -1,4 +1,3 @@
- 
 import { Table, TableColumnProps, Typography } from 'antd';
 import React from 'react';
 

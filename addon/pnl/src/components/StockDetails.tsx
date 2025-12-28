@@ -63,14 +63,16 @@ export default function StockDetails(props: Props) {
 
       <LabelValue
         label="Market Value"
-        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.market_value)
-          } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${
+          props.isPrivateMode ? '-' : formatMoney(position.market_value)
+        } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
       />
 
       <LabelValue
         label="Proft/Loss"
-        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
-          } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${
+          props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
+        } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
         valueProps={{ type: position.gain_percent > 0 ? 'success' : 'danger', strong: true }}
       />
       <LabelValue
@@ -87,7 +89,6 @@ export default function StockDetails(props: Props) {
           sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity,
         )} / ${formatMoney(position.security.last_price)}`}
       />
-
 
       <LabelValue
         label="Account"

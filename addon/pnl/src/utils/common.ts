@@ -130,7 +130,9 @@ export function getPreviousWeekday(date: any) {
 export function setLocalCache(name: string, value: string) {
   try {
     window.localStorage.setItem(name, value);
-  } catch {}
+  } catch {
+    console.error('Error setting local cache', name, value);
+  }
 }
 
 export function sumOf(...args: number[]) {
@@ -140,7 +142,9 @@ export function sumOf(...args: number[]) {
 export function getLocalCache(name: string) {
   try {
     return window.localStorage.getItem(name);
-  } catch {}
+  } catch {
+    console.error('Error getting local cache', name);
+  }
 }
 
 export function normalizeAccountType(type: string): string {

@@ -4,8 +4,5 @@ declare module 'xirr' {
     when: Date;
   }
 
-  export default function xirr(
-    transactions: XirrTransaction[],
-    guess?: number,
-  ): number | null;
+  export default function xirr(transactions: XirrTransaction[], guess?: number): number | null;
 }

@@ -268,9 +268,7 @@ function LogItem({ index, style }: { index: number; style: React.CSSProperties }
           visible={!!preview}
           onCancel={() => setPreview(undefined)}
         >
-          <div className="flex w-full justify-center mb-2">
-            {preview && <Image src={preview} preview={false} />}
-          </div>
+          <div className="flex w-full justify-center mb-2">{preview && <Image src={preview} preview={false} />}</div>
         </Modal>
       </Timeline.Item>
     </div>

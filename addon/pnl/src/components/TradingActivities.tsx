@@ -110,37 +110,40 @@ export default function TradingActivities(props: Props) {
         (transaction) =>
           transaction.date.isSameOrAfter(fromDate) && TRANSACTION_TYPES.includes(transaction.originalType),
       )
-      .reduce((hash: { [key: string]: any }, transaction) => {
-        const symbol = transaction.symbol;
-        if (!hash[symbol]) {
-          hash[symbol] = {
-            symbol,
-            ticker: transaction.ticker,
-            lastPrice: symbolPriceCache[symbol],
-            price: transaction.currencyAmount / transaction.shares,
-            currency: transaction.currency,
-            value: transaction.amount,
-            currencyValue: transaction.currencyAmount,
-            shares: transaction.shares,
-            accounts: { [transaction.account]: transaction.shares },
-          };
+      .reduce(
+        (hash: { [key: string]: any }, transaction) => {
+          const symbol = transaction.symbol;
+          if (!hash[symbol]) {
+            hash[symbol] = {
+              symbol,
+              ticker: transaction.ticker,
+              lastPrice: symbolPriceCache[symbol],
+              price: transaction.currencyAmount / transaction.shares,
+              currency: transaction.currency,
+              value: transaction.amount,
+              currencyValue: transaction.currencyAmount,
+              shares: transaction.shares,
+              accounts: { [transaction.account]: transaction.shares },
+            };
+            return hash;
+          }
+
+          const security = hash[symbol];
+          security.shares = security.shares + transaction.shares;
+          security.currencyValue =
+            security.currencyValue + transaction.currencyAmount * (transaction.type === 'buy' ? 1 : -1);
+          security.value = security.value + transaction.amount * (transaction.type === 'buy' ? 1 : -1);
+
+          if (!security.accounts[transaction.account]) {
+            security.accounts[transaction.account] = 0;
+          }
+          security.accounts[transaction.account] += transaction.shares;
+          security.price = security.currencyValue / security.shares;
+
           return hash;
-        }
-
-        const security = hash[symbol];
-        security.shares = security.shares + transaction.shares;
-        security.currencyValue =
-          security.currencyValue + transaction.currencyAmount * (transaction.type === 'buy' ? 1 : -1);
-        security.value = security.value + transaction.amount * (transaction.type === 'buy' ? 1 : -1);
-
-        if (!security.accounts[transaction.account]) {
-          security.accounts[transaction.account] = 0;
-        }
-        security.accounts[transaction.account] += transaction.shares;
-        security.price = security.currencyValue / security.shares;
-
-        return hash;
-      }, {} as { [K: string]: Security });
+        },
+        {} as { [K: string]: Security },
+      );
 
     return Object.values(securitiesCache)
       .map((security) => ({ ...security, shares: security.shares, price: Math.abs(security.price) }))
@@ -152,10 +155,13 @@ export default function TradingActivities(props: Props) {
     const dates = [
       dayjs().startOf('year'),
       ...range(6).map((num) => dayjs().subtract(num, 'month').startOf('month')),
-    ].reduce((hash: { [key: string]: any }, date: Dayjs) => {
-      hash[date.format("MMMM' YY")] = date;
-      return hash;
-    }, {} as { [K: string]: Dayjs });
+    ].reduce(
+      (hash: { [key: string]: any }, date: Dayjs) => {
+        hash[date.format("MMMM' YY")] = date;
+        return hash;
+      },
+      {} as { [K: string]: Dayjs },
+    );
     return Object.keys(dates)
       .map((label) => ({ label, value: dates[label] }))
       .sort((a, b) => (a.value.isSameOrAfter(b.value) ? -1 : 1));

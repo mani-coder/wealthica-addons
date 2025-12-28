@@ -1,6 +1,6 @@
 import { Alert } from 'antd';
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { trackEvent } from '../analytics';
 import { CURRENCY_DISPLAY_CACHE_KEY, DATE_FORMAT } from '../constants';
 import useCurrency from '../hooks/useCurrency';
@@ -8,8 +8,7 @@ import { formatDate, getLocalCache, setLocalCache } from '../utils/common';
 
 export default function CurrencyDisplayAlert({ currency }: { currency: string }) {
   const { baseCurrencyDisplay } = useCurrency();
-
-  const displayCurrencyAlert = useMemo(() => {
+  const [isDisplaying, setIsDisplaying] = useState(() => {
     const currencyDisplayCache = getLocalCache(CURRENCY_DISPLAY_CACHE_KEY);
     if (!currencyDisplayCache) {
       return true;
@@ -22,16 +21,17 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
 
       // If the currency has changed or the alert has expired
       return _currency !== currency || date.add(60, 'days').isBefore(dayjs());
-    } catch (error) {
+    } catch {
       return true;
     }
-  }, [currency]);
+  });
 
   function saveCurrencyDisplayInLocalCache() {
+    setIsDisplaying(false);
     setLocalCache(CURRENCY_DISPLAY_CACHE_KEY, JSON.stringify({ date: formatDate(dayjs(), DATE_FORMAT), currency }));
   }
 
-  return displayCurrencyAlert ? (
+  return isDisplaying ? (
     <div className="flex w-full justify-center items-center my-2 mb-2">
       <Alert
         className="w-full text-center"
