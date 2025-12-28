@@ -8,17 +8,17 @@ import { Portfolio, Position } from '../types';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
   return (
-    <div className="p-2 mr-6 mb-2">
+    <div className="p-1 mr-3 mb-1">
       <Statistic
         {...props}
-
+        valueStyle={{ fontSize: '20px', fontWeight: 600, ...props.valueStyle }}
         title={
           props.tooltip ? (
             <Tooltip title={props.tooltip}>
-              {props.title} <QuestionCircleOutlined className='text-gray-500' />
+              <span className="text-xs text-gray-600">{props.title} <QuestionCircleOutlined className='text-gray-400 text-[10px]' /></span>
             </Tooltip>
           ) : (
-            <span className='text-zinc-600'>{props.title}</span>
+            <span className='text-xs text-gray-600'>{props.title}</span>
           )
         }
       />
@@ -67,8 +67,8 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
   console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, portfolios });
 
   return (
-    <Card styles={{ body: { backgroundColor: '#d1fae5' } }} className="rounded-md border-[#6ee7b7]">
-      <div className="flex w-full justify-between flex-wrap mb-2">
+    <Card styles={{ body: { backgroundColor: '#ecfdf5', padding: '12px 16px' } }} className="rounded-md border-[#a7f3d0]">
+      <div className="flex w-full justify-between flex-wrap">
         <StatisticBox
           title="Current Portfolio Value"
           value={privateMode ? '--' : portfolio.value}
@@ -90,7 +90,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
           prefix={xirr >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />
 
-        <Divider style={{ marginTop: 12, marginBottom: 12 }} />
+        <Divider style={{ marginTop: 8, marginBottom: 8 }} />
 
         <StatisticBox
           title="All Time P&L %"
@@ -126,10 +126,10 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
 
         {startPortfolio && (
           <>
-            <Divider style={{ marginTop: 12, marginBottom: 12 }} />
+            <Divider style={{ marginTop: 8, marginBottom: 8 }} />
 
-            <div className="flex w-full mb-4 justify-center mb-2">
-              <Typography.Text strong>
+            <div className="flex w-full justify-center mb-1">
+              <Typography.Text strong style={{ fontSize: '13px' }}>
                 {fromDateDisplay} - {toDateDisplay}
               </Typography.Text>
             </div>
