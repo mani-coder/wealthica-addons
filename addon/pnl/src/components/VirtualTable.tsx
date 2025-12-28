@@ -5,10 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { VariableSizeGrid as Grid } from 'react-window';
 
 export default function VirtualTable(props: Parameters<typeof Table>[0]) {
-  const { columns = [], scroll } = props;
+  const { columns = [], scroll } = props as any;
+  const scrollY = scroll?.y;
   const [tableWidth, setTableWidth] = useState(0);
 
-  const mergedColumns = columns.map((column) => {
+  const mergedColumns = columns.map((column: any) => {
     if (column.width) {
       return column;
     }
@@ -56,11 +57,11 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
         columnCount={columns.length}
         columnWidth={(index: number) => {
           const { width } = mergedColumns[index];
-          return totalHeight > scroll!.y! && index === columns.length - 1
+          return typeof scrollY === 'number' && scrollY > 0 && totalHeight > scrollY && index === columns.length - 1
             ? (width as number) - scrollbarSize - 1
             : (width as number);
         }}
-        height={scroll!.y as number}
+        height={typeof scrollY === 'number' && scrollY > 0 ? scrollY : 0}
         rowCount={data.length}
         rowHeight={() => 64}
         width={tableWidth}
@@ -95,7 +96,7 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
         columns={mergedColumns}
         pagination={false}
         components={{
-          body: renderVirtualList,
+          body: renderVirtualList as any,
         }}
       />
     </ResizeObserver>

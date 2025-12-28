@@ -2,7 +2,6 @@ import { Addon } from '@wealthica/wealthica.js/index';
 import { Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
 import _ from 'lodash';
 import { useEffect, useRef, useState } from 'react';
-import { Flex } from 'rebass';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
 import {
@@ -59,6 +58,7 @@ type AddOnOptions = {
   groupsFilter?: string;
   institutionsFilter?: string;
   investmentsFilter?: string;
+  [key: string]: any;
 };
 
 const MANDATORY_OPTIONS = ['currency', 'privateMode', 'fromDate', 'toDate'];
@@ -101,7 +101,7 @@ export default function App() {
         (window.location.search || '').includes('?developer') ? {} : { id: 'mani-coder/wealthica-portfolio-addon' },
       );
 
-      addon.on('init', (options) => {
+      addon.on('init', (options: any) => {
         const newOptions = updateOptions(addOnOptionsRef.current, options);
         console.debug('Addon initialization', { options, newOptions });
         load();
@@ -113,7 +113,7 @@ export default function App() {
         console.debug('Reload invoked!');
       });
 
-      addon.on('update', (options) => {
+      addon.on('update', (options: any) => {
         const updatedOptions = updateOptions(addOnOptionsRef.current, options);
         if (updatedOptions && Object.keys(updatedOptions).length > 0) {
           setLoadingOnUpdate(true);
@@ -164,7 +164,7 @@ export default function App() {
 
     async function _loadCurrencies() {
       const values = await Promise.all(validCurrencies.map(loadCurrency));
-      return validCurrencies.reduce((hash, currency, index) => {
+      return validCurrencies.reduce((hash: { [key: string]: any }, currency, index) => {
         hash[currency] = values[index];
         return hash;
       }, {});
@@ -194,7 +194,7 @@ export default function App() {
 
     const currencyCache = await loadCurrenciesCache(
       addOnOptions.currency,
-      Array.from(new Set(accounts.map((account) => account.currency))),
+      Array.from(new Set(accounts.map((account: any) => account.currency))),
     );
     computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
   }
@@ -218,7 +218,7 @@ export default function App() {
 
     // Security transactions & XIRR computation
     const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyRef.current);
-    const securityTransactionsBySymbol = securityTransactions.reduce((hash, transaction) => {
+    const securityTransactionsBySymbol = securityTransactions.reduce((hash: { [key: string]: any }, transaction) => {
       if (!hash[transaction.symbol]) {
         hash[transaction.symbol] = [];
       }
@@ -228,7 +228,7 @@ export default function App() {
 
     positions.forEach((position) => {
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
-      position.xirr = computeXIRR(position);
+      position.xirr = computeXIRR(position) ?? 0;
       computeBookValue(position, currencyRef.current);
     });
 
@@ -271,7 +271,7 @@ export default function App() {
     }
 
     try {
-      xirrRate = xirr(values);
+      xirrRate = xirr(values) ?? 0;
       console.debug('XIRR computation -- ', {
         values: values.map((value) => `${value.when.toLocaleDateString()}, ${formatMoney(value.amount)}`),
         xirrRate,
@@ -311,8 +311,8 @@ export default function App() {
         method: 'GET',
         endpoint: 'portfolio',
       })
-      .then((response) => parsePortfolioResponse(response))
-      .catch((error) => {
+      .then((response: any) => parsePortfolioResponse(response))
+      .catch((error: any) => {
         console.error('Failed to load portfolio data.', error);
       });
   }
@@ -331,8 +331,8 @@ export default function App() {
         method: 'GET',
         endpoint: 'positions',
       })
-      .then((response) => parsePositionsResponse(response))
-      .catch((error) => {
+      .then((response: any) => parsePositionsResponse(response))
+      .catch((error: any) => {
         console.error('Failed to load position data.', error);
       });
   }
@@ -351,14 +351,14 @@ export default function App() {
         method: 'GET',
         endpoint: 'institutions',
       })
-      .then((response) =>
+      .then((response: any) =>
         parseInstitutionsResponse(
           response,
           options.groupsFilter ? options.groupsFilter.split(',') : [],
           options.institutionsFilter ? options.institutionsFilter.split(',') : [],
         ),
       )
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Failed to load institutions data.', error);
       });
   }
@@ -379,15 +379,15 @@ export default function App() {
         method: 'GET',
         endpoint: 'transactions',
       })
-      .then((response) => response)
-      .catch((error) => {
+      .then((response: any) => response)
+      .catch((error: any) => {
         console.error('Failed to load transactions data.', error);
       });
   }
 
   async function loadStaticPortfolioData() {
     let institutionsData, portfolioData, positionsData, transactionsData;
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       const importMock = async (file: string) => {
         try {
           // Using a dynamic import with template string prevents the bundler from requiring the file to exist at build-time.
@@ -450,9 +450,9 @@ export default function App() {
   }
 
   return (
-    <ConfigProvider theme={{ token: { colorPrimary: '#9948d1', colorInfo: '#9948d1' } }}>
+    <ConfigProvider theme={{ token: { colorPrimary: '#10b981', colorInfo: '#10b981' } }}>
       <CurrencyContextProvider currencyRef={currencyRef}>
-        <Flex width={1} justifyContent="center">
+        <div className="flex justify-center w-full">
           <div style={{ padding: 4, maxWidth: addon.current ? '100%' : 1100, width: '100%' }}>
             {state.isLoaded ? (
               <>
@@ -478,9 +478,9 @@ export default function App() {
                   </>
                 )}
                 {isLoadingOnUpdate ? (
-                  <Flex width={1} justifyContent="center" alignItems="center">
+                  <div className="flex justify-center items-center w-full">
                     <Spin size="large" />
-                  </Flex>
+                  </div>
                 ) : (
                   <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
                 )}
@@ -495,106 +495,131 @@ export default function App() {
                     trackEvent('tab-change', { tab });
                   }}
                   size="large"
-                >
-                  <Tabs.TabPane destroyInactiveTabPane forceRender tab="P&L Charts" key={TabKeysEnum.PNL}>
-                    <PnLStatistics
-                      xirr={state.xirr}
-                      portfolios={state.allPortfolios}
-                      privateMode={addOnOptions.privateMode}
-                      positions={state.positions}
-                      fromDate={addOnOptions.fromDate}
-                      toDate={addOnOptions.toDate}
-                    />
-
-                    <DepositVsPortfolioValueTimeline
-                      portfolios={state.portfolios}
-                      cashflows={state.cashflows}
-                      isPrivateMode={addOnOptions.privateMode}
-                    />
-
-                    <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
-                    <ProfitLossPercentageTimeline
-                      portfolios={state.portfolios}
-                      isPrivateMode={addOnOptions.privateMode}
-                    />
-                    <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane forceRender tab="Holdings Analyzer" key={TabKeysEnum.HOLDINGS}>
-                    {!!state.positions.length ? (
-                      <HoldingsCharts
-                        positions={state.positions}
-                        accounts={state.accounts}
-                        isPrivateMode={addOnOptions.privateMode}
-                        addon={addon.current}
-                      />
-                    ) : (
-                      <Empty description="No Holdings" />
-                    )}
-
-                    <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
-
-                    {!!state.positions.length && (
-                      <>
-                        <PortfolioVisualizer positions={state.positions} />
-                        <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
-                      </>
-                    )}
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane destroyInactiveTabPane tab="Gainers/Losers" key={TabKeysEnum.GAINERS_LOSERS}>
-                    <TopGainersLosers
-                      positions={state.positions}
-                      isPrivateMode={addOnOptions.privateMode}
-                      addon={addon.current}
-                      accounts={state.accounts}
-                    />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane destroyInactiveTabPane tab="Realized P&L" key={TabKeysEnum.REALIZED_PNL}>
-                    <RealizedPnL
-                      fromDate={addOnOptions.fromDate}
-                      toDate={addOnOptions.toDate}
-                      transactions={state.securityTransactions}
-                      accountTransactions={state.accountTransactions}
-                      accounts={state.accounts}
-                      isPrivateMode={addOnOptions.privateMode}
-                    />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane destroyInactiveTabPane tab="Activities" key={TabKeysEnum.ACTIVITIES}>
-                    <TradingActivities
-                      fromDate={addOnOptions.fromDate}
-                      transactions={state.securityTransactions.filter((t) => ['buy', 'sell'].includes(t.originalType))}
-                      positions={state.positions}
-                    />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane destroyInactiveTabPane tab="News" key={TabKeysEnum.NEWS}>
-                    <News positions={state.positions} />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane destroyInactiveTabPane tab="Events" key={TabKeysEnum.EVENTS}>
-                    <Events positions={state.positions} />
-                  </Tabs.TabPane>
-
-                  <Tabs.TabPane
-                    destroyInactiveTabPane
-                    tab={
-                      <Badge count={newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
-                        Latest Changes
-                      </Badge>
-                    }
-                    key={TabKeysEnum.CHANGE_LOG}
-                  >
-                    <ChangeLog />
-                  </Tabs.TabPane>
-                </Tabs>
+                  items={[
+                    {
+                      label: 'P&L Charts',
+                      key: TabKeysEnum.PNL,
+                      destroyInactiveTabPane: true,
+                      forceRender: true,
+                      children: (
+                        <>
+                          <PnLStatistics
+                            xirr={state.xirr}
+                            portfolios={state.allPortfolios}
+                            privateMode={addOnOptions.privateMode}
+                            positions={state.positions}
+                            fromDate={addOnOptions.fromDate}
+                            toDate={addOnOptions.toDate}
+                          />
+                          <DepositVsPortfolioValueTimeline
+                            portfolios={state.portfolios}
+                            cashflows={state.cashflows}
+                            isPrivateMode={addOnOptions.privateMode}
+                          />
+                          <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
+                          <ProfitLossPercentageTimeline
+                            portfolios={state.portfolios}
+                            isPrivateMode={addOnOptions.privateMode}
+                          />
+                          <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
+                        </>
+                      ),
+                    },
+                    {
+                      label: 'Holdings Analyzer',
+                      key: TabKeysEnum.HOLDINGS,
+                      forceRender: true,
+                      children: (
+                        <>
+                          {state.positions.length ? (
+                            <HoldingsCharts
+                              positions={state.positions}
+                              accounts={state.accounts}
+                              isPrivateMode={addOnOptions.privateMode}
+                              addon={addon.current}
+                            />
+                          ) : (
+                            <Empty description="No Holdings" />
+                          )}
+                          <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
+                          {!!state.positions.length && (
+                            <>
+                              <PortfolioVisualizer positions={state.positions} />
+                              <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
+                            </>
+                          )}
+                        </>
+                      ),
+                    },
+                    {
+                      label: 'Gainers/Losers',
+                      key: TabKeysEnum.GAINERS_LOSERS,
+                      destroyInactiveTabPane: true,
+                      children: (
+                        <TopGainersLosers
+                          positions={state.positions}
+                          isPrivateMode={addOnOptions.privateMode}
+                          addon={addon.current}
+                          accounts={state.accounts}
+                        />
+                      ),
+                    },
+                    {
+                      label: 'Realized P&L',
+                      key: TabKeysEnum.REALIZED_PNL,
+                      destroyInactiveTabPane: true,
+                      children: (
+                        <RealizedPnL
+                          fromDate={addOnOptions.fromDate}
+                          toDate={addOnOptions.toDate}
+                          transactions={state.securityTransactions}
+                          accountTransactions={state.accountTransactions}
+                          accounts={state.accounts}
+                          isPrivateMode={addOnOptions.privateMode}
+                        />
+                      ),
+                    },
+                    {
+                      label: 'Activities',
+                      key: TabKeysEnum.ACTIVITIES,
+                      destroyInactiveTabPane: true,
+                      children: (
+                        <TradingActivities
+                          fromDate={addOnOptions.fromDate}
+                          transactions={state.securityTransactions.filter((t) => ['buy', 'sell'].includes(t.originalType))}
+                          positions={state.positions}
+                        />
+                      ),
+                    },
+                    {
+                      label: 'News',
+                      key: TabKeysEnum.NEWS,
+                      destroyInactiveTabPane: true,
+                      children: <News positions={state.positions} />,
+                    },
+                    {
+                      label: 'Events',
+                      key: TabKeysEnum.EVENTS,
+                      destroyInactiveTabPane: true,
+                      children: <Events positions={state.positions} />,
+                    },
+                    {
+                      label: (
+                        <Badge count={newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
+                          Latest Changes
+                        </Badge>
+                      ),
+                      key: TabKeysEnum.CHANGE_LOG,
+                      destroyInactiveTabPane: true,
+                      children: <ChangeLog />,
+                    },
+                  ]}
+                />
               </>
             ) : (
-              <Flex justifyContent="center" width={1}>
+              <div className="flex justify-center w-full">
                 <Spin size="large" spinning />
-              </Flex>
+              </div>
             )}
 
             <br />
@@ -627,7 +652,7 @@ export default function App() {
             <br />
             <hr />
           </div>
-        </Flex>
+        </div>
       </CurrencyContextProvider>
     </ConfigProvider>
   );

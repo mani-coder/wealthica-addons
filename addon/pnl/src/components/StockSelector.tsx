@@ -1,5 +1,5 @@
 import { Select, Typography } from 'antd';
-import { Flex } from 'rebass';
+
 import { Account, Position } from '../types';
 import { getSymbol } from '../utils/common';
 import StockDetails from './StockDetails';
@@ -22,16 +22,15 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
     ));
 
   return (
-    <Flex p={3} pt={3} width={1} flexDirection="column">
+    <div className="flex p-6 w-full flex-col">
       <Typography.Title style={{ textAlign: 'center' }} level={4}>
-        Search for a stock in your protofolio:
+        Search for a stock:
       </Typography.Title>
       <Select
         showSearch
         value={selectedSymbol}
         placeholder="Enter a stock, e.g: FB, SHOP.TO"
-        showArrow
-        style={{ width: '100%' }}
+        className="w-full"
         onChange={(symbol) => setSelectedSymbol(symbol)}
         filterOption={(inputValue, option) =>
           (option!.props!.value! as string).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -41,6 +40,6 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
       </Select>
 
       {selectedSymbol && <StockDetails symbol={selectedSymbol} positions={positions} {...rest} />}
-    </Flex>
+    </div>
   );
 };

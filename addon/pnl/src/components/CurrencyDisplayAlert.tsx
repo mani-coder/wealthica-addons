@@ -1,7 +1,6 @@
 import { Alert } from 'antd';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 import { CURRENCY_DISPLAY_CACHE_KEY, DATE_FORMAT } from '../constants';
 import useCurrency from '../hooks/useCurrency';
@@ -33,9 +32,9 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
   }
 
   return displayCurrencyAlert ? (
-    <Flex width={1} justifyContent="center" alignItems="center" marginY={1}>
+    <div className="flex w-full justify-center items-center my-2 mb-2">
       <Alert
-        style={{ width: '100%', textAlign: 'center' }}
+        className="w-full text-center"
         type="info"
         banner
         closable
@@ -49,7 +48,7 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
           </>
         }
       />
-    </Flex>
+    </div>
   ) : (
     <></>
   );

@@ -1,4 +1,3 @@
-/* eslint-disable no-template-curly-in-string */
 import { Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
@@ -29,7 +28,7 @@ function StockTimeline(props: Props) {
   const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
 
   const accountById = useMemo(() => {
-    return props.accounts.reduce((hash, account) => {
+    return props.accounts.reduce((hash: { [key: string]: any }, account) => {
       hash[account.id] = account;
       return hash;
     }, {} as { [K: string]: Account });
@@ -40,12 +39,12 @@ function StockTimeline(props: Props) {
     return account ? account.name : accountById;
   }
 
-  const parseSecuritiesResponse = useCallback((response) => {
+  const parseSecuritiesResponse = useCallback((response: any) => {
     let to = getDate(response.to);
     const data: SecurityHistoryTimeline[] = [];
-    let prevPrice;
+    let prevPrice: number | undefined;
     response.data
-      .filter((closePrice) => closePrice)
+      .filter((closePrice: number) => closePrice)
       .reverse()
       .forEach((closePrice: number) => {
         if (!prevPrice) {
@@ -93,10 +92,10 @@ function StockTimeline(props: Props) {
           method: 'GET',
           endpoint,
         })
-        .then((response) => {
+        .then((response: any) => {
           parseSecuritiesResponse(response);
         })
-        .catch((error) => console.log(error))
+        .catch((error: any) => console.log(error))
         .finally(() => setLoading(false));
     } else {
       const url = `https://app.wealthica.com/api/${endpoint}`;
@@ -109,10 +108,10 @@ function StockTimeline(props: Props) {
         },
       })
         .then((response) => response.json())
-        .then((response) => {
+        .then((response: any) => {
           parseSecuritiesResponse(response);
         })
-        .catch((error) => console.log(error))
+        .catch((error: any) => console.log(error))
         .finally(() => setLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,7 +127,7 @@ function StockTimeline(props: Props) {
     }
 
     const data: { x: number; y: number }[] = [];
-    let minPrice, maxPrice, minTimestamp, maxTimestamp;
+    let minPrice: number | undefined, maxPrice: number | undefined, minTimestamp: number | undefined, maxTimestamp: number | undefined;
     securityTimeline.forEach((_data, index) => {
       const timestamp = _data.timestamp.valueOf();
       const closePrice = _data.closePrice;
@@ -139,11 +138,11 @@ function StockTimeline(props: Props) {
         maxPrice = minPrice = closePrice;
         minTimestamp = maxTimestamp = timestamp;
       }
-      if (closePrice < minPrice) {
+      if (minPrice !== undefined && closePrice < minPrice) {
         minPrice = closePrice;
         minTimestamp = timestamp;
       }
-      if (closePrice > maxPrice) {
+      if (maxPrice !== undefined && closePrice > maxPrice) {
         maxPrice = closePrice;
         maxTimestamp = timestamp;
       }
@@ -167,6 +166,7 @@ function StockTimeline(props: Props) {
         name: props.symbol,
         data,
         type: 'line',
+        color: '#10b981',
 
         tooltip: {
           valueDecimals: 2,
@@ -187,16 +187,16 @@ function StockTimeline(props: Props) {
           {
             x: minTimestamp,
             title: 'L',
-            text: `Low Price: $${formatCurrency(minPrice, 2)}`,
+            text: `Low Price: $${formatCurrency(minPrice ?? 0, 2)}`,
           },
           {
             x: maxTimestamp,
             title: 'H',
-            text: `High Price: $${formatCurrency(maxPrice, 2)}`,
+            text: `High Price: $${formatCurrency(maxPrice ?? 0, 2)}`,
           },
-        ].sort((a, b) => a.x - b.x),
-        color: '#7cb5ec',
-        fillColor: '#7cb5ec',
+        ].sort((a, b) => (a.x ?? 0) - (b.x ?? 0)),
+        color: '#10b981',
+        fillColor: '#10b981',
         style: {
           color: 'white',
         },
@@ -205,7 +205,7 @@ function StockTimeline(props: Props) {
     ];
   }
 
-  const getFlags = (type: string, onSeries?: boolean): Highcharts.SeriesFlagsOptions => {
+  const getFlags = (type: string, onSeries?: boolean): any => {
     const isBuySell = ['buy', 'sell', 'reinvest', 'transfer'].includes(type);
     const _type = type === 'transfer' ? 'buy' : type;
 
@@ -267,8 +267,8 @@ function StockTimeline(props: Props) {
             account: getAccountName(transaction.account),
           };
         }),
-      color: TYPE_TO_COLOR[type],
-      fillColor: TYPE_TO_COLOR[type],
+      color: (TYPE_TO_COLOR as { [key: string]: any })[type],
+      fillColor: (TYPE_TO_COLOR as { [key: string]: any })[type],
       style: {
         color: 'white', // text style
       },
@@ -293,18 +293,17 @@ function StockTimeline(props: Props) {
         text: props.isPrivateMode
           ? 'Shares: -, Market Value: -, Profit: -'
           : `Shares: ${props.position.quantity}@${formatMoney(
-              props.position.investments.reduce((cost, investment) => {
-                return cost + investment.book_value;
-              }, 0) / props.position.quantity,
-            )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
-              props.position.market_value,
-              2,
-            )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
-              props.position.gain_percent * 100,
-              2,
-            )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${
-              dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
-            }`,
+            props.position.investments.reduce((cost, investment) => {
+              return cost + investment.book_value;
+            }, 0) / props.position.quantity,
+          )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
+            props.position.market_value,
+            2,
+          )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
+            props.position.gain_percent * 100,
+            2,
+          )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
+          }`,
         style: {
           color: '#1F2A33',
           fontWeight: 'bold',

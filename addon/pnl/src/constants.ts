@@ -1,20 +1,20 @@
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
-export const DEFAULT_BASE_CURRENCY = 'cad';
+export const DEFAULT_BASE_CURRENCY = 'usd';
 export const TRANSACTIONS_FROM_DATE = '2010-01-01';
 
-export const TYPE_TO_COLOR = {
-  buy: '#9948d1',
-  sell: '#FF897C',
-  income: 'green',
-  dividend: 'green',
-  distribution: 'green',
-  tax: 'brown',
-  fee: 'brown',
-  deposit: '#9254de',
-  withdrawal: '#ff7875',
-  reinvest: '#f759ab',
-  transfer: '#c41d7f',
+export const TYPE_TO_COLOR: { [key: string]: string } = {
+  buy: '#3b82f6', // blue-500
+  sell: '#f43f5e', // rose-500
+  income: '#a855f7', // purple-500
+  dividend: '#8b5cf6', // violet-500
+  distribution: '#6366f1', // indigo-500
+  tax: '#f97316', // orange-500
+  fee: '#f59e0b', // amber-500
+  deposit: '#10b981', // emerald-500
+  withdrawal: '#ec4899', // pink-500
+  reinvest: '#14b8a6', // teal-500
+  transfer: '#06b6d4', // cyan-500
 };
 
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';

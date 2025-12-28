@@ -2,7 +2,7 @@ import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { startCase } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { Box, Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
@@ -26,7 +26,7 @@ export default function CompositionCharts(props: Props) {
   const { getValue, baseCurrencyDisplay } = useCurrency();
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('currency');
 
-  const getColor = useCallback((index) => (COLORS ? COLORS[index % COLORS?.length] : undefined), []);
+  const getColor = useCallback((index: number) => (COLORS ? COLORS[index % COLORS?.length] : undefined), []);
 
   const getAccountsCompositionHoldingsDrilldown = useCallback(
     (group: GroupType, drilldown: boolean): Highcharts.SeriesPieOptions | Highcharts.DrilldownOptions => {
@@ -136,7 +136,7 @@ export default function CompositionCharts(props: Props) {
 
         return drilldown
           ? {
-              type: 'pie' as 'pie',
+              type: 'pie' as const,
               id: name,
               name,
               data,
@@ -166,7 +166,7 @@ export default function CompositionCharts(props: Props) {
             ),
           }
         : {
-            type: 'pie' as 'pie',
+            type: 'pie' as const,
             id: 'holdings',
             name: 'Holdings',
             size: '80%',
@@ -237,7 +237,7 @@ export default function CompositionCharts(props: Props) {
       );
 
       const accountsSeries: Highcharts.SeriesPieOptions = {
-        type: 'pie' as 'pie',
+        type: 'pie' as const,
         id: 'accounts',
         name: 'Accounts',
         size: showHoldings ? '60%' : '100%',
@@ -298,7 +298,7 @@ export default function CompositionCharts(props: Props) {
           },
           style: showHoldings
             ? {
-                color: 'purple',
+                color: '#10b981',
                 fontSize: '12px',
                 fontWeight: '600',
               }
@@ -393,7 +393,7 @@ export default function CompositionCharts(props: Props) {
         tracker="holdings-composition-group"
       />
 
-      <Flex mt={3} mb={2} width={1} justifyContent="center" alignItems="center" alignContent="center">
+      <div className="flex mt-6 w-full justify-center items-center">
         <Switch
           checked={showHoldings}
           onChange={(checked) => {
@@ -402,11 +402,11 @@ export default function CompositionCharts(props: Props) {
           }}
         />
 
-        <Box px={1} />
+        <div className="px-2 mb-2" />
         <Typography.Text strong style={{ fontSize: 16 }}>
           Show Holdings (Donut Chart)
         </Typography.Text>
-      </Flex>
+      </div>
     </Collapsible>
   );
 }

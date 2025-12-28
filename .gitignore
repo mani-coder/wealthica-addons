@@ -8,6 +8,7 @@ firebase-debug.log*
 firebase-debug.*.log*
 .DS_Store
 trigger-netlify-build.sh
+.playwright-mcp/
 
 # Firebase cache
 .firebase/

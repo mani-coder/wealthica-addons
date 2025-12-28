@@ -22,7 +22,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
   }, [props.cashflows]);
   console.debug('[DEBUG] Cash Flows', { cashflows: props.cashflows.filter((t) => t.deposit || t.withdrawal) });
 
-  function getFlags(type: string): Highcharts.SeriesFlagsOptions {
+  function getFlags(type: string): any {
     return {
       name: startCase(type),
       shape: 'squarepin',
@@ -36,13 +36,13 @@ function DepositVsPortfolioValueTimeline(props: Props) {
       },
 
       data: cashflows
-        .filter((t) => Math.abs(t[type]) > 1)
+        .filter((t) => Math.abs((t as any)[type]) > 1)
         .map((t) => {
           return {
             t,
             x: t.date.valueOf(),
             title: type.charAt(0).toUpperCase(),
-            text: `${startCase(type)}: $${formatMoney(t[type], 2)}`,
+            text: `${startCase(type)}: $${formatMoney((t as any)[type], 2)}`,
           };
         }),
 
@@ -67,7 +67,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
           };
         }),
         type: 'spline',
-        color: '#4E2E5E',
+        color: '#10b981',
       },
       {
         id: 'deposits',
@@ -80,7 +80,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
           };
         }),
         type: 'spline',
-        color: '#C00316',
+        color: '#f59e0b',
       },
       ...['deposit', 'withdrawal'].map((type) => getFlags(type)),
     ];
@@ -115,6 +115,15 @@ function DepositVsPortfolioValueTimeline(props: Props) {
 
       navigator: { enabled: true },
       scrollbar: { enabled: false },
+
+      legend: {
+        enabled: true,
+        align: 'center',
+        verticalAlign: 'bottom',
+        layout: 'horizontal',
+        itemMarginTop: 8,
+        itemDistance: 24,
+      },
 
       yAxis: [
         {

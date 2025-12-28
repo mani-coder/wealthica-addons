@@ -3,7 +3,7 @@ import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined';
 import { Empty, Radio, Spin, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import { Position } from '../types';
 import { buildCorsFreeUrl, getNasdaqTicker, getSymbol, getSymbolFromNasdaqTicker } from '../utils/common';
@@ -24,8 +24,8 @@ function Dot() {
 
 function NewsItem({ news }: { news: NewsResult }) {
   return (
-    <Box pb={2} key={news.title}>
-      <Flex alignItems="center">
+    <div className="pb-4 mb-2" key={news.title}>
+      <div className="flex items-center mb-2">
         <div style={{ fontSize: 15, fontWeight: 500, paddingBottom: 4, paddingRight: 4 }}>
           <Typography.Link href={news.url} target="_blank" rel="noopener noreferrer">
             {news.title}
@@ -37,7 +37,7 @@ function NewsItem({ news }: { news: NewsResult }) {
         ) : news.sentiment !== 'neutral' ? (
           <CaretDownOutlined style={{ color: 'red', fontSize: 25 }} />
         ) : undefined}
-      </Flex>
+      </div>
 
       <div style={{ fontSize: 13, color: '#8c8c8c' }}>
         {news.source}
@@ -49,7 +49,7 @@ function NewsItem({ news }: { news: NewsResult }) {
       </div>
 
       <hr />
-    </Box>
+    </div>
   );
 }
 
@@ -100,7 +100,7 @@ function News({ positions }: { positions: Position[] }) {
           // url: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
           // urlString: "https://www.nasdaq.com/articles/us-stocks-sp-500-dow-climb-for-third-day-and-close-at-records-2021-04-09-0"
           const _news = response.reduce(
-            (hash, newsRecord) => {
+            (hash: { [key: string]: any }, newsRecord: any) => {
               const symbol = getSymbolFromNasdaqTicker(newsRecord.ticker);
               validSymbols.add(symbol);
               const newsResult = {
@@ -154,8 +154,8 @@ function News({ positions }: { positions: Position[] }) {
   }, [news, symbol, sentiment]);
 
   return (
-    <Flex flexDirection="column" mb={3} alignItems="center">
-      <Flex width={1} justifyContent="center" mb={3}>
+    <div className="flex flex-col mb-6 items-center">
+      <div className="flex w-full justify-center mb-6">
         <Radio.Group
           size="large"
           defaultValue={sentiment}
@@ -175,13 +175,13 @@ function News({ positions }: { positions: Position[] }) {
             <CaretDownOutlined style={{ color: 'red' }} /> Bearish
           </Radio.Button>
         </Radio.Group>
-      </Flex>
+      </div>
 
-      <Flex width={1}>
-        <Flex flexDirection="column" alignItems="flex-end" px={2} width={1 / 4}>
-          <Box width={1}>
+      <div className="flex w-full mb-2 space-x-2">
+        <div className="flex flex-col items-end w-1/4">
+          <div className="w-full mb-2">
             <Radio.Group
-              style={{ width: '100%' }}
+              className="w-full"
               onChange={(e) => {
                 const _symbol = e.target.value;
                 setSymbol(_symbol);
@@ -217,22 +217,22 @@ function News({ positions }: { positions: Position[] }) {
                 </Radio.Button>
               ))}
             </Radio.Group>
-          </Box>
-        </Flex>
+          </div>
+        </div>
 
-        {!!selectedNews.length ? (
-          <Box ref={newsContainerRef} width={3 / 4} px={2} height="70vh" style={{ overflow: 'scroll' }}>
+        {selectedNews.length ? (
+          <div ref={newsContainerRef as any} className="w-3/4 h-[70vh] overflow-scroll">
             {selectedNews.map((_news, index) => (
               <NewsItem key={`${symbol}-${index}`} news={_news} />
             ))}
-          </Box>
+          </div>
         ) : (
-          <Flex justifyContent="center" width={3 / 4} py={3}>
+          <div className="flex justify-center py-6 w-3/4">
             {loading ? <Spin size="large" /> : <Empty description="No News Articles Found!" />}
-          </Flex>
+          </div>
         )}
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 }
 

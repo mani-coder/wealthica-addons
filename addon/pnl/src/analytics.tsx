@@ -1,6 +1,6 @@
 let enabled = false;
 
-export function initTracking(userHash) {
+export function initTracking(userHash: string) {
   if (!window.analytics || process.env.NODE_ENV !== 'production') {
     return;
   }

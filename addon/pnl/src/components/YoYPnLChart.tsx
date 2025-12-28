@@ -15,7 +15,7 @@ type Props = {
 };
 
 function YoYPnLChart(props: Props) {
-  const portfoliosByDate = props.portfolios.reduce((hash, portfolio) => {
+  const portfoliosByDate = props.portfolios.reduce((hash: { [key: string]: any }, portfolio) => {
     hash[portfolio.date] = portfolio;
     return hash;
   }, {});
@@ -229,7 +229,7 @@ function YoYPnLChart(props: Props) {
         };
       });
 
-    const series: Highcharts.SeriesColumnOptions[] = [
+    const series: any[] = [
       {
         name: 'PnL Change %',
         type: 'column',

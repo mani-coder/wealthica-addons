@@ -3,7 +3,7 @@ import RightOutlined from '@ant-design/icons/RightOutlined';
 import { Button, Calendar, Card, Spin, Table, TableColumnProps, Tag, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT } from '../constants';
 import { Position } from '../types';
@@ -46,12 +46,12 @@ function EventTypes({ types, onChange }: { types: EventType[]; onChange: (types:
     );
   }
   return (
-    <Box>
+    <div>
       {renderTag('earning', 'magenta', 'Earning')}
       {renderTag('ex-dividend', 'blue', 'ED: Ex-Dividend')}
       {renderTag('pay-dividend', 'green', 'PD: Pay Dividend')}
       {renderTag('rec-dividend', 'geekblue', 'RD: Record Dividend')}
-    </Box>
+    </div>
   );
 }
 
@@ -112,9 +112,9 @@ export function Events({ positions }: { positions: Position[] }) {
     const _events = eventsByDate[date.format(DATE_FORMAT)];
 
     return _events && _events.length ? (
-      <Flex flexWrap="wrap">
+      <div className="flex flex-wrap">
         {_events.map((item) => (
-          <Box mr={1} mb={1} key={item.ticker}>
+          <div className="mr-2 mb-2" key={item.ticker}>
             <Tag
               color={
                 item.type === 'earning'
@@ -135,9 +135,9 @@ export function Events({ positions }: { positions: Position[] }) {
                 : 'RD: '}
               {item.ticker}
             </Tag>
-          </Box>
+          </div>
         ))}
-      </Flex>
+      </div>
     ) : (
       <></>
     );
@@ -192,7 +192,7 @@ export function Events({ positions }: { positions: Position[] }) {
       }[];
     } = {};
     if (types.includes('earning')) {
-      result = events.earnings.reduce((hash, earning) => {
+      result = events.earnings.reduce((hash: { [key: string]: any }, earning) => {
         const earningDate = dayjs(earning.date).format(DATE_FORMAT);
         let earnings = hash[earningDate];
         if (!earnings) {
@@ -208,7 +208,7 @@ export function Events({ positions }: { positions: Position[] }) {
       }, result);
     }
 
-    result = events.dividends.reduce((hash, dividend) => {
+    result = events.dividends.reduce((hash: { [key: string]: any }, dividend: any) => {
       ['exDate', 'payDate', 'recDate'].forEach((field) => {
         if (!dividend[field]) {
           return;
@@ -252,8 +252,8 @@ export function Events({ positions }: { positions: Position[] }) {
         validRange={[dayjs().startOf('month'), dayjs().endOf('month').add(1, 'year')]}
         dateCellRender={dateCellRender}
         headerRender={() => (
-          <Box>
-            <Flex justifyContent="space-between" alignItems="center" flexWrap="wrap">
+          <div>
+            <div className="flex justify-between items-center flex-wrap">
               <Button
                 loading={loading}
                 disabled={date.isSameOrBefore(range.start)}
@@ -280,9 +280,9 @@ export function Events({ positions }: { positions: Position[] }) {
               >
                 Next Month <RightOutlined />
               </Button>
-            </Flex>
+            </div>
 
-            <Flex my={2} justifyContent="center" flexWrap="wrap">
+            <div className="flex my-4 justify-center flex-wrap">
               <EventTypes types={types} onChange={setTypes} />
               {/* <Radio.Group
                 size="large"
@@ -297,8 +297,8 @@ export function Events({ positions }: { positions: Position[] }) {
                   { label: 'Dividends Only', value: 'dividends' },
                 ]}
               /> */}
-            </Flex>
-          </Box>
+            </div>
+          </div>
         )}
       />
 

@@ -16,7 +16,7 @@ const CurrencyContext = createContext<CurrencyContextType>({
   baseCurrency: DEFAULT_BASE_CURRENCY,
   baseCurrencyDisplay: DEFAULT_BASE_CURRENCY.toUpperCase(),
   allCurrencies: [DEFAULT_BASE_CURRENCY],
-  getValue: (from, value) => value,
+  getValue: (_from, value) => value,
 });
 
 function getCurrencyValue(

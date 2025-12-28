@@ -1,8 +1,9 @@
-import { Typography } from 'antd';
+import { Divider, Typography } from 'antd';
 import type { TextProps } from 'antd/es/typography/Text';
-import { Flex, FlexProps } from 'rebass';
+
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
+import { cn } from '../utils/cn';
 import { formatMoney, getSymbol, sumOf } from '../utils/common';
 
 type Props = {
@@ -16,13 +17,16 @@ function LabelValue({
   label,
   value,
   valueProps,
-  ...rest
-}: { label: string; value: string; valueProps?: TextProps } & FlexProps) {
+  className,
+}: { label: string; value: string; valueProps?: TextProps } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <Flex justifyContent="space-between" py={1} style={{ borderBottom: `1px solid #f0f0f0` }} {...rest}>
-      <Typography.Text strong>{label}</Typography.Text>
-      <Typography.Text {...valueProps}>{value}</Typography.Text>
-    </Flex>
+    <>
+      <div className={cn('flex justify-between', className)}>
+        <Typography.Text strong>{label}</Typography.Text>
+        <Typography.Text {...valueProps}>{value}</Typography.Text>
+      </div>
+      <Divider className="my-0.5" />
+    </>
   );
 }
 
@@ -49,7 +53,7 @@ export default function StockDetails(props: Props) {
 
   const currency = position.security.currency ? position.security.currency.toUpperCase() : position.security.currency;
   return (
-    <Flex flexDirection="column" p={2}>
+    <div className="flex flex-col space-y-1">
       <LabelValue label="Symbol" value={getSymbol(position.security)} />
 
       <LabelValue
@@ -59,16 +63,14 @@ export default function StockDetails(props: Props) {
 
       <LabelValue
         label="Market Value"
-        value={`${baseCurrencyDisplay} ${
-          props.isPrivateMode ? '-' : formatMoney(position.market_value)
-        } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.market_value)
+          } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
       />
 
       <LabelValue
         label="Proft/Loss"
-        value={`${baseCurrencyDisplay} ${
-          props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
-        } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
+        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
+          } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
         valueProps={{ type: position.gain_percent > 0 ? 'success' : 'danger', strong: true }}
       />
       <LabelValue
@@ -79,20 +81,19 @@ export default function StockDetails(props: Props) {
 
       <LabelValue label="Shares" value={`${position.quantity}`} />
 
-      <LabelValue label="Currency" value={currency} />
       <LabelValue
-        label="Buy Price"
-        value={formatMoney(
+        label="Buy / Last Price"
+        value={`${currency} ${formatMoney(
           sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity,
-        )}
+        )} / ${formatMoney(position.security.last_price)}`}
       />
-      <LabelValue label="Last Price" value={formatMoney(position.security.last_price)} />
+
+
       <LabelValue
         label="Account"
         value="Shares"
         valueProps={{ strong: true }}
-        pt={2}
-        style={{ borderBottom: `2px solid #7b7b7b` }}
+        className="pt-4 border-b-2 border-gray-600"
       />
       {accounts.map(
         (account) =>
@@ -104,6 +105,6 @@ export default function StockDetails(props: Props) {
             />
           ),
       )}
-    </Flex>
+    </div>
   );
 }

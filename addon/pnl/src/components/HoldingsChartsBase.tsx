@@ -1,5 +1,6 @@
+import * as Highcharts from 'highcharts';
 import { Select, Typography } from 'antd';
-import { Flex } from 'rebass';
+
 import { Account, Position } from '../types';
 import { getSymbol } from '../utils/common';
 import StockDetails from './StockDetails';
@@ -11,15 +12,12 @@ export const POSITION_TOOLTIP: Highcharts.TooltipOptions = {
       ? `<table width="100%">
       <tr><td>Weightage</td><td class="position-tooltip-value">${(this as any).percentage.toFixed(1)}%</td></tr>
       <tr><td>Value</td><td class="position-tooltip-value">${point.baseCurrency} ${point.value}</td></tr>
-      <tr><td>XIRR %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
-          point.xirr ? point.xirr.toFixed(2) : 'n/a'
-        }%</td></tr>
-      <tr><td>Unrealized P/L %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
-          point.gain ? point.gain.toFixed(2) : 'n/a'
-        }%</td></tr>
-      <tr><td>Unrealized P/L $</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${
-          point.baseCurrency
-        } ${point.profit}</td></tr>
+      <tr><td>XIRR %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${point.xirr ? point.xirr.toFixed(2) : 'n/a'
+      }%</td></tr>
+      <tr><td>Unrealized P/L %</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${point.gain ? point.gain.toFixed(2) : 'n/a'
+      }%</td></tr>
+      <tr><td>Unrealized P/L $</td><td class="position-tooltip-value" style="color: ${point.pnlColor};">${point.baseCurrency
+      } ${point.profit}</td></tr>
       <tr><td>Shares</td><td style="text-align: right;">${point.shares}</td></tr>
       <tr><td>Currency</td><td style="text-align: right;">${point.currency}</td></tr>
       <tr><td>Buy Price</td><td style="text-align: right;">${point.buyPrice}</td></tr>
@@ -132,7 +130,7 @@ export function getOptionsV2({
   series,
   isPrivateMode,
 }: {
-  series: (Highcharts.SeriesColumnOptions | Highcharts.SeriesPieOptions)[];
+  series: (Highcharts.SeriesPieOptions | Highcharts.SeriesColumnOptions)[];
   title?: string;
   subtitle?: string;
   yAxisTitle?: string;
@@ -214,16 +212,15 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
     ));
 
   return (
-    <Flex p={3} pt={3} width={1} flexDirection="column">
+    <div className="flex p-6 w-full flex-col space-y-2">
       <Typography.Title style={{ textAlign: 'center' }} level={4}>
-        Search for a stock in your protofolio:
+        Search for a stock:
       </Typography.Title>
       <Select
         showSearch
         value={selectedSymbol}
         placeholder="Enter a stock, e.g: FB, SHOP.TO"
-        showArrow
-        style={{ width: '100%' }}
+        className="w-full"
         onChange={(symbol) => setSelectedSymbol(symbol)}
         filterOption={(inputValue, option) =>
           (option!.props!.value! as string).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -233,6 +230,6 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
       </Select>
 
       {selectedSymbol && <StockDetails symbol={selectedSymbol} positions={positions} {...rest} />}
-    </Flex>
+    </div>
   );
 };

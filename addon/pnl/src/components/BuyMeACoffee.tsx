@@ -1,12 +1,11 @@
 import Heart from '@ant-design/icons/HeartFilled';
 import { Button } from 'antd';
-import { Flex } from 'rebass';
 import { trackEvent } from '../analytics';
 
 export default function BuyMeACoffee() {
   const text = 'Buy me a coffee';
   return (
-    <Flex py={3} width={1} justifyContent="center">
+    <div className="flex py-6 w-full justify-center mb-2">
       <Button
         href="https://ko-fi.com/manicoder"
         target="_blank"
@@ -26,6 +25,6 @@ export default function BuyMeACoffee() {
       >
         Buy me a coffee
       </Button>
-    </Flex>
+    </div>
   );
 }

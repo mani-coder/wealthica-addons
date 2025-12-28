@@ -1,6 +1,6 @@
 import PrinterFilled from '@ant-design/icons/PrinterFilled';
 import { Button, Table, TableProps, Typography } from 'antd';
-import { Flex } from 'rebass';
+
 import { usePrint } from '../hooks/usePrint';
 import { isChrome } from '../utils/common';
 
@@ -30,9 +30,9 @@ export default function PrintableTable<T extends object>({
           defaultExpandAllRows: true,
         }}
         title={() => (
-          <Flex width={1} justifyContent="center">
+          <div className="flex w-full justify-center mb-2">
             <Typography.Title level={4}>{printTitle}</Typography.Title>
-          </Flex>
+          </div>
         )}
         pagination={false}
       />

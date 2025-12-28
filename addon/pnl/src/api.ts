@@ -16,8 +16,8 @@ const isSecuritiesAccountsTransfer = (transaction: any) =>
 
 export const parseCurrencyReponse = (response: any) => {
   const date = getDate(response.from);
-  return response.data.reduce((hash, value) => {
-    if (!!value) {
+  return response.data.reduce((hash: any, value: any) => {
+    if (value) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
     // Move the date forward.
@@ -27,7 +27,7 @@ export const parseCurrencyReponse = (response: any) => {
 };
 
 export const parseGroupNameByIdReponse = (response: any): { [K: string]: string } =>
-  (response || []).reduce((hash, group) => {
+  (response || []).reduce((hash: any, group: any) => {
     hash[group._id] = group.name;
     return hash;
   }, {});
@@ -47,12 +47,12 @@ export function isValidAccountGroup(groups?: string[], accountGroups?: string[])
 export const parseInstitutionsResponse = (response: any, groups?: string[], institutions?: string[]): Account[] => {
   const accounts: Account[] = [];
   return response
-    .filter((institution) => !institutions || !institutions.length || institutions.includes(institution.id))
-    .reduce((accounts, instutition) => {
+    .filter((institution: any) => !institutions || !institutions.length || institutions.includes(institution.id))
+    .reduce((accounts: any, instutition: any) => {
       return accounts.concat(
         instutition.investments
-          .filter((account) => isValidAccountGroup(groups, account.groups) && !account.ignored)
-          .map((account) => {
+          .filter((account: any) => isValidAccountGroup(groups, account.groups) && !account.ignored)
+          .map((account: any) => {
             return {
               id: account._id,
               institution: instutition.id,
@@ -71,7 +71,7 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
               value: account.value,
               currency_value: account.currency_value,
               currency: account.currency,
-              positions: (account.positions || []).map((position) => ({
+              positions: (account.positions || []).map((position: any) => ({
                 ...position,
                 symbol: getSymbol(position.security),
               })),
@@ -85,7 +85,7 @@ export const parsePortfolioResponse = (response: any) => {
   const data = response.history.total;
 
   let date = getDate(data.from);
-  return data.data.reduce((hash, value) => {
+  return data.data.reduce((hash: any, value: any) => {
     if (value !== null && value !== undefined) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
@@ -103,8 +103,8 @@ const getInvestmentCurrency = (investment: string) => {
 
 export const computeCashFlowByDate = (response: any, currencies: Currencies): { [K: string]: CashFlow } => {
   return response
-    .filter((t) => !t.deleted)
-    .reduce((hash, transaction) => {
+    .filter((t: any) => !t.deleted)
+    .reduce((hash: any, transaction: any) => {
       const type = transaction.type;
       if (['sell', 'buy', 'unknown', 'split', 'reinvest'].includes(type)) {
         return hash;
@@ -164,16 +164,16 @@ export const computeCashFlowByDate = (response: any, currencies: Currencies): { 
 
 export const parseSecurityTransactionsResponse = (response: any, currencies: Currencies): Transaction[] => {
   return response
-    .filter((t) => !t.deleted && t.type)
+    .filter((t: any) => !t.deleted && t.type)
     .filter(
-      (transaction) =>
+      (transaction: any) =>
         (['sell', 'buy', 'income', 'dividend', 'distribution', 'tax', 'fee', 'split', 'reinvest'].includes(
           transaction.type.toLowerCase(),
         ) ||
           isSecuritiesAccountsTransfer(transaction)) &&
         (transaction.security || transaction.symbol),
     )
-    .map((transaction) => {
+    .map((transaction: any) => {
       const date = getDate(transaction.date);
 
       const amount = currencies.getValue(
@@ -223,21 +223,21 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
 
       return _transaction;
     })
-    .sort((a, b) => a.date.valueOf() - b.date.valueOf());
+    .sort((a: any, b: any) => a.date.valueOf() - b.date.valueOf());
 };
 
 export const parseAccountTransactionsResponse = (response: any, currencies: Currencies): AccountTransaction[] => {
   return response
-    .filter((t) => !t.deleted && t.type)
+    .filter((t: any) => !t.deleted && t.type)
     .filter(
-      (transaction) =>
+      (transaction: any) =>
         (!(transaction.security || transaction.symbol) &&
           ['income', 'interest', 'deposit', 'withdrawal', 'transfer', 'fee'].includes(
             transaction.type.toLowerCase(),
           )) ||
         isSecuritiesAccountsTransfer(transaction),
     )
-    .map((transaction) => {
+    .map((transaction: any) => {
       const date = getDate(transaction.date);
       const amount = currencies.getValue(
         getInvestmentCurrency(transaction.investment),
@@ -257,5 +257,5 @@ export const parseAccountTransactionsResponse = (response: any, currencies: Curr
 };
 
 export const parsePositionsResponse = (response: any): Position[] => {
-  return response.filter((position) => position.market_value >= 0.5).map((position) => position as Position);
+  return response.filter((position: any) => position.market_value >= 0.5).map((position: any) => position as Position);
 };

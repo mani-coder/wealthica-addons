@@ -87,7 +87,7 @@ const IncomeTable = React.memo(
     }
 
     return (
-      <div className="zero-padding">
+      <div className="zero-padding mb-2">
         <Collapsible title="Income History" closed>
           <Table<IncomeTransaction>
             rowKey="id"

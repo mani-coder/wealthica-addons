@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Empty, Switch, Typography } from 'antd';
 import { useMemo, useState } from 'react';
-import { Box, Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
@@ -19,13 +19,13 @@ export function TopGainersLosers(props: {
   const [pnlSymbol, setPnlSymbol] = useState<string>();
   const { baseCurrencyDisplay } = useCurrency();
 
-  function getTopGainersLosers(gainers: boolean): Highcharts.SeriesColumnOptions[] {
+  function getTopGainersLosers(gainers: boolean): any[] {
     return [
       {
         name: gainers ? 'Top Gainers' : 'Top Losers',
         type: 'column',
         events: {
-          click(event) {
+          click(event: any) {
             if (event.point.name && pnlSymbol !== event.point.name) {
               setTimeout(() => {
                 setPnlSymbol((event.point as any).symbol);
@@ -85,7 +85,7 @@ export function TopGainersLosers(props: {
     subtitle,
     series,
   }: {
-    series: Highcharts.SeriesColumnOptions[];
+    series: any[];
     title?: string;
     subtitle?: string;
     yAxisTitle?: string;
@@ -212,17 +212,9 @@ export function TopGainersLosers(props: {
     );
   };
 
-  return !!props.positions.length ? (
+  return props.positions.length ? (
     <>
-      <Flex
-        mb={3}
-        mt={2}
-        width={1}
-        justifyContent="center"
-        alignContent="center"
-        justifyItems="center"
-        alignItems="center"
-      >
+      <div className="flex mb-6 w-full justify-center items-center">
         <Switch
           checked={sortByValue}
           onChange={(checked) => {
@@ -230,11 +222,11 @@ export function TopGainersLosers(props: {
             trackEvent('gainers-show-by-pnl-value', { checked });
           }}
         />
-        <Box px={1} />
+        <div className="px-2 mb-2" />
         <Typography.Text strong mark={sortByValue} style={{ fontSize: 17 }}>
           Show By P&amp;L Value ($)
         </Typography.Text>
-      </Flex>
+      </div>
 
       {!!(gainers.series && gainers.series[0] && (gainers.series[0] as any).data.length) && (
         <Charts options={gainers} />

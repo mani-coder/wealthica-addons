@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-template-curly-in-string */
+ 
 import { Empty, Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
@@ -45,12 +45,12 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     return account ? account.name : accountById;
   }
 
-  function parseSecuritiesResponse(response) {
+  function parseSecuritiesResponse(response: any) {
     let to = getDate(response.to);
     const data: StockPrice[] = [];
-    let prevPrice;
+    let prevPrice: number | undefined;
     response.data
-      .filter((closePrice) => closePrice)
+      .filter((closePrice: number) => closePrice)
       .reverse()
       .forEach((closePrice: number) => {
         if (!prevPrice) {
@@ -86,8 +86,8 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       if (addon) {
         addon
           .request({ query: {}, method: 'GET', endpoint })
-          .then((response) => parseSecuritiesResponse(response))
-          .catch((error) => {
+          .then((response: any) => parseSecuritiesResponse(response))
+          .catch((error: any) => {
             console.log('Failed to load stock prices.', error);
             setPrices([]);
           })
@@ -106,10 +106,10 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     }
   }, [symbol, position]);
 
-  function getNextWeekday(date) {
+  function getNextWeekday(date: any) {
     const referenceDate = dayjs(date);
-    let day = referenceDate.day();
-    let diff = day === 6 ? 2 : day === 0 ? 1 : 0;
+    const day = referenceDate.day();
+    const diff = day === 6 ? 2 : day === 0 ? 1 : 0;
     return (diff ? referenceDate.add(diff, 'days') : referenceDate).format(DATE_FORMAT);
   }
 
@@ -137,7 +137,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
 
         const tPrice = t.type === 'reinvest' ? 0 : t.price;
         const splitRatio = t.splitRatio || 1;
-        let lastBuySell = accountBook.pop() || { shares: 0, price: 0, date };
+        const lastBuySell = accountBook.pop() || { shares: 0, price: 0, date };
         const newPositionShares = Number(
           (!isSplit ? lastBuySell.shares + t.shares : Math.floor(lastBuySell.shares / splitRatio)).toFixed(10),
         );
@@ -160,7 +160,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
         accountBook.push(newPosition);
 
         // Update all book.
-        let allLastBuySell = book.all.pop() || { shares: 0, price: 0, date };
+        const allLastBuySell = book.all.pop() || { shares: 0, price: 0, date };
         const shares = Number(
           (isSplit
             ? allLastBuySell.shares - lastBuySell.shares + newPosition.shares
@@ -189,7 +189,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
       return hash;
     }, {} as { [K: string]: { shares: number; price: number } });
     let data: any[] = [];
-    let _entry;
+    let _entry: any;
     prices.forEach((price) => {
       const entry = allBook[price.timestamp.format(DATE_FORMAT)];
       _entry = entry ? entry : _entry;
@@ -256,7 +256,7 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     ];
   }
 
-  function getFlags(type: string): Highcharts.SeriesFlagsOptions {
+  function getFlags(type: string): any {
     const isBuySell = ['buy', 'sell', 'reinvest', 'transfer'].includes(type);
     const _type = type === 'transfer' ? 'buy' : type;
 
@@ -317,15 +317,15 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
             account: getAccountName(transaction.account),
           };
         }),
-      color: TYPE_TO_COLOR[type],
-      fillColor: TYPE_TO_COLOR[type],
+      color: (TYPE_TO_COLOR as any)[type],
+      fillColor: (TYPE_TO_COLOR as any)[type],
       style: {
         color: 'white', // text style
       },
     };
   }
 
-  function getOptions(series: Highcharts.SeriesLineOptions[]): Highcharts.Options {
+  function getOptions(series: any[]): Highcharts.Options {
     const dividends = position.transactions
       .filter((transaction) => transaction.type === 'dividend')
       .reduce((dividend, transaction) => dividend + transaction.amount, 0);
@@ -429,9 +429,9 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     <>
       <hr />
       {loading ? (
-        <Flex justifyContent="center" height={300} alignItems="center">
+        <div className="flex justify-center items-center" style={{ height: 300 }}>
           <Spin size="large" />
-        </Flex>
+        </div>
       ) : !prices || !prices.length ? (
         <Empty description={`Can't load stock price for ${symbol}`} />
       ) : (

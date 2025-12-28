@@ -6,7 +6,7 @@ import { getSymbol } from './common';
 export function computeXIRR(position: Position) {
   const data = position.transactions.reduce(
     (hash, transaction) => {
-      if (['buy', 'sell', 'reinvest', 'split']) {
+      if (['buy', 'sell', 'reinvest', 'split'].includes(transaction.type)) {
         const openShares = hash.book[transaction.account] || 0;
 
         let outstandingShares = 0;

@@ -1,5 +1,5 @@
 import { Radio, Typography } from 'antd';
-import { Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import { Account } from '../types';
 
@@ -13,7 +13,7 @@ type Props = {
 
 export default function CompositionGroup({ group = 'currency', changeGroup, tracker }: Props) {
   return (
-    <Flex width={1} flexDirection="column" alignItems="center" py={2} mb={2}>
+    <div className="flex w-full flex-col items-center">
       <Typography.Title level={4}>Group By</Typography.Title>
       <Radio.Group
         optionType="button"
@@ -30,7 +30,7 @@ export default function CompositionGroup({ group = 'currency', changeGroup, trac
           { label: 'Account', value: 'accounts' },
         ]}
       />
-    </Flex>
+    </div>
   );
 }
 

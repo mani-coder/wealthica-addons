@@ -30,7 +30,7 @@ export function usePrint({ title, children }: Props) {
       setPrinting(true);
 
       if (render) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         
         ReactDOM.render(component, document.getElementById('pnl-addon-printable-content')!);
       }
 

@@ -18,9 +18,21 @@ Highcharts.setOptions({
     },
   },
   time: {
-    getTimezoneOffset: function (timestamp) {
+    getTimezoneOffset: function (_timestamp) {
       return TZ_OFFSET;
     },
+  },
+  rangeSelector: {
+    buttonTheme: {
+      states: {
+        select: {
+          fill: '#10b981',
+        },
+      },
+    },
+  },
+  navigator: {
+    maskFill: 'rgba(16, 185, 129, 0.3)',
   },
 });
 
@@ -30,15 +42,25 @@ type Props = {
 };
 
 export function Charts(props: Props) {
-  const options = props.options;
+  const options = {
+    ...props.options,
+    chart: {
+      ...props.options.chart,
+      width: null, // Let chart use full container width
+      reflow: true, // Enable automatic reflow
+    },
+  };
+
   return !!options.series && !!options.series.length ? (
     <ErrorBoundary message="Failed to load the chart!">
-      <HighchartsReact
-        highcharts={Highcharts}
-        constructorType={props.constructorType}
-        options={options}
-        oneToOne={true}
-      />
+      <div className="w-full">
+        <HighchartsReact
+          highcharts={Highcharts}
+          constructorType={props.constructorType}
+          options={options}
+          oneToOne={true}
+        />
+      </div>
     </ErrorBoundary>
   ) : (
     <></>

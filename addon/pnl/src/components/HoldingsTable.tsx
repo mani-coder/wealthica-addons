@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+ 
 import { Table, TableColumnProps, Typography } from 'antd';
 import React from 'react';
-import { Box } from 'rebass';
+
 import useCurrency from '../hooks/useCurrency';
 import { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils/common';
@@ -23,7 +23,7 @@ function HoldingsTable(props: Props) {
         key: 'symbol',
         title: 'Symbol',
         dataIndex: 'security.name',
-        render: (text, position) => (
+        render: (_text, position) => (
           <Typography.Link
             rel="noreferrer noopener"
             href={`https://finance.yahoo.com/quote/${getSymbol(position.security, true)}`}
@@ -42,7 +42,7 @@ function HoldingsTable(props: Props) {
         dataIndex: 'security.currency',
         filters: allCurrencies.map((value) => ({ text: value.toUpperCase(), value: value.toLocaleLowerCase() })),
         onFilter: (value, position) => position.security.currency === value,
-        render: (text, position) => position.security.currency.toLocaleUpperCase(),
+        render: (_text, position) => position.security.currency.toLocaleUpperCase(),
         sorter: (a, b) => a.security.currency.localeCompare(b.security.currency),
         width: 125,
       },
@@ -51,7 +51,7 @@ function HoldingsTable(props: Props) {
         title: 'Last Price',
         align: 'right',
         dataIndex: 'security.last_price',
-        render: (text, position) => (
+        render: (_text, position) => (
           <>
             {formatMoney(position.security.last_price)}
             <div style={{ fontSize: 11 }}>{position.security.currency.toUpperCase()}</div>
@@ -73,7 +73,7 @@ function HoldingsTable(props: Props) {
         key: 'buyPrice',
         title: 'Avg Cost / Share',
         dataIndex: 'quantity',
-        render: (text, position) => (
+        render: (_text, position) => (
           <>
             <Typography.Text strong>
               {formatMoney(
@@ -95,16 +95,16 @@ function HoldingsTable(props: Props) {
           </>
         ),
         dataIndex: 'gain_percent',
-        render: (text, position) => (
-          <Box style={{ color: position.gain_percent < 0 ? 'red' : 'green' }}>
+        render: (_text, position) => (
+          <div style={{ color: position.gain_percent < 0 ? 'red' : 'green' }}>
             <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
               {formatMoney(position.gain_percent * 100)}%
             </Typography.Text>
-            <Box />
+            <div />
             <Typography.Text style={{ color: 'inherit', fontSize: 13 }}>
               {formatMoney(position.gain_amount)}
             </Typography.Text>
-          </Box>
+          </div>
         ),
         align: 'right',
         sorter: (a, b) => a.gain_percent - b.gain_percent,
@@ -113,12 +113,12 @@ function HoldingsTable(props: Props) {
         key: 'XIRR',
         title: 'XIRR %',
         dataIndex: 'xirr',
-        render: (text, position) => (
-          <Box style={{ color: position.xirr < 0 ? 'red' : 'green' }}>
+        render: (_text, position) => (
+          <div style={{ color: position.xirr < 0 ? 'red' : 'green' }}>
             <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
               {formatMoney(position.xirr * 100)}%
             </Typography.Text>
-          </Box>
+          </div>
         ),
         align: 'right',
         sorter: (a, b) => a.gain_percent - b.gain_percent,
@@ -144,7 +144,7 @@ function HoldingsTable(props: Props) {
   }
 
   return (
-    <div className="zero-padding">
+    <div className="zero-padding mb-2">
       <Collapsible title="Holdings Table" closed>
         <Table<Position>
           rowKey={(row) => getSymbol(row.security)}

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import * as Highcharts from 'highcharts';
 import { useMemo, useState } from 'react';
-import { Flex } from 'rebass';
+
 import useCurrency from '../hooks/useCurrency';
 import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
@@ -73,7 +73,7 @@ export default function HoldingsCharts(props: Props) {
       });
 
     const events = {
-      click: (event) => {
+      click: (event: any) => {
         if (event.point.name && timelineSymbol !== event.point.name) {
           setTimelineSymbol((event.point as any).symbol);
         }
@@ -96,7 +96,7 @@ export default function HoldingsCharts(props: Props) {
         showInLegend: false,
       },
       pie: {
-        type: 'pie' as 'pie',
+        type: 'pie' as const,
         id: 'Holdings Pie',
         name: 'Holdings',
 
@@ -168,12 +168,12 @@ export default function HoldingsCharts(props: Props) {
     <>
       <Charts options={columnChartOptions} />
 
-      <Flex width={1} flexWrap="wrap" alignItems="stretch">
-        <Flex width={[1, 1, 2 / 3]} height="100%" justifyContent="center">
+      <div className="flex w-full flex-wrap items-stretch">
+        <div className="flex justify-center w-2/3 h-full">
           <Charts options={pieChartOptions} />
-        </Flex>
+        </div>
 
-        <Flex width={[1, 1, 1 / 3]} pr={4} height="100%" justifyContent="center">
+        <div className="flex justify-center w-1/3 h-full">
           <StockSelector
             positions={props.positions}
             accounts={props.accounts}
@@ -181,8 +181,8 @@ export default function HoldingsCharts(props: Props) {
             selectedSymbol={timelineSymbol}
             setSelectedSymbol={setTimelineSymbol}
           />
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
       {renderStockTimeline()}
 

@@ -33,18 +33,18 @@ export const formatMoneyWithCurrency = (amount: number, currency: string, precis
   })}`;
 };
 
-function getRandomInt(n) {
+function getRandomInt(n: number) {
   return Math.floor(Math.random() * n);
 }
 
 export function shuffle(s: string) {
-  var arr = s.split(''); // Convert String to array
-  var n = arr.length; // Length of the array
+  const arr = s.split(''); // Convert String to array
+  const n = arr.length; // Length of the array
 
-  for (var i = 0; i < n - 1; ++i) {
-    var j = getRandomInt(n); // Get random of [0, n-1]
+  for (let i = 0; i < n - 1; ++i) {
+    const j = getRandomInt(n); // Get random of [0, n-1]
 
-    var temp = arr[i]; // Swap arr[i] and arr[j]
+    const temp = arr[i]; // Swap arr[i] and arr[j]
     arr[i] = arr[j];
     arr[j] = temp;
   }
@@ -76,7 +76,7 @@ export const max = (data: any[], field: string): any => {
 };
 
 export const formatCurrency = (amount: number, digits: number) => {
-  var si = [
+  const si = [
     { value: 1, symbol: '' },
     { value: 1e3, symbol: 'K' },
     { value: 1e6, symbol: 'M' },
@@ -85,8 +85,8 @@ export const formatCurrency = (amount: number, digits: number) => {
     { value: 1e15, symbol: 'P' },
     { value: 1e18, symbol: 'E' },
   ];
-  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  var i;
+  const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+  let i;
   for (i = si.length - 1; i > 0; i--) {
     if (Math.abs(amount) >= si[i].value) {
       break;
@@ -116,9 +116,9 @@ export function buildCorsFreeUrl(target: string): string {
   return `https://cors.mani-coder.dev/${url}`;
 }
 
-export function getPreviousWeekday(date) {
+export function getPreviousWeekday(date: any) {
   const referenceDate = dayjs(date);
-  let day = referenceDate.day();
+  const day = referenceDate.day();
   let diff = 1; // returns yesterday
   if (day === 0 || day === 1) {
     // is Sunday or Monday
@@ -127,17 +127,17 @@ export function getPreviousWeekday(date) {
   return referenceDate.subtract(diff, 'days');
 }
 
-export function setLocalCache(name, value) {
+export function setLocalCache(name: string, value: string) {
   try {
     window.localStorage.setItem(name, value);
   } catch {}
 }
 
-export function sumOf(...args) {
+export function sumOf(...args: number[]) {
   return args.reduce((s, value) => (value ? s + value : s), 0);
 }
 
-export function getLocalCache(name) {
+export function getLocalCache(name: string) {
   try {
     return window.localStorage.getItem(name);
   } catch {}

@@ -2,7 +2,7 @@ import { DatePicker, Space, Table, TableColumnsType, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { Flex } from 'rebass';
+
 import useCurrency from '../hooks/useCurrency';
 import { Position, Transaction } from '../types';
 import { formatMoney, getSymbol, sumOf } from '../utils/common';
@@ -31,7 +31,7 @@ export default function TradingActivities(props: Props) {
   const [fromDate, setFromDate] = useState<Dayjs>(dayjs().startOf('month'));
   const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const symbolPriceCache = useMemo(() => {
-    return props.positions.reduce((hash, position) => {
+    return props.positions.reduce((hash: { [key: string]: any }, position) => {
       hash[getSymbol(position.security)] = position.security.last_price;
       return hash;
     }, {});
@@ -52,7 +52,7 @@ export default function TradingActivities(props: Props) {
         dataIndex: 'currency',
         filters: allCurrencies.map((value) => ({ text: value.toUpperCase(), value: value.toLocaleLowerCase() })),
         onFilter: (value, security) => security.currency === value,
-        render: (text, security) => security.currency.toLocaleUpperCase(),
+        render: (_text, security) => security.currency.toLocaleUpperCase(),
         sorter: (a, b) => a.currency.localeCompare(b.currency),
       },
       {
@@ -88,7 +88,7 @@ export default function TradingActivities(props: Props) {
       {
         key: 'pnl',
         title: 'Change %',
-        render: (value, security) => {
+        render: (_value, security) => {
           const change = security.lastPrice - security.price;
           return security.shares >= 0 && security.lastPrice ? (
             <Typography.Text strong style={{ color: change > 0 ? 'green' : 'red', fontSize: 14 }}>
@@ -110,7 +110,7 @@ export default function TradingActivities(props: Props) {
         (transaction) =>
           transaction.date.isSameOrAfter(fromDate) && TRANSACTION_TYPES.includes(transaction.originalType),
       )
-      .reduce((hash, transaction) => {
+      .reduce((hash: { [key: string]: any }, transaction) => {
         const symbol = transaction.symbol;
         if (!hash[symbol]) {
           hash[symbol] = {
@@ -152,7 +152,7 @@ export default function TradingActivities(props: Props) {
     const dates = [
       dayjs().startOf('year'),
       ..._.range(6).map((num) => dayjs().subtract(num, 'month').startOf('month')),
-    ].reduce((hash, date: Dayjs) => {
+    ].reduce((hash: { [key: string]: any }, date: Dayjs) => {
       hash[date.format("MMMM' YY")] = date;
       return hash;
     }, {} as { [K: string]: Dayjs });
@@ -168,7 +168,7 @@ export default function TradingActivities(props: Props) {
         size="large"
         bordered
         title={() => (
-          <Flex justifyContent="space-between">
+          <div className="flex justify-between">
             <Typography.Title level={3}>Trading Activities</Typography.Title>
             <Space direction="horizontal">
               <Typography.Text strong type="secondary">
@@ -183,7 +183,7 @@ export default function TradingActivities(props: Props) {
                 presets={presets}
               />
             </Space>
-          </Flex>
+          </div>
         )}
         pagination={false}
         scroll={{ y: 750 }}
@@ -211,5 +211,5 @@ export default function TradingActivities(props: Props) {
     );
   }
 
-  return <div className="zero-padding">{renderTable(securities)}</div>;
+  return <div className="zero-padding mb-2">{renderTable(securities)}</div>;
 }

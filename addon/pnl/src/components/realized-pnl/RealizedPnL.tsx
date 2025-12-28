@@ -4,7 +4,7 @@ import { Checkbox, Empty, Radio, Statistic, Typography } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import * as Highcharts from 'highcharts';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Flex } from 'rebass';
+
 import { trackEvent } from '../../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT, DEBUG_LOCAL_STORAGE_KEY } from '../../constants';
 import { getLocalCache } from '../../utils/common';
@@ -494,7 +494,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
 
       const data = Object.values(pnls);
       const accountsSeries: Highcharts.SeriesPieOptions = {
-        type: 'pie' as 'pie',
+        type: 'pie' as const,
         id: 'accounts',
         name: 'Accounts',
         dataLabels: {
@@ -610,7 +610,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
   const show = closedPositions.length > 0 || incomeTransactions.length > 0 || expenseTransactions.length > 0;
   return show ? (
     <>
-      <Flex mt={2} mb={3} justifyContent="center">
+      <div className="flex mt-4 mb-6 justify-center mb-2">
         <Statistic
           value={isPrivateMode ? '--' : closedPnL}
           precision={2}
@@ -618,17 +618,9 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
           valueStyle={{ color: closedPnL >= 0 ? 'green' : 'red' }}
           prefix={closedPnL >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />
-      </Flex>
+      </div>
 
-      <Flex
-        mb={3}
-        mt={2}
-        width={1}
-        justifyContent="center"
-        alignContent="center"
-        justifyItems="center"
-        alignItems="center"
-      >
+      <div className="flex mb-6 mt-4 w-full justify-center items-center mb-2">
         <Checkbox.Group
           options={typesOptions}
           value={types}
@@ -637,7 +629,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
             trackEvent('realized-pnl-types', { types: checkedValues });
           }}
         />
-      </Flex>
+      </div>
 
       <div style={{ position: 'relative' }}>
         <Charts key={timeline} options={options} />
@@ -652,7 +644,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
         )}
       </div>
 
-      <Flex width={1} justifyContent="center" py={2} mb={4}>
+      <div className="flex w-full justify-center py-4 mb-8 mb-2">
         <Radio.Group
           defaultValue={timeline}
           size="large"
@@ -669,7 +661,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
           ]}
           optionType="button"
         />
-      </Flex>
+      </div>
 
       <Collapsible title="Realized P&L Composition">
         <Charts key={timeline} options={accountSeriesOptions} />{' '}

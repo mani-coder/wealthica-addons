@@ -4,25 +4,25 @@ import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
 import { Card, Divider, Statistic, StatisticProps, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
-import { Box, Flex } from 'rebass';
 import { Portfolio, Position } from '../types';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
   return (
-    <Box p={1} mr={3}>
+    <div className="p-2 mr-6 mb-2">
       <Statistic
         {...props}
+
         title={
           props.tooltip ? (
             <Tooltip title={props.tooltip}>
-              {props.title} <QuestionCircleOutlined color="#8c8c8c" />
+              {props.title} <QuestionCircleOutlined className='text-gray-500' />
             </Tooltip>
           ) : (
-            props.title
+            <span className='text-zinc-600'>{props.title}</span>
           )
         }
       />
-    </Box>
+    </div>
   );
 }
 
@@ -67,8 +67,8 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
   console.debug('PnL Statistics', { fromDate, toDate, startPortfolio, portfolios });
 
   return (
-    <Card bodyStyle={{ backgroundColor: '#f9f0ff' }} style={{ borderRadius: 6, borderColor: '#efdbff' }}>
-      <Flex width={1} justifyContent="space-between" flexWrap="wrap">
+    <Card styles={{ body: { backgroundColor: '#d1fae5' } }} className="rounded-md border-[#6ee7b7]">
+      <div className="flex w-full justify-between flex-wrap mb-2">
         <StatisticBox
           title="Current Portfolio Value"
           value={privateMode ? '--' : portfolio.value}
@@ -128,11 +128,11 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
           <>
             <Divider style={{ marginTop: 12, marginBottom: 12 }} />
 
-            <Flex width={1} mb={2} justifyContent="center">
+            <div className="flex w-full mb-4 justify-center mb-2">
               <Typography.Text strong>
                 {fromDateDisplay} - {toDateDisplay}
               </Typography.Text>
-            </Flex>
+            </div>
 
             <StatisticBox
               title="Deposits"
@@ -153,14 +153,14 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
             <StatisticBox
               title="P/L $ Change"
               tooltip={`P/L Value change from ${fromDateDisplay} to ${toDateDisplay}`}
-              valueStyle={{ color: timelinePnlChangeValue >= 0 ? 'green' : 'red' }}
+              valueStyle={{ color: timelinePnlChangeValue ? timelinePnlChangeValue >= 0 ? 'green' : 'red' : 'grey' }}
               value={privateMode ? '--' : timelinePnlChangeValue}
               precision={privateMode ? undefined : 2}
               prefix="$"
             />
           </>
         )}
-      </Flex>
+      </div>
     </Card>
   );
 }

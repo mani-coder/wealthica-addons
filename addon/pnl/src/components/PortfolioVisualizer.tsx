@@ -1,6 +1,6 @@
 import { Typography } from 'antd';
 import React from 'react';
-import { Box, Flex } from 'rebass';
+
 import { trackEvent } from '../analytics';
 import { Position } from '../types';
 import { getSymbol, getURLParams } from '../utils/common';
@@ -8,7 +8,7 @@ import Collapsible from './Collapsible';
 
 const Link = ({ href, title }: { href: string; title: string }) => {
   return (
-    <Box width={275}>
+    <div className="w-[275px]">
       <Typography.Link
         href={href}
         target="_blank"
@@ -17,7 +17,7 @@ const Link = ({ href, title }: { href: string; title: string }) => {
       >
         {title}
       </Typography.Link>
-    </Box>
+    </div>
   );
 };
 
@@ -29,7 +29,7 @@ function PortfolioVisualizer({ positions }: { positions: Position[] }) {
 
     let remainingWeightage = 100;
     const params = getURLParams(
-      positions.reduce((hash, position, index) => {
+      positions.reduce((hash: { [key: string]: any }, position, index) => {
         // symbol1=QD&allocation1_1=1&
         // symbol2=TTD&allocation2_1=15
         let weightage = Number(((position.market_value / marketValue) * 100).toFixed(1));
@@ -67,10 +67,10 @@ function PortfolioVisualizer({ positions }: { positions: Position[] }) {
 
   return (
     <Collapsible title="Portoflio Visualizer Tools">
-      <Flex width={1}>
+      <div className="flex w-full mb-2">
         <Link href={getBacktestPortfolioAssetAllocationLink()} title="Backtest Portfolio Asset Allocation" />
         <Link href={factorRegression()} title="Factor Regression (US Stocks)" />
-      </Flex>
+      </div>
     </Collapsible>
   );
 }

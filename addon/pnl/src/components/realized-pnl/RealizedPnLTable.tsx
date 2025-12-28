@@ -3,7 +3,7 @@ import { Table, TableColumnProps, TableColumnType, Tooltip, Typography } from 'a
 import dayjs, { Dayjs } from 'dayjs';
 import _ from 'lodash';
 import React from 'react';
-import { Box, Flex } from 'rebass';
+
 import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
 import { Account, Transaction } from '../../types';
@@ -20,12 +20,12 @@ const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => 
       key: 'shares',
       title: 'Shares',
       dataIndex: 'shares',
-      render: (text, t) => `${Math.abs(t.shares)}@${formatMoney(t.price)}`,
+      render: (_text, t) => `${Math.abs(t.shares)}@${formatMoney(t.price)}`,
     },
   ];
 
   return (
-    <Flex width="450">
+    <div className="w-[450px]">
       <Table<Transaction>
         rowKey="id"
         bordered
@@ -34,7 +34,7 @@ const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => 
         dataSource={transactions}
         columns={columns}
       />
-    </Flex>
+    </div>
   );
 };
 
@@ -103,7 +103,7 @@ const RealizedPnLTable = React.memo(
         {
           key: 'price',
           title: (
-            <Box>
+            <div>
               <div>Buy Price /</div>
               <div>
                 Sell Price{' '}
@@ -111,11 +111,11 @@ const RealizedPnLTable = React.memo(
                   <QuestionCircleTwoTone twoToneColor="#bfbfbf" />
                 </Tooltip>
               </div>
-            </Box>
+            </div>
           ),
           align: 'center',
           width: 150,
-          render: (text, position) => (
+          render: (_text, position) => (
             <>
               {formatMoneyWithCurrency(position.buyPrice, position.currency)} /{' '}
               <span style={{ whiteSpace: 'nowrap' }}>{formatMoney(position.sellPrice)}</span>
@@ -125,17 +125,17 @@ const RealizedPnLTable = React.memo(
         {
           key: 'cost',
           title: (
-            <Box>
+            <div>
               <div>ACB /</div>
               <div>Proceeds </div>
               <Typography.Text style={{ fontSize: 12 }}>({baseCurrencyDisplay})</Typography.Text>{' '}
               <Tooltip title="This is the Adjusted Cost Base (ACB) which includes the buy/sell transaction fees.">
                 <QuestionCircleTwoTone twoToneColor="#bfbfbf" />
               </Tooltip>
-            </Box>
+            </div>
           ),
           align: 'right',
-          render: (text, position) => {
+          render: (_text, position) => {
             return (
               <>
                 {formatMoney(position.buyCost)} / {formatMoney(position.sellCost)}
@@ -150,17 +150,17 @@ const RealizedPnLTable = React.memo(
               P&L $%<div style={{ fontSize: 12 }}>({baseCurrencyDisplay})</div>
             </>
           ),
-          render: (text, position) => {
+          render: (_text, position) => {
             return (
-              <Box style={{ color: position.pnl < 0 ? 'red' : 'green' }}>
+              <div style={{ color: position.pnl < 0 ? 'red' : 'green' }}>
                 <Typography.Text strong style={{ color: 'inherit', fontSize: 14 }}>
                   {isPrivateMode ? '-' : formatMoney(position.pnl)}
                 </Typography.Text>
-                <Box />
+                <div />
                 <Typography.Text style={{ color: 'inherit', fontSize: 13 }}>
                   {formatMoney(position.pnlRatio)}%
                 </Typography.Text>
-              </Box>
+              </div>
             );
           },
           align: 'right',
@@ -174,7 +174,7 @@ const RealizedPnLTable = React.memo(
               <Typography.Text style={{ color: '#8c8c8c' }}>Holding Period</Typography.Text>
             </>
           ),
-          render: (text, position) => (
+          render: (_text, position) => (
             <>
               <div>
                 <Typography.Text>
@@ -193,7 +193,7 @@ const RealizedPnLTable = React.memo(
     }
 
     return (
-      <div className="zero-padding">
+      <div className="zero-padding mb-2">
         <Collapsible title="Realized P&L History" closed>
           <PrintableTable<ClosedPosition>
             printTitle={`Realized Gain/Loss For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(

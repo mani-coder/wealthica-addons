@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Table, TableColumnProps, Typography } from 'antd';
 import React, { useMemo } from 'react';
-import { Box, Flex } from 'rebass';
 import useCurrency from '../hooks/useCurrency';
 import { Account } from '../types';
 import { formatMoney, sumOf } from '../utils/common';
@@ -90,14 +89,14 @@ function CashTable(props: Props) {
   }
 
   return (
-    <div className="zero-padding">
+    <div className="zero-padding mb-2">
       <Collapsible title="Cash Table">
         <Table<Account>
           rowKey={(row) => `${row.id}:${row.institution}:${row.name}:${row.currency}`}
           pagination={false}
           scroll={{ y: 500 }}
           summary={(accounts) => {
-            const currencyValues = accounts.reduce((hash, account) => {
+            const currencyValues = accounts.reduce((hash: { [key: string]: any }, account) => {
               if (!hash[account.currency]) hash[account.currency] = 0;
               hash[account.currency] += account.cash;
               return hash;
@@ -111,15 +110,15 @@ function CashTable(props: Props) {
               <Table.Summary fixed>
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={1} colSpan={4} align="right">
-                    <Flex px={2} flexDirection="row" justifyContent="space-evenly">
+                    <div className="flex flex-row px-4 justify-evenly mb-2">
                       {Object.keys(currencyValues).map((currency) => (
-                        <Box px={2}>
+                        <div key={currency} className="px-4">
                           <Typography.Text strong style={{ color: currencyValues[currency] >= 0 ? 'green' : 'red' }}>
                             {formatMoney(currencyValues[currency])} {currency.toUpperCase()}
                           </Typography.Text>
-                        </Box>
+                        </div>
                       ))}
-                    </Flex>
+                    </div>
                   </Table.Summary.Cell>
 
                   <Table.Summary.Cell index={1} colSpan={1} align="right">
