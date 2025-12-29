@@ -1,9 +1,7 @@
 import { Radio, Typography } from 'antd';
 
 import { trackEvent } from '../analytics';
-import { Account } from '../types';
-
-export type GroupType = 'type' | 'accounts' | 'institution' | 'currency';
+import { GroupType } from '../utils/compositionHelpers';
 
 type Props = {
   group?: GroupType;
@@ -32,21 +30,4 @@ export default function CompositionGroup({ group = 'currency', changeGroup, trac
       />
     </div>
   );
-}
-
-export function getGroupKey(group: GroupType, account?: Account) {
-  if (!account) {
-    return 'N/A';
-  }
-
-  switch (group) {
-    case 'currency':
-      return account.currency.toUpperCase();
-    case 'type':
-      return account.type;
-    case 'institution':
-      return account.instutitionName;
-    default:
-      return account.name;
-  }
 }

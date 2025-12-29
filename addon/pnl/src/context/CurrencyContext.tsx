@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 import type { Dayjs } from 'dayjs';
 import { createContext, ReactNode, useCallback } from 'react';
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY } from '../constants';

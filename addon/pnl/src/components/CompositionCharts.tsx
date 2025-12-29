@@ -9,8 +9,9 @@ import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils/common';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
-import CompositionGroup, { GroupType, getGroupKey } from './CompositionGroup';
-import { POSITION_TOOLTIP, getOptions } from './HoldingsChartsBase';
+import CompositionGroup from './CompositionGroup';
+import { GroupType, getGroupKey } from '../utils/compositionHelpers';
+import { POSITION_TOOLTIP, getOptions } from '../utils/chartHelpers';
 
 type Props = {
   positions: Position[];

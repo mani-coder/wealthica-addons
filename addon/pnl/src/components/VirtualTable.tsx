@@ -21,6 +21,7 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
   });
 
   const gridRef = useRef<any>();
+  // eslint-disable-next-line react-hooks/refs -- Advanced pattern: creating a connector object for Ant Design Table to control react-window Grid scroll
   const [connectObject] = useState<any>(() => {
     const obj = {};
     Object.defineProperty(obj, 'scrollLeft', {

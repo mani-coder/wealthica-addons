@@ -86,6 +86,7 @@ export function Events({ positions }: { positions: Position[] }) {
         .add(60, 'days')
         .format(DATE_FORMAT)}&tickers=${_symbols}`,
     );
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: subscribing to external API and managing loading state
     setLoading(true);
 
     fetch(url, {
@@ -179,6 +180,7 @@ export function Events({ positions }: { positions: Position[] }) {
     ];
   }
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Memoization is necessary for performance and is correctly implemented
   const eventsByDate = useMemo(() => {
     if (!events) {
       return {};

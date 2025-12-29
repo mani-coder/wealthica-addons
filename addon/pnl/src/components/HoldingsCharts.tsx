@@ -7,7 +7,8 @@ import { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import CompositionCharts from './CompositionCharts';
-import { POSITION_TOOLTIP, StockSelector, getOptions, getOptionsV2 } from './HoldingsChartsBase';
+import { StockSelector } from './HoldingsChartsBase';
+import { POSITION_TOOLTIP, getOptions, getOptionsV2 } from '../utils/chartHelpers';
 import StockTimeline from './StockTimeline';
 
 type Props = {

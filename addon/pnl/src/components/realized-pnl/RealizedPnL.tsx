@@ -13,7 +13,8 @@ import { Account, AccountTransaction, SecurityTransaction, Transaction } from '.
 import { formatCurrency, formatMoney } from '../../utils/common';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
-import CompositionGroup, { GroupType, getGroupKey } from '../CompositionGroup';
+import CompositionGroup from '../CompositionGroup';
+import { GroupType, getGroupKey } from '../../utils/compositionHelpers';
 import ExpenseTable from './ExpenseTable';
 import IncomeTable, { IncomeTransaction } from './IncomeTable';
 import RealizedPnLTable from './RealizedPnLTable';
