@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
+import { ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
@@ -14,7 +14,7 @@ import {
 } from './api';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
-import ChangeLog, { getNewChangeLogsCount, setChangeLogViewDate } from './components/ChangeLog';
+import ChangeLog, { setChangeLogViewDate } from './components/ChangeLog';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
@@ -74,7 +74,6 @@ export default function App() {
     toDate: dayjs().format(DATE_FORMAT),
   });
   const addOnOptions = addOnOptionsRef.current;
-  const [newChangeLogsCount, setNewChangeLogsCount] = useState<number>();
   const [isLoadingOnUpdate, setLoadingOnUpdate] = useState<boolean>(false);
 
   const getAddon = (addOnOptionsRef: React.RefObject<AddOnOptions>): any => {
@@ -149,8 +148,8 @@ export default function App() {
   });
 
   function updateState(_state: Partial<State>) {
-    console.debug('[DEBUG] Update state', { newState: _state, state });
-    setState({ ...state, ..._state });
+    console.debug('[DEBUG] Update state', { newState: _state });
+    setState((prevState) => ({ ...prevState, ..._state }));
   }
 
   async function loadCurrenciesCache(_baseCurrency: string, currencies: string[]) {
@@ -435,16 +434,7 @@ export default function App() {
     if (!addon.current) {
       setTimeout(loadStaticPortfolioData, 0);
     }
-
-    setTimeout(computeChangeLogCount, 1000);
-  }, [computeChangeLogCount, loadStaticPortfolioData]);
-
-  function computeChangeLogCount() {
-    const newChangeLogsCount = getNewChangeLogsCount();
-    if (newChangeLogsCount) {
-      setNewChangeLogsCount(newChangeLogsCount);
-    }
-  }
+  }, []);
 
   if (state.isLoaded) {
     console.debug('[DEBUG] Loaded State', { state, addOnOptions, isLoadingOnUpdate });
@@ -487,9 +477,8 @@ export default function App() {
                 <Tabs
                   defaultActiveKey={TabKeysEnum.PNL}
                   onChange={(tab) => {
-                    if (tab === 'change-log' && newChangeLogsCount) {
+                    if (tab === 'change-log') {
                       setChangeLogViewDate();
-                      setNewChangeLogsCount(undefined);
                     }
                     trackEvent('tab-change', { tab });
                   }}
@@ -605,11 +594,7 @@ export default function App() {
                       children: <Events positions={state.positions} />,
                     },
                     {
-                      label: (
-                        <Badge count={newChangeLogsCount} overflowCount={9} offset={[15, 2]}>
-                          Change Log
-                        </Badge>
-                      ),
+                      label: 'Change Log',
                       key: TabKeysEnum.CHANGE_LOG,
                       destroyInactiveTabPane: true,
                       children: <ChangeLog />,
