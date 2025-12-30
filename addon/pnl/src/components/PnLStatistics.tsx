@@ -1,10 +1,10 @@
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
 import QuestionCircleOutlined from '@ant-design/icons/QuestionCircleOutlined';
-import { Card, Divider, Statistic, StatisticProps, Tooltip, Typography } from 'antd';
+import { Card, Divider, Statistic, type StatisticProps, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import React from 'react';
-import { Portfolio, Position } from '../types';
+import type { Portfolio, Position } from '../types';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
   return (
@@ -47,8 +47,8 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
 
   const startPortfolio = portfolios.find((portfolio) => portfolio.date === fromDate);
 
-  let timelineDeposits,
-    timelinePnlChangeValue,
+  let timelineDeposits: number | undefined,
+    timelinePnlChangeValue: number | undefined,
     timelinePnlChangeRatio = 0;
   if (startPortfolio) {
     const endPortfolio = portfolio;

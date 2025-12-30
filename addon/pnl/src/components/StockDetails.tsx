@@ -2,7 +2,7 @@ import { Divider, Typography } from 'antd';
 import type { TextProps } from 'antd/es/typography/Text';
 
 import useCurrency from '../hooks/useCurrency';
-import { Account, Position } from '../types';
+import type { Account, Position } from '../types';
 import { cn } from '../utils/cn';
 import { formatMoney, getSymbol, sumOf } from '../utils/common';
 
@@ -38,7 +38,7 @@ export default function StockDetails(props: Props) {
 
   const position = props.positions.find((position) => getSymbol(position.security) === props.symbol);
   if (!position) {
-    return <></>;
+    return null;
   }
 
   const accounts = (props.accounts || [])
@@ -48,8 +48,8 @@ export default function StockDetails(props: Props) {
         ? { name: account.name, quantity: position.quantity, price: position.book_value / position.quantity }
         : undefined;
     })
-    .filter((value) => value)
-    .sort((a, b) => b!.quantity - a!.quantity);
+    .filter((value): value is { name: string; quantity: number; price: number } => !!value)
+    .sort((a, b) => b.quantity - a.quantity);
 
   const currency = position.security.currency ? position.security.currency.toUpperCase() : position.security.currency;
   return (

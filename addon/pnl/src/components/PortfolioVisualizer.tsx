@@ -2,7 +2,7 @@ import { Typography } from 'antd';
 import React from 'react';
 
 import { trackEvent } from '../analytics';
-import { Position } from '../types';
+import type { Position } from '../types';
 import { getSymbol, getURLParams } from '../utils/common';
 import Collapsible from './Collapsible';
 

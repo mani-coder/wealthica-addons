@@ -43,7 +43,6 @@ export function debounce<T extends (...args: any[]) => any>(
 
   const debounced = function (this: any, ...args: any[]) {
     lastArgs = args;
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastThis = this;
 
     const shouldCallNow = leading && !timeout;

@@ -1,5 +1,5 @@
 import PrinterFilled from '@ant-design/icons/PrinterFilled';
-import { Button, Table, TableProps, Typography } from 'antd';
+import { Button, Table, type TableProps, Typography } from 'antd';
 
 import { usePrint } from '../hooks/usePrint';
 import { isChrome } from '../utils/common';

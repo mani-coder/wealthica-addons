@@ -1,17 +1,16 @@
 import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { useCallback, useMemo, useState } from 'react';
-import { startCase } from '../utils/lodash-replacements';
-
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
-import { Account, Position } from '../types';
+import type { Account, Position } from '../types';
+import { getOptions, POSITION_TOOLTIP } from '../utils/chartHelpers';
 import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils/common';
+import { type GroupType, getGroupKey } from '../utils/compositionHelpers';
+import { startCase } from '../utils/lodash-replacements';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup from './CompositionGroup';
-import { GroupType, getGroupKey } from '../utils/compositionHelpers';
-import { POSITION_TOOLTIP, getOptions } from '../utils/chartHelpers';
 
 type Props = {
   positions: Position[];
@@ -102,13 +101,11 @@ export default function CompositionCharts(props: Props) {
                     }
                   : undefined;
               })
-              .filter((value) => value)
-              .sort((a, b) => b!.quantity - a!.quantity)
+              .filter((value): value is { name: string; quantity: number; price: string } => !!value)
+              .sort((a, b) => b.quantity - a.quantity)
               .map(
                 (value) =>
-                  `<tr><td>${value!.name}</td><td style="text-align: right;">${value!.quantity}@${
-                    value!.price
-                  }</td></tr>`,
+                  `<tr><td>${value.name}</td><td style="text-align: right;">${value.quantity}@${value.price}</td></tr>`,
               )
               .join('');
 
@@ -307,7 +304,7 @@ export default function CompositionCharts(props: Props) {
           distance: showHoldings ? 150 : 50,
         },
         tooltip: {
-          headerFormat: `<b>{point.key}<br />{point.percentage:.1f}%</b><hr />`,
+          headerFormat: '<b>{point.key}<br />{point.percentage:.1f}%</b><hr />',
           pointFormatter() {
             const point = this.options as any;
             return `<table>

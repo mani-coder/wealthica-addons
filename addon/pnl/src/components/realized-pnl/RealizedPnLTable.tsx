@@ -1,16 +1,15 @@
 import QuestionCircleTwoTone from '@ant-design/icons/QuestionCircleTwoTone';
-import { Table, TableColumnProps, TableColumnType, Tooltip, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import { Table, type TableColumnProps, type TableColumnType, Tooltip, Typography } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import React from 'react';
-import { sumBy } from '../../utils/lodash-replacements';
-
 import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
-import { Account, Transaction } from '../../types';
+import type { Account, Transaction } from '../../types';
 import { formatDate, formatMoney, formatMoneyWithCurrency } from '../../utils/common';
+import { sumBy } from '../../utils/lodash-replacements';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
-import { ClosedPosition, renderSymbol } from './utils';
+import { type ClosedPosition, renderSymbol } from './utils';
 
 const TransactionTable = ({ transactions }: { transactions: Transaction[] }) => {
   const columns: TableColumnType<Transaction>[] = [

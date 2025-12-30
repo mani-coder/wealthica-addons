@@ -1,12 +1,12 @@
 import { Spin } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { startCase } from '../utils/lodash-replacements';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
-import { Account, Position, Transaction } from '../types';
+import type { Account, Position, Transaction } from '../types';
 import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils/common';
+import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
 type Props = {
@@ -76,10 +76,7 @@ function StockTimeline(props: Props) {
 
     const startDate =
       dayjs.min(
-        (props.position.transactions && props.position.transactions.length
-          ? props.position.transactions[0].date
-          : dayjs()
-        )
+        (props.position.transactions?.length ? props.position.transactions[0].date : dayjs())
           .clone()
           .subtract(1, 'months'),
         dayjs().subtract(6, 'months'),
@@ -117,12 +114,11 @@ function StockTimeline(props: Props) {
         .catch((error: any) => console.log(error))
         .finally(() => setLoading(false));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parseSecuritiesResponse, props.position.security.id]);
+  }, [parseSecuritiesResponse, props.position.security.id, props.addon, props.position.transactions]);
 
   useEffect(() => {
     fetchData();
-  }, [props.symbol, fetchData]);
+  }, [fetchData]);
 
   function getSeries(): any {
     if (!securityTimeline) {
@@ -333,7 +329,7 @@ function StockTimeline(props: Props) {
         },
       ],
       tooltip: {
-        pointFormat: '{series.name}: <b>${point.y}',
+        pointFormat: '{series.name}: <b>' + '$' + '{point.y}',
         valueDecimals: 2,
         split: true,
       },

@@ -1,6 +1,6 @@
 import xirr from 'xirr';
-import { Currencies } from '../context/CurrencyContext';
-import { Position } from '../types';
+import type { Currencies } from '../context/CurrencyContext';
+import type { Position } from '../types';
 import { getSymbol } from './common';
 
 export function computeXIRR(position: Position) {

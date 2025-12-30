@@ -1,7 +1,7 @@
 import ErrorBoundary from 'antd/es/alert/ErrorBoundary';
-import HighchartsReact from 'highcharts-react-official';
 import * as Highcharts from 'highcharts/highstock';
 import HC_DrillDown from 'highcharts/modules/drilldown';
+import HighchartsReact from 'highcharts-react-official';
 import React from 'react';
 
 HC_DrillDown(Highcharts);
@@ -18,9 +18,7 @@ Highcharts.setOptions({
     },
   },
   time: {
-    getTimezoneOffset: function (_timestamp) {
-      return TZ_OFFSET;
-    },
+    getTimezoneOffset: (_timestamp) => TZ_OFFSET,
   },
   rangeSelector: {
     buttonTheme: {
@@ -62,9 +60,7 @@ export function Charts(props: Props) {
         />
       </div>
     </ErrorBoundary>
-  ) : (
-    <></>
-  );
+  ) : null;
 }
 
 export default React.memo(Charts);

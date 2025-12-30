@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
-import { startCase } from '../utils/lodash-replacements';
 import type { CashFlow, Portfolio } from '../types';
 import { formatMoney } from '../utils/common';
+import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 

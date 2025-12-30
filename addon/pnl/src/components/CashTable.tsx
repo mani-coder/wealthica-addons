@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Table, TableColumnProps, Typography } from 'antd';
+import { Table, type TableColumnProps, Typography } from 'antd';
 import React, { useMemo } from 'react';
 import useCurrency from '../hooks/useCurrency';
-import { Account } from '../types';
+import type { Account } from '../types';
 import { formatMoney, sumOf } from '../utils/common';
 import Collapsible from './Collapsible';
 
@@ -14,7 +14,7 @@ function CashTable(props: Props) {
 
   const accounts = useMemo(() => {
     return props.accounts.filter((acc) => acc.cash && acc.cash !== 0).sort(cashComparator);
-  }, [props.accounts]);
+  }, [props.accounts, cashComparator]);
 
   const currencies = useMemo(() => {
     return allCurrencies.map((currency) => ({ value: currency, text: currency.toUpperCase() }));

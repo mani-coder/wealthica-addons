@@ -1,11 +1,11 @@
 import CaretDownOutlined from '@ant-design/icons/CaretDownOutlined';
 import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined';
 import { Empty, Radio, Spin, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { trackEvent } from '../analytics';
-import { Position } from '../types';
+import type { Position } from '../types';
 import { buildCorsFreeUrl, getNasdaqTicker, getSymbol, getSymbolFromNasdaqTicker } from '../utils/common';
 
 type NewsResult = {
@@ -142,9 +142,7 @@ function News({ positions }: { positions: Position[] }) {
 
     setSymbol('All');
     setTimeout(() => fetchNews(_symbols), 100);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [positions]);
+  }, [positions, fetchNews]);
 
   const newsContainerRef = useRef<HTMLDivElement>();
 
@@ -222,8 +220,8 @@ function News({ positions }: { positions: Position[] }) {
 
         {selectedNews.length ? (
           <div ref={newsContainerRef as any} className="w-3/4 h-[70vh] overflow-scroll">
-            {selectedNews.map((_news, index) => (
-              <NewsItem key={`${symbol}-${index}`} news={_news} />
+            {selectedNews.map((_news) => (
+              <NewsItem key={_news.url} news={_news} />
             ))}
           </div>
         ) : (

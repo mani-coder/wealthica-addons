@@ -1,7 +1,7 @@
 import { Typography } from 'antd';
 
-import { Dayjs } from 'dayjs';
-import { Account, Transaction } from '../../types';
+import type { Dayjs } from 'dayjs';
+import type { Account, Transaction } from '../../types';
 
 export type ClosedPosition = {
   key: string;

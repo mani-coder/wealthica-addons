@@ -1,7 +1,7 @@
 import { Radio, Typography } from 'antd';
 
 import { trackEvent } from '../analytics';
-import { GroupType } from '../utils/compositionHelpers';
+import type { GroupType } from '../utils/compositionHelpers';
 
 type Props = {
   group?: GroupType;

@@ -1,4 +1,4 @@
-import * as Highcharts from 'highcharts';
+import type * as Highcharts from 'highcharts';
 
 export const POSITION_TOOLTIP: Highcharts.TooltipOptions = {
   pointFormatter() {

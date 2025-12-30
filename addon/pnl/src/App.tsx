@@ -1,7 +1,6 @@
 import { Addon } from '@wealthica/wealthica.js/index';
 import { Badge, ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { debounce } from './utils/lodash-replacements';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
 import {
@@ -26,15 +25,16 @@ import PnLStatistics from './components/PnLStatistics';
 import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
+import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
-import RealizedPnL from './components/realized-pnl/RealizedPnL';
-import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TRANSACTIONS_FROM_DATE, TabKeysEnum } from './constants';
+import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import dayjs from './dayjs';
-import { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
+import type { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { formatMoney, getSymbol } from './utils/common';
+import { debounce } from './utils/lodash-replacements';
 import { computeBookValue, computeXIRR } from './utils/xirr';
 
 type State = {
@@ -105,7 +105,7 @@ export default function App() {
         const newOptions = updateOptions(addOnOptionsRef.current, options);
         console.debug('Addon initialization', { options, newOptions });
         load();
-        initTracking(options.authUser && options.authUser.id);
+        initTracking(options.authUser?.id);
       });
 
       addon.on('reload', () => {
@@ -389,7 +389,7 @@ export default function App() {
   }
 
   async function loadStaticPortfolioData() {
-    let institutionsData, portfolioData, positionsData, transactionsData;
+    let institutionsData: any, portfolioData: any, positionsData: any, transactionsData: any;
     if (import.meta.env.DEV) {
       const importMock = async (file: string) => {
         try {
@@ -397,7 +397,7 @@ export default function App() {
           const module = await import(/* @vite-ignore */ `./mocks/prod/${file}`);
           return module?.default;
         } catch {
-          console.debug(`[DEV] Mock file not found`, file);
+          console.debug('[DEV] Mock file not found', file);
           return undefined;
         }
       };
@@ -437,8 +437,7 @@ export default function App() {
     }
 
     setTimeout(computeChangeLogCount, 1000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addon.current]);
+  }, [computeChangeLogCount, loadStaticPortfolioData]);
 
   function computeChangeLogCount() {
     const newChangeLogsCount = getNewChangeLogsCount();
@@ -459,25 +458,23 @@ export default function App() {
             {state.isLoaded ? (
               <>
                 {!addon.current && (
-                  <>
-                    <p
-                      style={{
-                        fontWeight: 'bolder',
-                        textAlign: 'center',
-                        color: '#C00316',
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      <img
-                        src="/mani-coder/wealthica-portfolio-addon/favicon.png"
-                        alt="favicon"
-                        width="50"
-                        height="50"
-                        style={{ backgroundColor: '#fff' }}
-                      />
-                      !! This is sample data !!
-                    </p>
-                  </>
+                  <p
+                    style={{
+                      fontWeight: 'bolder',
+                      textAlign: 'center',
+                      color: '#C00316',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    <img
+                      src="/mani-coder/wealthica-portfolio-addon/favicon.png"
+                      alt="favicon"
+                      width="50"
+                      height="50"
+                      style={{ backgroundColor: '#fff' }}
+                    />
+                    !! This is sample data !!
+                  </p>
                 )}
                 {isLoadingOnUpdate ? (
                   <div className="flex justify-center items-center w-full">

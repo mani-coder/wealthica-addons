@@ -1,24 +1,24 @@
 import ArrowDownOutlined from '@ant-design/icons/ArrowDownOutlined';
 import ArrowUpOutlined from '@ant-design/icons/ArrowUpOutlined';
 import { Checkbox, Empty, Radio, Statistic, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
-import * as Highcharts from 'highcharts';
-import React, { useCallback, useMemo, useState } from 'react';
+import dayjs, { type Dayjs } from 'dayjs';
+import type * as Highcharts from 'highcharts';
+import type React from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { trackEvent } from '../../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT, DEBUG_LOCAL_STORAGE_KEY } from '../../constants';
-import { getLocalCache } from '../../utils/common';
 import useCurrency from '../../hooks/useCurrency';
-import { Account, AccountTransaction, SecurityTransaction, Transaction } from '../../types';
-import { formatCurrency, formatMoney } from '../../utils/common';
+import type { Account, AccountTransaction, SecurityTransaction, Transaction } from '../../types';
+import { formatCurrency, formatMoney, getLocalCache } from '../../utils/common';
+import { type GroupType, getGroupKey } from '../../utils/compositionHelpers';
 import { Charts } from '../Charts';
 import Collapsible from '../Collapsible';
 import CompositionGroup from '../CompositionGroup';
-import { GroupType, getGroupKey } from '../../utils/compositionHelpers';
 import ExpenseTable from './ExpenseTable';
-import IncomeTable, { IncomeTransaction } from './IncomeTable';
+import IncomeTable, { type IncomeTransaction } from './IncomeTable';
 import RealizedPnLTable from './RealizedPnLTable';
-import { ClosedPosition } from './utils';
+import type { ClosedPosition } from './utils';
 
 type Props = {
   transactions: Transaction[];
@@ -525,7 +525,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
           }),
 
         tooltip: {
-          headerFormat: `<b>{point.key}<br />{point.percentage:.1f}%</b><hr />`,
+          headerFormat: '<b>{point.key}<br />{point.percentage:.1f}%</b><hr />',
           pointFormatter() {
             const point = this.options as any;
             return `<table>

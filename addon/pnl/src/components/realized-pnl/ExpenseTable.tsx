@@ -1,11 +1,11 @@
-import { Table, TableColumnProps, Typography } from 'antd';
-import { Dayjs } from 'dayjs';
+import { Table, type TableColumnProps, Typography } from 'antd';
+import type { Dayjs } from 'dayjs';
 import React from 'react';
-import { startCase, sumBy } from '../../utils/lodash-replacements';
 import { DATE_DISPLAY_FORMAT } from '../../constants';
 import useCurrency from '../../hooks/useCurrency';
-import { Account, AccountTransaction } from '../../types';
+import type { Account, AccountTransaction } from '../../types';
 import { formatDate, formatMoney } from '../../utils/common';
+import { startCase, sumBy } from '../../utils/lodash-replacements';
 import Collapsible from '../Collapsible';
 import PrintableTable from '../PrintableTable';
 

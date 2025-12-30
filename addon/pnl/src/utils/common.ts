@@ -1,6 +1,6 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { DATE_FORMAT } from '../constants';
-import { PortfolioData, Security } from '../types';
+import type { PortfolioData, Security } from '../types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
   return Boolean(data.deposit || data.income || data.interest || data.value || data.withdrawal);
@@ -86,7 +86,7 @@ export const formatCurrency = (amount: number, digits: number) => {
     { value: 1e18, symbol: 'E' },
   ];
   const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  let i;
+  let i: number;
   for (i = si.length - 1; i > 0; i--) {
     if (Math.abs(amount) >= si[i].value) {
       break;
@@ -98,9 +98,7 @@ export const formatCurrency = (amount: number, digits: number) => {
 
 export const getURLParams = (values: { [id: string]: string }): string => {
   return Object.keys(values)
-    .map(function (key) {
-      return key + '=' + values[key];
-    })
+    .map((key) => `${key}=${values[key]}`)
     .join('&');
 };
 
@@ -163,8 +161,8 @@ export function normalizeAccountType(type: string): string {
 }
 
 export function isChrome() {
-  const userAgent = ((navigator && navigator.userAgent) || '').toLowerCase();
-  const vendor = ((navigator && navigator.vendor) || '').toLowerCase();
+  const userAgent = (navigator?.userAgent || '').toLowerCase();
+  const vendor = (navigator?.vendor || '').toLowerCase();
   const match = /google inc/.test(vendor) ? userAgent.match(/(?:chrome|crios)\/(\d+)/) : null;
   return match !== null;
 }

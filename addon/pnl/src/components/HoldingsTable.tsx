@@ -1,8 +1,8 @@
-import { Table, TableColumnProps, Typography } from 'antd';
+import { Table, type TableColumnProps, Typography } from 'antd';
 import React from 'react';
 
 import useCurrency from '../hooks/useCurrency';
-import { Position } from '../types';
+import type { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils/common';
 import Collapsible from './Collapsible';
 

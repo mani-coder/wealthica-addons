@@ -1,12 +1,12 @@
 import LeftOutlined from '@ant-design/icons/LeftOutlined';
 import RightOutlined from '@ant-design/icons/RightOutlined';
-import { Button, Calendar, Card, Spin, Table, TableColumnProps, Tag, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import { Button, Calendar, Card, Spin, Table, type TableColumnProps, Tag, Typography } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT } from '../constants';
-import { Position } from '../types';
+import type { Position } from '../types';
 import { buildCorsFreeUrl, getNasdaqTicker, getSymbolFromNasdaqTicker } from '../utils/common';
 
 type Dividend = {
@@ -86,7 +86,6 @@ export function Events({ positions }: { positions: Position[] }) {
         .add(60, 'days')
         .format(DATE_FORMAT)}&tickers=${_symbols}`,
     );
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Valid use case: subscribing to external API and managing loading state
     setLoading(true);
 
     fetch(url, {
@@ -112,7 +111,7 @@ export function Events({ positions }: { positions: Position[] }) {
   function dateCellRender(date: Dayjs) {
     const _events = eventsByDate[date.format(DATE_FORMAT)];
 
-    return _events && _events.length ? (
+    return _events?.length ? (
       <div className="flex flex-wrap">
         {_events.map((item) => (
           <div className="mr-2 mb-2" key={item.ticker}>
@@ -139,9 +138,7 @@ export function Events({ positions }: { positions: Position[] }) {
           </div>
         ))}
       </div>
-    ) : (
-      <></>
-    );
+    ) : null;
   }
 
   function getColumns(): TableColumnProps<Earning>[] {
@@ -180,7 +177,6 @@ export function Events({ positions }: { positions: Position[] }) {
     ];
   }
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- Memoization is necessary for performance and is correctly implemented
   const eventsByDate = useMemo(() => {
     if (!events) {
       return {};

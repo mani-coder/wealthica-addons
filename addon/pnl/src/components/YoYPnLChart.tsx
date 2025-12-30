@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../constants';
-import { Portfolio } from '../types';
+import type { Portfolio } from '../types';
 import { formatCurrency, getPreviousWeekday } from '../utils/common';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
@@ -253,7 +253,7 @@ function YoYPnLChart(props: Props) {
             mouseOver: (e: any) => {
               trackEvent('mouse-over-point', {
                 chart: 'pnl-change-over-periods',
-                name: e && e.target ? e.target.key : null,
+                name: e?.target ? e.target.key : null,
               });
             },
           },
@@ -277,7 +277,7 @@ function YoYPnLChart(props: Props) {
 
   const options = useMemo(() => {
     return getOptions({ series: getData() });
-  }, [props.isPrivateMode, props.portfolios]);
+  }, [getData, getOptions]);
 
   return (
     <Collapsible title="P&L % Change Over Multiple Time Periods">

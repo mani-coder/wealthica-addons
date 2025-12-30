@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import React from 'react';
-import { Portfolio } from '../types';
+import type { Portfolio } from '../types';
 import { formatCurrency, max, min } from '../utils/common';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
@@ -109,7 +109,9 @@ function ProfitLossPercentageTimeline(props: Props) {
       ],
       tooltip: {
         pointFormat:
-          '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}% (${point.pnlValue})</b><br/>',
+          '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}% (' +
+          '$' +
+          '{point.pnlValue})</b><br/>',
         valueDecimals: 2,
         split: true,
       },

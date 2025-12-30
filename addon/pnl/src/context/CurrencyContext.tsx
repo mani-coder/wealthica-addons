@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/refs */
 import type { Dayjs } from 'dayjs';
-import { createContext, ReactNode, useCallback } from 'react';
+import { createContext, type ReactNode, useCallback } from 'react';
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY } from '../constants';
-import { CurrencyCache } from '../types';
+import type { CurrencyCache } from '../types';
 
 export type CurrencyRef = React.RefObject<Currencies> & { readonly current: Currencies };
 
@@ -32,7 +32,7 @@ function getCurrencyValue(
   if (currency === baseCurrency || !value) return value;
 
   const _currencyCache = currencyCache[currency];
-  let multiplier: number | undefined = undefined;
+  let multiplier: number | undefined;
   if (date) {
     multiplier = _currencyCache[typeof date === 'string' ? date : date.format(DATE_FORMAT)];
   }

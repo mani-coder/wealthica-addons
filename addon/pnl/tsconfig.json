@@ -35,12 +35,6 @@
     "experimentalDecorators": true
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "cypress",
-    "storybook-static"
-  ],
+  "exclude": ["node_modules", "dist", "build", "cypress", "storybook-static"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

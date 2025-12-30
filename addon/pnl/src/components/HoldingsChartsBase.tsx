@@ -1,6 +1,6 @@
 import { Select, Typography } from 'antd';
 
-import { Account, Position } from '../types';
+import type { Account, Position } from '../types';
 import { getSymbol } from '../utils/common';
 import StockDetails from './StockDetails';
 
@@ -15,8 +15,8 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
   const options = positions
     .map((position) => getSymbol(position.security))
     .sort()
-    .map((symbol, index) => (
-      <Select.Option key={index} value={symbol}>
+    .map((symbol) => (
+      <Select.Option key={symbol} value={symbol}>
         {symbol}
       </Select.Option>
     ));
@@ -33,7 +33,7 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
         className="w-full"
         onChange={(symbol) => setSelectedSymbol(symbol)}
         filterOption={(inputValue, option) =>
-          (option!.props!.value! as string).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+          ((option?.props?.value as string) ?? '').toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
         }
       >
         {options}

@@ -1,9 +1,9 @@
-import { Table, TableColumnProps, Typography } from 'antd';
+import { Table, type TableColumnProps, Typography } from 'antd';
 import React from 'react';
 import useCurrency from '../../hooks/useCurrency';
-import { startCase, sumBy } from '../../utils/lodash-replacements';
-import { Account, AccountTransaction } from '../../types';
+import type { Account, AccountTransaction } from '../../types';
 import { formatDate, formatMoney } from '../../utils/common';
+import { startCase, sumBy } from '../../utils/lodash-replacements';
 import Collapsible from '../Collapsible';
 import { renderSymbol } from './utils';
 

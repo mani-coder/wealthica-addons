@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import * as Highcharts from 'highcharts';
+import type * as Highcharts from 'highcharts';
 import { useMemo, useState } from 'react';
 
 import useCurrency from '../hooks/useCurrency';
-import { Account, Position } from '../types';
+import type { Account, Position } from '../types';
+import { getOptions, getOptionsV2, POSITION_TOOLTIP } from '../utils/chartHelpers';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import CompositionCharts from './CompositionCharts';
 import { StockSelector } from './HoldingsChartsBase';
-import { POSITION_TOOLTIP, getOptions, getOptionsV2 } from '../utils/chartHelpers';
 import StockTimeline from './StockTimeline';
 
 type Props = {
@@ -43,11 +43,11 @@ export default function HoldingsCharts(props: Props) {
                 }
               : undefined;
           })
-          .filter((value) => value)
-          .sort((a, b) => b!.quantity - a!.quantity)
+          .filter((value): value is { name: string; quantity: number; price: string } => !!value)
+          .sort((a, b) => b.quantity - a.quantity)
           .map(
             (value) =>
-              `<tr><td>${value!.name}</td><td style="text-align: right;">${value!.quantity}@${value!.price}</td></tr>`,
+              `<tr><td>${value.name}</td><td style="text-align: right;">${value.quantity}@${value.price}</td></tr>`,
           )
           .join('');
 
@@ -121,12 +121,12 @@ export default function HoldingsCharts(props: Props) {
 
   const renderStockTimeline = () => {
     if (!timelineSymbol) {
-      return <></>;
+      return null;
     }
     const position = props.positions.filter((position) => getSymbol(position.security) === timelineSymbol)[0];
 
     if (!position) {
-      return <></>;
+      return null;
     }
 
     return (
@@ -142,7 +142,7 @@ export default function HoldingsCharts(props: Props) {
 
   const { pie, column } = useMemo(() => {
     return getPositionsSeries();
-  }, [props.accounts, props.positions, props.isPrivateMode]);
+  }, [getPositionsSeries]);
 
   const columnChartOptions = useMemo(
     () =>

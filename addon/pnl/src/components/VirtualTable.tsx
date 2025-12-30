@@ -21,7 +21,6 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
   });
 
   const gridRef = useRef<any>();
-  // eslint-disable-next-line react-hooks/refs -- Advanced pattern: creating a connector object for Ant Design Table to control react-window Grid scroll
   const [connectObject] = useState<any>(() => {
     const obj = {};
     Object.defineProperty(obj, 'scrollLeft', {
@@ -37,7 +36,7 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
   });
 
   const resetVirtualGrid = () => {
-    if (gridRef && gridRef.current) {
+    if (gridRef?.current) {
       gridRef.current.resetAfterIndices({
         columnIndex: 0,
         shouldForceUpdate: false,
@@ -45,7 +44,7 @@ export default function VirtualTable(props: Parameters<typeof Table>[0]) {
     }
   };
 
-  useEffect(() => resetVirtualGrid, [tableWidth]);
+  useEffect(() => resetVirtualGrid, [resetVirtualGrid]);
 
   const renderVirtualList = (data: readonly object[], { scrollbarSize, ref, onScroll }: any) => {
     ref.current = connectObject;

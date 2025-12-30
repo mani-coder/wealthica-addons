@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import React from 'react';
-import { Portfolio } from '../types';
+import type { Portfolio } from '../types';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 

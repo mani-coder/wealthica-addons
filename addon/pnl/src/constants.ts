@@ -25,6 +25,7 @@ export const DEBUG_LOCAL_STORAGE_KEY = '__debug__';
 
 export enum TabKeysEnum {
   PNL = 'pnl',
+  PERFORMANCE = 'performance',
   HOLDINGS = 'holdings',
   GAINERS_LOSERS = 'gainers-losers',
   REALIZED_PNL = 'realized-pnl',

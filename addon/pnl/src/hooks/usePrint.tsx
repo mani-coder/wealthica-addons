@@ -22,21 +22,22 @@ export function usePrint({ title, children }: Props) {
 
   const component = useMemo(() => {
     return <div ref={componentRef}>{children}</div>;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [children]);
 
   const print = useCallback(
     (render?: boolean) => {
       setPrinting(true);
 
       if (render) {
-        ReactDOM.render(component, document.getElementById('pnl-addon-printable-content')!);
+        const printableElement = document.getElementById('pnl-addon-printable-content');
+        if (printableElement) {
+          ReactDOM.render(component, printableElement);
+        }
       }
 
       setTimeout(() => handlePrint(), 50);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [component, handlePrint],
   );
 
   return { print, component, printing };

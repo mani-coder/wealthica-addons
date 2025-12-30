@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { trackEvent } from '../analytics';
 import useCurrency from '../hooks/useCurrency';
-import { Account, Position } from '../types';
+import type { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import StockPnLTimeline from './StockPnLTimeline';
@@ -188,16 +188,16 @@ export function TopGainersLosers(props: {
         series: getTopGainersLosers(false),
       }),
     };
-  }, [sortByValue, props.isPrivateMode, props.positions]);
+  }, [sortByValue, getOptions, getTopGainersLosers]);
 
   const renderStockPnLTimeline = () => {
     if (!pnlSymbol) {
-      return <></>;
+      return null;
     }
     const position = props.positions.filter((position) => getSymbol(position.security) === pnlSymbol)[0];
 
     if (!position) {
-      return <></>;
+      return null;
     }
 
     return (
@@ -228,13 +228,11 @@ export function TopGainersLosers(props: {
         </Typography.Text>
       </div>
 
-      {!!(gainers.series && gainers.series[0] && (gainers.series[0] as any).data.length) && (
-        <Charts options={gainers} />
-      )}
+      {!!(gainers.series?.[0] && (gainers.series[0] as any).data.length) && <Charts options={gainers} />}
 
       {renderStockPnLTimeline()}
 
-      {!!(losers.series && losers.series[0] && (losers.series[0] as any).data.length) && <Charts options={losers} />}
+      {!!(losers.series?.[0] && (losers.series[0] as any).data.length) && <Charts options={losers} />}
     </>
   ) : (
     <Empty description="No Holdings" />

@@ -1,11 +1,10 @@
-import { DatePicker, Space, Table, TableColumnsType, Typography } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import { DatePicker, Space, Table, type TableColumnsType, Typography } from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
-import { range } from '../utils/lodash-replacements';
-
 import useCurrency from '../hooks/useCurrency';
-import { Position, Transaction } from '../types';
+import type { Position, Transaction } from '../types';
 import { formatMoney, getSymbol, sumOf } from '../utils/common';
+import { range } from '../utils/lodash-replacements';
 import { renderSymbol } from './realized-pnl/utils';
 
 type Props = {

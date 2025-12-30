@@ -1,6 +1,6 @@
 import { DATE_FORMAT } from './constants';
-import { Currencies } from './context/CurrencyContext';
-import { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
+import type { Currencies } from './context/CurrencyContext';
+import type { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
 import { getDate, getSymbol, normalizeAccountType } from './utils/common';
 
 //
@@ -11,8 +11,7 @@ import { getDate, getSymbol, normalizeAccountType } from './utils/common';
 const isSecuritiesAccountsTransfer = (transaction: any) =>
   transaction.type &&
   transaction.type.toLowerCase() === 'transfer' &&
-  ((transaction.description && transaction.description.startsWith('[Accounts Transfer]')) ||
-    (transaction.note && transaction.note.includes('Accounts Transfer')));
+  (transaction.description?.startsWith('[Accounts Transfer]') || transaction.note?.includes('Accounts Transfer'));
 
 export const parseCurrencyReponse = (response: any) => {
   const date = getDate(response.from);
@@ -62,7 +61,7 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
               type: normalizeAccountType(
                 account.type
                   ? account.type
-                  : account.name && account.name.includes('-')
+                  : account.name?.includes('-')
                     ? account.name.split('-')[1].trim()
                     : account.name,
               ),
@@ -97,7 +96,7 @@ export const parsePortfolioResponse = (response: any) => {
 };
 
 const getInvestmentCurrency = (investment: string) => {
-  const currency = investment && investment.includes(':') && investment.split(':').pop();
+  const currency = investment?.includes(':') && investment.split(':').pop();
   return currency && currency.length === 3 ? currency : 'cad';
 };
 
@@ -182,11 +181,11 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         date,
       );
 
-      let splitRatio;
+      let splitRatio: number | undefined;
       if (transaction.type === 'split' && transaction.description?.includes('@')) {
         const match = transaction.description.match(/@([0-9]+):([0-9]+)/);
-        if (match && match[1]) {
-          splitRatio = parseInt(match[2]) / parseInt(match[1]);
+        if (match?.[1]) {
+          splitRatio = parseInt(match[2], 10) / parseInt(match[1], 10);
         }
       }
 

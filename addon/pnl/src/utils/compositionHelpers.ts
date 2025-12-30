@@ -1,4 +1,4 @@
-import { Account } from '../types';
+import type { Account } from '../types';
 
 export type GroupType = 'type' | 'accounts' | 'institution' | 'currency';
 
