@@ -43,7 +43,7 @@ function HoldingsTable(props: Props) {
         onFilter: (value, position) => position.security.currency === value,
         render: (_text, position) => position.security.currency.toLocaleUpperCase(),
         sorter: (a, b) => a.security.currency.localeCompare(b.security.currency),
-        width: 125,
+        width: 150,
       },
       {
         key: 'lastPrice',

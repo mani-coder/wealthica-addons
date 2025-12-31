@@ -1,3 +1,4 @@
+import type { Dayjs } from 'dayjs';
 import { DATE_FORMAT } from './constants';
 import type { Currencies } from './context/CurrencyContext';
 import type { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
@@ -80,12 +81,13 @@ export const parseInstitutionsResponse = (response: any, groups?: string[], inst
     }, accounts);
 };
 
-export const parsePortfolioResponse = (response: any) => {
+export const parsePortfolioResponse = (response: any, startDate?: Dayjs) => {
   const data = response.history.total;
 
   let date = getDate(data.from);
   return data.data.reduce((hash: any, value: any) => {
-    if (value !== null && value !== undefined) {
+    // Filter out dates before startDate if provided
+    if (value !== null && value !== undefined && (!startDate || date.isSameOrAfter(startDate, 'day'))) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
 

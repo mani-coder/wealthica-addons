@@ -12,6 +12,7 @@ import {
   parsePositionsResponse,
   parseSecurityTransactionsResponse,
 } from './api';
+import BenchmarkComparison from './components/BenchmarkComparison';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog, { setChangeLogViewDate } from './components/ChangeLog';
@@ -30,6 +31,7 @@ import { TopGainersLosers } from './components/TopGainersLosers';
 import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';
+import { AddonProvider } from './context/AddonContext';
 import { Currencies, CurrencyContextProvider } from './context/CurrencyContext';
 import dayjs from './dayjs';
 import type { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
@@ -418,7 +420,10 @@ export default function App() {
       ]);
     }
 
-    const portfolioByDate = parsePortfolioResponse(portfolioData);
+    const portfolioByDate = parsePortfolioResponse(
+      portfolioData,
+      import.meta.env.DEV ? dayjs(TRANSACTIONS_FROM_DATE) : undefined,
+    );
     const positions = parsePositionsResponse(positionsData);
     const accounts = parseInstitutionsResponse(institutionsData);
 
@@ -442,204 +447,220 @@ export default function App() {
 
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#10b981', colorInfo: '#10b981' } }}>
-      <CurrencyContextProvider currencyRef={currencyRef}>
-        <div className="flex justify-center w-full">
-          <div style={{ padding: 4, maxWidth: addon.current ? '100%' : 1100, width: '100%' }}>
-            {state.isLoaded ? (
-              <>
-                {!addon.current && (
-                  <p
-                    style={{
-                      fontWeight: 'bolder',
-                      textAlign: 'center',
-                      color: '#C00316',
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    <img
-                      src="/mani-coder/wealthica-portfolio-addon/favicon.png"
-                      alt="favicon"
-                      width="50"
-                      height="50"
-                      style={{ backgroundColor: '#fff' }}
-                    />
-                    !! This is sample data !!
-                  </p>
-                )}
-                {isLoadingOnUpdate ? (
-                  <div className="flex justify-center items-center w-full">
-                    <Spin size="large" />
-                  </div>
-                ) : (
-                  <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
-                )}
+      <AddonProvider addon={addon.current}>
+        <CurrencyContextProvider currencyRef={currencyRef}>
+          <div className="flex justify-center w-full">
+            <div style={{ padding: 4, maxWidth: addon.current ? '100%' : 1100, width: '100%' }}>
+              {state.isLoaded ? (
+                <>
+                  {!addon.current && (
+                    <p
+                      style={{
+                        fontWeight: 'bolder',
+                        textAlign: 'center',
+                        color: '#C00316',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      <img
+                        src="/mani-coder/wealthica-portfolio-addon/favicon.png"
+                        alt="favicon"
+                        width="50"
+                        height="50"
+                        style={{ backgroundColor: '#fff' }}
+                      />
+                      !! This is sample data !!
+                    </p>
+                  )}
+                  {isLoadingOnUpdate ? (
+                    <div className="flex justify-center items-center w-full">
+                      <Spin size="large" />
+                    </div>
+                  ) : (
+                    <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
+                  )}
 
-                <Tabs
-                  defaultActiveKey={TabKeysEnum.PNL}
-                  onChange={(tab) => {
-                    if (tab === 'change-log') {
-                      setChangeLogViewDate();
-                    }
-                    trackEvent('tab-change', { tab });
-                  }}
-                  size="large"
-                  items={[
-                    {
-                      label: 'P&L Charts',
-                      key: TabKeysEnum.PNL,
-                      destroyInactiveTabPane: true,
-                      forceRender: true,
-                      children: (
-                        <>
-                          <PnLStatistics
-                            xirr={state.xirr}
-                            portfolios={state.allPortfolios}
-                            privateMode={addOnOptions.privateMode}
+                  <Tabs
+                    defaultActiveKey={TabKeysEnum.PNL}
+                    onChange={(tab) => {
+                      if (tab === 'change-log') {
+                        setChangeLogViewDate();
+                      }
+                      trackEvent('tab-change', { tab });
+                    }}
+                    size="large"
+                    items={[
+                      {
+                        label: 'P&L Charts',
+                        key: TabKeysEnum.PNL,
+                        destroyInactiveTabPane: true,
+                        forceRender: true,
+                        children: (
+                          <>
+                            <PnLStatistics
+                              xirr={state.xirr}
+                              portfolios={state.allPortfolios}
+                              privateMode={addOnOptions.privateMode}
+                              positions={state.positions}
+                              fromDate={addOnOptions.fromDate}
+                              toDate={addOnOptions.toDate}
+                            />
+                            <DepositVsPortfolioValueTimeline
+                              portfolios={state.portfolios}
+                              cashflows={state.cashflows}
+                              isPrivateMode={addOnOptions.privateMode}
+                            />
+                            <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
+                            <ProfitLossPercentageTimeline
+                              portfolios={state.portfolios}
+                              isPrivateMode={addOnOptions.privateMode}
+                            />
+                            <ProfitLossTimeline
+                              portfolios={state.portfolios}
+                              isPrivateMode={addOnOptions.privateMode}
+                            />
+                          </>
+                        ),
+                      },
+                      {
+                        label: 'Holdings',
+                        key: TabKeysEnum.HOLDINGS,
+                        forceRender: true,
+                        children: (
+                          <>
+                            {state.positions.length ? (
+                              <HoldingsCharts
+                                positions={state.positions}
+                                accounts={state.accounts}
+                                isPrivateMode={addOnOptions.privateMode}
+                              />
+                            ) : (
+                              <Empty description="No Holdings" />
+                            )}
+                            <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
+                            {!!state.positions.length && (
+                              <>
+                                <PortfolioVisualizer positions={state.positions} />
+                                <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
+                              </>
+                            )}
+                          </>
+                        ),
+                      },
+                      {
+                        label: 'Gainers/Losers',
+                        key: TabKeysEnum.GAINERS_LOSERS,
+                        destroyInactiveTabPane: true,
+                        children: (
+                          <TopGainersLosers
                             positions={state.positions}
+                            isPrivateMode={addOnOptions.privateMode}
+                            accounts={state.accounts}
+                          />
+                        ),
+                      },
+                      {
+                        label: 'Performance',
+                        key: TabKeysEnum.PERFORMANCE,
+                        destroyInactiveTabPane: true,
+                        children: (
+                          <BenchmarkComparison
+                            portfolios={state.allPortfolios}
+                            isPrivateMode={addOnOptions.privateMode}
                             fromDate={addOnOptions.fromDate}
                             toDate={addOnOptions.toDate}
                           />
-                          <DepositVsPortfolioValueTimeline
-                            portfolios={state.portfolios}
-                            cashflows={state.cashflows}
+                        ),
+                      },
+                      {
+                        label: 'Realized P&L',
+                        key: TabKeysEnum.REALIZED_PNL,
+                        destroyInactiveTabPane: true,
+                        children: (
+                          <RealizedPnL
+                            fromDate={addOnOptions.fromDate}
+                            toDate={addOnOptions.toDate}
+                            transactions={state.securityTransactions}
+                            accountTransactions={state.accountTransactions}
+                            accounts={state.accounts}
                             isPrivateMode={addOnOptions.privateMode}
                           />
-                          <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
-                          <ProfitLossPercentageTimeline
-                            portfolios={state.portfolios}
-                            isPrivateMode={addOnOptions.privateMode}
+                        ),
+                      },
+                      {
+                        label: 'Activities',
+                        key: TabKeysEnum.ACTIVITIES,
+                        destroyInactiveTabPane: true,
+                        children: (
+                          <TradingActivities
+                            fromDate={addOnOptions.fromDate}
+                            transactions={state.securityTransactions.filter((t) =>
+                              ['buy', 'sell'].includes(t.originalType),
+                            )}
+                            positions={state.positions}
                           />
-                          <ProfitLossTimeline portfolios={state.portfolios} isPrivateMode={addOnOptions.privateMode} />
-                        </>
-                      ),
-                    },
-                    {
-                      label: 'Holdings Analyzer',
-                      key: TabKeysEnum.HOLDINGS,
-                      forceRender: true,
-                      children: (
-                        <>
-                          {state.positions.length ? (
-                            <HoldingsCharts
-                              positions={state.positions}
-                              accounts={state.accounts}
-                              isPrivateMode={addOnOptions.privateMode}
-                              addon={addon.current}
-                            />
-                          ) : (
-                            <Empty description="No Holdings" />
-                          )}
-                          <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
-                          {!!state.positions.length && (
-                            <>
-                              <PortfolioVisualizer positions={state.positions} />
-                              <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
-                            </>
-                          )}
-                        </>
-                      ),
-                    },
-                    {
-                      label: 'Gainers/Losers',
-                      key: TabKeysEnum.GAINERS_LOSERS,
-                      destroyInactiveTabPane: true,
-                      children: (
-                        <TopGainersLosers
-                          positions={state.positions}
-                          isPrivateMode={addOnOptions.privateMode}
-                          addon={addon.current}
-                          accounts={state.accounts}
-                        />
-                      ),
-                    },
-                    {
-                      label: 'Realized P&L',
-                      key: TabKeysEnum.REALIZED_PNL,
-                      destroyInactiveTabPane: true,
-                      children: (
-                        <RealizedPnL
-                          fromDate={addOnOptions.fromDate}
-                          toDate={addOnOptions.toDate}
-                          transactions={state.securityTransactions}
-                          accountTransactions={state.accountTransactions}
-                          accounts={state.accounts}
-                          isPrivateMode={addOnOptions.privateMode}
-                        />
-                      ),
-                    },
-                    {
-                      label: 'Activities',
-                      key: TabKeysEnum.ACTIVITIES,
-                      destroyInactiveTabPane: true,
-                      children: (
-                        <TradingActivities
-                          fromDate={addOnOptions.fromDate}
-                          transactions={state.securityTransactions.filter((t) =>
-                            ['buy', 'sell'].includes(t.originalType),
-                          )}
-                          positions={state.positions}
-                        />
-                      ),
-                    },
-                    {
-                      label: 'News',
-                      key: TabKeysEnum.NEWS,
-                      destroyInactiveTabPane: true,
-                      children: <News positions={state.positions} />,
-                    },
-                    {
-                      label: 'Events',
-                      key: TabKeysEnum.EVENTS,
-                      destroyInactiveTabPane: true,
-                      children: <Events positions={state.positions} />,
-                    },
-                    {
-                      label: 'Change Log',
-                      key: TabKeysEnum.CHANGE_LOG,
-                      destroyInactiveTabPane: true,
-                      children: <ChangeLog />,
-                    },
-                  ]}
-                />
-              </>
-            ) : (
-              <div className="flex justify-center w-full">
-                <Spin size="large" spinning />
-              </div>
-            )}
+                        ),
+                      },
+                      {
+                        label: 'News',
+                        key: TabKeysEnum.NEWS,
+                        destroyInactiveTabPane: true,
+                        children: <News positions={state.positions} />,
+                      },
+                      {
+                        label: 'Events',
+                        key: TabKeysEnum.EVENTS,
+                        destroyInactiveTabPane: true,
+                        children: <Events positions={state.positions} />,
+                      },
+                      {
+                        label: 'Change Log',
+                        key: TabKeysEnum.CHANGE_LOG,
+                        destroyInactiveTabPane: true,
+                        children: <ChangeLog />,
+                      },
+                    ]}
+                  />
+                </>
+              ) : (
+                <div className="flex justify-center w-full">
+                  <Spin size="large" spinning />
+                </div>
+              )}
 
-            <br />
-            <hr />
-
-            <BuyMeACoffee />
-
-            <Typography.Title level={4} type="secondary">
-              Disclaimer
-            </Typography.Title>
-            <Typography.Text type="secondary">
-              This tool is simply a calculator of profit and loss using the deposits/withdrawals and daily portfolio
-              values. Results provided by this tool do not constitute investment advice. The makers of this tool are not
-              responsible for the consequences of any decisions or actions taken in reliance upon or as a result of the
-              information provided by this tool. The information on the add-on may contain errors or inaccuracies. The
-              use of the add-on is at your own risk and is provided without any warranty.
               <br />
+              <hr />
+
+              <BuyMeACoffee />
+
+              <Typography.Title level={4} type="secondary">
+                Disclaimer
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                This tool is simply a calculator of profit and loss using the deposits/withdrawals and daily portfolio
+                values. Results provided by this tool do not constitute investment advice. The makers of this tool are
+                not responsible for the consequences of any decisions or actions taken in reliance upon or as a result
+                of the information provided by this tool. The information on the add-on may contain errors or
+                inaccuracies. The use of the add-on is at your own risk and is provided without any warranty.
+                <br />
+                <br />
+                Please trade responsibly. For any issues or feedback, contact the developer at{' '}
+                <a href="mailto:k.elayamani@gmail.com">k.elayamani@gmail.com</a> or create a github issue{' '}
+                <a
+                  href="https://github.com/mani-coder/wealthica-addons/issues/new?assignees=mani-coder&labels=pnl-addon&template=custom.md&title=[P/L Addon]"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  here
+                </a>
+                .
+              </Typography.Text>
               <br />
-              Please trade responsibly. For any issues or feedback, contact the developer at{' '}
-              <a href="mailto:k.elayamani@gmail.com">k.elayamani@gmail.com</a> or create a github issue{' '}
-              <a
-                href="https://github.com/mani-coder/wealthica-addons/issues/new?assignees=mani-coder&labels=pnl-addon&template=custom.md&title=[P/L Addon]"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                here
-              </a>
-              .
-            </Typography.Text>
-            <br />
-            <hr />
+              <hr />
+            </div>
           </div>
-        </div>
-      </CurrencyContextProvider>
+        </CurrencyContextProvider>
+      </AddonProvider>
     </ConfigProvider>
   );
 }

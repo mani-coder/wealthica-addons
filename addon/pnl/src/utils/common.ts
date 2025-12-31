@@ -1,5 +1,7 @@
-import dayjs, { type Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import { isHoliday } from 'nyse-holidays';
 import { DATE_FORMAT } from '../constants';
+import dayjs from '../dayjs';
 import type { PortfolioData, Security } from '../types';
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
@@ -7,7 +9,9 @@ export const isValidPortfolioData = (data: PortfolioData): boolean => {
 };
 
 export const getDate = (date: string): Dayjs => {
-  return dayjs(date.slice(0, 10), DATE_FORMAT);
+  // Parse as local date (not UTC) to avoid timezone shifts in the chart
+  // These are calendar dates (e.g., closing price for Oct 27), not timestamps
+  return dayjs(date.slice(0, 10), DATE_FORMAT).startOf('day');
 };
 
 export const formatDate = (date: Dayjs, format?: string): string => date.format(format ?? 'MMM DD, YYYY');
@@ -165,4 +169,21 @@ export function isChrome() {
   const vendor = (navigator?.vendor || '').toLowerCase();
   const match = /google inc/.test(vendor) ? userAgent.match(/(?:chrome|crios)\/(\d+)/) : null;
   return match !== null;
+}
+
+/**
+ * Check if date is a trading day (not weekend or holiday)
+ */
+export function isTradingDay(date: Dayjs): boolean {
+  // Skip weekends (Saturday = 6, Sunday = 0)
+  if (date.day() === 0 || date.day() === 6) return false;
+
+  // Create a Date object representing this calendar date in local time
+  // This ensures isHoliday() gets the correct year/month/day values
+  const jsDate = new Date(date.year(), date.month(), date.date());
+
+  // Skip NYSE market holidays
+  if (isHoliday(jsDate)) return false;
+
+  return true;
 }

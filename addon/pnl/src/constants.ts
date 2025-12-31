@@ -1,7 +1,7 @@
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 export const DEFAULT_BASE_CURRENCY = 'usd';
-export const TRANSACTIONS_FROM_DATE = '2000-01-01';
+export const TRANSACTIONS_FROM_DATE = '2025-01-01';
 
 export const TYPE_TO_COLOR: { [key: string]: string } = {
   buy: '#3b82f6', // blue-500

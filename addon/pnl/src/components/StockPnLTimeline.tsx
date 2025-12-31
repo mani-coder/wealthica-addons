@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { Empty, Spin } from 'antd';
-import dayjs, { type Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
+import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate, max, min } from '../utils/common';
+import { formatCurrency, formatMoney, max, min } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -15,23 +16,18 @@ type Props = {
   symbol: string;
   position: Position;
   isPrivateMode: boolean;
-  addon?: any;
   showValueChart?: boolean;
   accounts: Account[];
-};
-
-type StockPrice = {
-  timestamp: Dayjs;
-  closePrice: number;
 };
 
 const POINT_FORMAT =
   'P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />';
 
-function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueChart, accounts }: Props) {
+function StockPnLTimeline({ isPrivateMode, symbol, position, showValueChart, accounts }: Props) {
   const { baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
-  const [prices, setPrices] = useState<StockPrice[]>([]);
+  const [prices, setPrices] = useState<SecurityPriceData[]>([]);
+  const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 100 });
 
   const accountById = useMemo(() => {
     return accounts.reduce(
@@ -48,66 +44,28 @@ function StockPnLTimeline({ isPrivateMode, symbol, position, addon, showValueCha
     return account ? account.name : accountById;
   }
 
-  function parseSecuritiesResponse(response: any) {
-    let to = getDate(response.to);
-    const data: StockPrice[] = [];
-    let prevPrice: number | undefined;
-    response.data
-      .filter((closePrice: number) => closePrice)
-      .reverse()
-      .forEach((closePrice: number) => {
-        if (!prevPrice) {
-          prevPrice = closePrice;
-        }
-        const changePercentage = Math.abs((closePrice - prevPrice) / closePrice) * 100;
-        if (changePercentage > 100) {
-          closePrice = prevPrice;
-        }
-
-        if (to.isoWeekday() <= 5) {
-          data.push({ timestamp: to.clone(), closePrice });
-        }
-
-        // Move the date forward.
-        to = to.subtract(1, 'days');
-        prevPrice = closePrice;
-      });
-
-    setPrices(data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf()));
-  }
-
   useEffect(() => {
     if (symbol) {
-      setLoading(true);
+      const fetchData = async () => {
+        setLoading(true);
+        trackEvent('stock-pnl-timeline');
 
-      trackEvent('stock-pnl-timeline');
+        const startDate = position.transactions?.length ? position.transactions[0].date : dayjs();
 
-      const startDate = position.transactions?.length ? position.transactions[0].date : dayjs();
-      const endpoint = `securities/${position.security.id}/history?from=${startDate.format(
-        DATE_FORMAT,
-      )}&to=${dayjs().format(DATE_FORMAT)}`;
-      if (addon) {
-        addon
-          .request({ query: {}, method: 'GET', endpoint })
-          .then((response: any) => parseSecuritiesResponse(response))
-          .catch((error: any) => {
-            console.log('Failed to load stock prices.', error);
-            setPrices([]);
-          })
-          .finally(() => setLoading(false));
-      } else {
-        const url = `https://app.wealthica.com/api/${endpoint}`;
-        fetch(buildCorsFreeUrl(url), { cache: 'force-cache', headers: { 'Content-Type': 'application/json' } })
-          .then((response) => response.json())
-          .then((response) => parseSecuritiesResponse(response))
-          .catch((error) => {
-            console.log('Failed to load stock prices.', error);
-            setPrices([]);
-          })
-          .finally(() => setLoading(false));
-      }
+        try {
+          const data = await fetchSecurityHistory(position.security.id, startDate, dayjs());
+          setPrices(data);
+        } catch (error) {
+          console.error('Failed to load stock prices:', error);
+          setPrices([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
     }
-  }, [symbol, position, addon, parseSecuritiesResponse]);
+  }, [symbol, position, fetchSecurityHistory]);
 
   function getNextWeekday(date: any) {
     const referenceDate = dayjs(date);

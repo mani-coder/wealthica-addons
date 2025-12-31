@@ -6,8 +6,6 @@ import React from 'react';
 
 HC_DrillDown(Highcharts);
 
-const TZ_OFFSET = new Date().getTimezoneOffset();
-
 Highcharts.setOptions({
   credits: {
     enabled: false,
@@ -18,7 +16,9 @@ Highcharts.setOptions({
     },
   },
   time: {
-    getTimezoneOffset: (_timestamp) => TZ_OFFSET,
+    // Return the correct timezone offset for each timestamp to handle DST correctly
+    // Without this, dates shift by 1 hour when DST changes (e.g., Nov 1)
+    getTimezoneOffset: (timestamp) => new Date(timestamp).getTimezoneOffset(),
   },
   rangeSelector: {
     buttonTheme: {

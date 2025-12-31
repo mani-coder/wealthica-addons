@@ -1,11 +1,12 @@
 import { Spin } from 'antd';
-import dayjs, { type Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
-import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
+import { TYPE_TO_COLOR } from '../constants';
 import useCurrency from '../hooks/useCurrency';
+import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { buildCorsFreeUrl, formatCurrency, formatMoney, getDate } from '../utils/common';
+import { formatCurrency, formatMoney } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -13,19 +14,14 @@ type Props = {
   symbol: string;
   position: Position;
   isPrivateMode: boolean;
-  addon?: any;
   accounts: Account[];
-};
-
-type SecurityHistoryTimeline = {
-  timestamp: Dayjs;
-  closePrice: number;
 };
 
 function StockTimeline(props: Props) {
   const [loading, setLoading] = useState<boolean>(false);
   const { baseCurrencyDisplay } = useCurrency();
-  const [securityTimeline, setSecurityTimeline] = useState<SecurityHistoryTimeline[]>([]);
+  const [securityTimeline, setSecurityTimeline] = useState<SecurityPriceData[]>([]);
+  const { fetchSecurityHistory } = useSecurityHistory();
 
   const accountById = useMemo(() => {
     return props.accounts.reduce(
@@ -42,35 +38,7 @@ function StockTimeline(props: Props) {
     return account ? account.name : accountById;
   }
 
-  const parseSecuritiesResponse = useCallback((response: any) => {
-    let to = getDate(response.to);
-    const data: SecurityHistoryTimeline[] = [];
-    let prevPrice: number | undefined;
-    response.data
-      .filter((closePrice: number) => closePrice)
-      .reverse()
-      .forEach((closePrice: number) => {
-        if (!prevPrice) {
-          prevPrice = closePrice;
-        }
-        const changePercentage = Math.abs((closePrice - prevPrice) / closePrice) * 100;
-        if (changePercentage > 200) {
-          closePrice = prevPrice;
-        }
-
-        if (to.isoWeekday() <= 5) {
-          data.push({ timestamp: to.clone(), closePrice });
-        }
-
-        // Move the date forward.
-        to = to.subtract(1, 'days');
-        prevPrice = closePrice;
-      });
-
-    setSecurityTimeline(data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf()));
-  }, []);
-
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     trackEvent('stock-timeline');
 
@@ -82,39 +50,15 @@ function StockTimeline(props: Props) {
         dayjs().subtract(6, 'months'),
       ) ?? dayjs();
 
-    const endpoint = `securities/${props.position.security.id}/history?from=${startDate.format(
-      DATE_FORMAT,
-    )}&to=${dayjs().format(DATE_FORMAT)}`;
-    if (props.addon) {
-      props.addon
-        .request({
-          query: {},
-          method: 'GET',
-          endpoint,
-        })
-        .then((response: any) => {
-          parseSecuritiesResponse(response);
-        })
-        .catch((error: any) => console.log(error))
-        .finally(() => setLoading(false));
-    } else {
-      const url = `https://app.wealthica.com/api/${endpoint}`;
-
-      console.debug('Fetching stock data..', url);
-      fetch(buildCorsFreeUrl(url), {
-        cache: 'force-cache',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then((response) => response.json())
-        .then((response: any) => {
-          parseSecuritiesResponse(response);
-        })
-        .catch((error: any) => console.log(error))
-        .finally(() => setLoading(false));
+    try {
+      const data = await fetchSecurityHistory(props.position.security.id, startDate, dayjs());
+      setSecurityTimeline(data);
+    } catch (error) {
+      console.error('Failed to load stock prices:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [parseSecuritiesResponse, props.position.security.id, props.addon, props.position.transactions]);
+  }, [fetchSecurityHistory, props.position.security.id, props.position.transactions]);
 
   useEffect(() => {
     fetchData();

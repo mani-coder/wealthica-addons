@@ -29,6 +29,7 @@ code {
 .virtual-table .ant-table-container:after {
   display: none;
 }
+
 .virtual-table-cell {
   box-sizing: border-box;
   padding: 12px 16px;
@@ -37,7 +38,7 @@ code {
 }
 
 .zero-padding .ant-collapse-content-box {
-  padding: 0px;
+  padding: 0px !important;
 }
 
 .position-tooltip-value {

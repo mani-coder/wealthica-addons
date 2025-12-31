@@ -11,6 +11,7 @@
     "dayjs": "^1.11.13",
     "highcharts": "^11.4.8",
     "highcharts-react-official": "^3.2.1",
+    "nyse-holidays": "^1.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-to-print": "^2.15.1",
