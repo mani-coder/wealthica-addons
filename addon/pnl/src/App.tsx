@@ -447,7 +447,13 @@ export default function App() {
 
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#10b981', colorInfo: '#10b981' } }}>
-      <AddonProvider addon={addon.current}>
+      <AddonProvider
+        addon={addon.current}
+        fromDate={addOnOptions.fromDate}
+        toDate={addOnOptions.toDate}
+        isPrivateMode={addOnOptions.privateMode}
+        currency={addOnOptions.currency}
+      >
         <CurrencyContextProvider currencyRef={currencyRef}>
           <div className="flex justify-center w-full">
             <div style={{ padding: 4, maxWidth: addon.current ? '100%' : 1100, width: '100%' }}>
@@ -508,17 +514,10 @@ export default function App() {
                             <DepositVsPortfolioValueTimeline
                               portfolios={state.portfolios}
                               cashflows={state.cashflows}
-                              isPrivateMode={addOnOptions.privateMode}
                             />
-                            <YoYPnLChart portfolios={state.allPortfolios} isPrivateMode={addOnOptions.privateMode} />
-                            <ProfitLossPercentageTimeline
-                              portfolios={state.portfolios}
-                              isPrivateMode={addOnOptions.privateMode}
-                            />
-                            <ProfitLossTimeline
-                              portfolios={state.portfolios}
-                              isPrivateMode={addOnOptions.privateMode}
-                            />
+                            <YoYPnLChart portfolios={state.allPortfolios} />
+                            <ProfitLossPercentageTimeline portfolios={state.portfolios} />
+                            <ProfitLossTimeline portfolios={state.portfolios} />
                           </>
                         ),
                       },
@@ -529,19 +528,15 @@ export default function App() {
                         children: (
                           <>
                             {state.positions.length ? (
-                              <HoldingsCharts
-                                positions={state.positions}
-                                accounts={state.accounts}
-                                isPrivateMode={addOnOptions.privateMode}
-                              />
+                              <HoldingsCharts positions={state.positions} accounts={state.accounts} />
                             ) : (
                               <Empty description="No Holdings" />
                             )}
-                            <CashTable accounts={state.accounts} isPrivateMode={addOnOptions.privateMode} />
+                            <CashTable accounts={state.accounts} />
                             {!!state.positions.length && (
                               <>
                                 <PortfolioVisualizer positions={state.positions} />
-                                <HoldingsTable positions={state.positions} isPrivateMode={addOnOptions.privateMode} />
+                                <HoldingsTable positions={state.positions} />
                               </>
                             )}
                           </>
@@ -551,26 +546,13 @@ export default function App() {
                         label: 'Gainers/Losers',
                         key: TabKeysEnum.GAINERS_LOSERS,
                         destroyInactiveTabPane: true,
-                        children: (
-                          <TopGainersLosers
-                            positions={state.positions}
-                            isPrivateMode={addOnOptions.privateMode}
-                            accounts={state.accounts}
-                          />
-                        ),
+                        children: <TopGainersLosers positions={state.positions} accounts={state.accounts} />,
                       },
                       {
                         label: 'Performance',
                         key: TabKeysEnum.PERFORMANCE,
                         destroyInactiveTabPane: true,
-                        children: (
-                          <BenchmarkComparison
-                            portfolios={state.allPortfolios}
-                            isPrivateMode={addOnOptions.privateMode}
-                            fromDate={addOnOptions.fromDate}
-                            toDate={addOnOptions.toDate}
-                          />
-                        ),
+                        children: <BenchmarkComparison portfolios={state.allPortfolios} />,
                       },
                       {
                         label: 'Realized P&L',
@@ -578,12 +560,9 @@ export default function App() {
                         destroyInactiveTabPane: true,
                         children: (
                           <RealizedPnL
-                            fromDate={addOnOptions.fromDate}
-                            toDate={addOnOptions.toDate}
                             transactions={state.securityTransactions}
                             accountTransactions={state.accountTransactions}
                             accounts={state.accounts}
-                            isPrivateMode={addOnOptions.privateMode}
                           />
                         ),
                       },

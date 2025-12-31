@@ -1,6 +1,6 @@
 import { Divider, Typography } from 'antd';
 import type { TextProps } from 'antd/es/typography/Text';
-
+import { useAddonContext } from '@/context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Account, Position } from '../types';
 import { cn } from '../utils/cn';
@@ -10,7 +10,6 @@ type Props = {
   symbol: string;
   positions: Position[];
   accounts: Account[];
-  isPrivateMode: boolean;
 };
 
 function LabelValue({
@@ -32,6 +31,7 @@ function LabelValue({
 
 export default function StockDetails(props: Props) {
   const { baseCurrencyDisplay } = useCurrency();
+  const { isPrivateMode } = useAddonContext();
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
   }, 0);
@@ -58,20 +58,20 @@ export default function StockDetails(props: Props) {
 
       <LabelValue
         label="Book Value"
-        value={`${baseCurrencyDisplay} ${props.isPrivateMode ? '-' : formatMoney(position.book_value)}`}
+        value={`${baseCurrencyDisplay} ${isPrivateMode ? '-' : formatMoney(position.book_value)}`}
       />
 
       <LabelValue
         label="Market Value"
         value={`${baseCurrencyDisplay} ${
-          props.isPrivateMode ? '-' : formatMoney(position.market_value)
+          isPrivateMode ? '-' : formatMoney(position.market_value)
         } (${(position.market_value ? (position.market_value / marketValue) * 100 : 0).toFixed(2)}%)`}
       />
 
       <LabelValue
         label="Proft/Loss"
         value={`${baseCurrencyDisplay} ${
-          props.isPrivateMode ? '-' : formatMoney(position.gain_amount)
+          isPrivateMode ? '-' : formatMoney(position.gain_amount)
         } (${(position.gain_percent ? position.gain_percent * 100 : position.gain_percent || 0).toFixed(2)}%)`}
         valueProps={{ type: position.gain_percent > 0 ? 'success' : 'danger', strong: true }}
       />

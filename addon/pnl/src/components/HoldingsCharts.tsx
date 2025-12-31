@@ -2,6 +2,7 @@
 import type * as Highcharts from 'highcharts';
 import { useMemo, useState } from 'react';
 
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Account, Position } from '../types';
 import { getOptions, getOptionsV2, POSITION_TOOLTIP } from '../utils/chartHelpers';
@@ -14,11 +15,11 @@ import StockTimeline from './StockTimeline';
 type Props = {
   positions: Position[];
   accounts: Account[];
-  isPrivateMode: boolean;
 };
 
 export default function HoldingsCharts(props: Props) {
   const [timelineSymbol, setTimelineSymbol] = useState<string>();
+  const { isPrivateMode } = useAddonContext();
   const { baseCurrencyDisplay } = useCurrency();
 
   const getPositionsSeries = (): {
@@ -55,11 +56,11 @@ export default function HoldingsCharts(props: Props) {
           symbol,
           y: position.market_value,
           baseCurrency: baseCurrencyDisplay,
-          displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
-          value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
+          displayValue: isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
+          value: isPrivateMode ? '-' : formatMoney(position.market_value),
           gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
           xirr: position.xirr ? position.xirr * 100 : position.xirr,
-          profit: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
+          profit: isPrivateMode ? '-' : formatMoney(position.gain_amount),
           percentage: (position.market_value / totalValue) * 100,
           buyPrice: formatMoney(
             position.investments.reduce((cost, investment) => cost + investment.book_value, 0) / position.quantity,
@@ -90,7 +91,7 @@ export default function HoldingsCharts(props: Props) {
         events,
         tooltip: POSITION_TOOLTIP,
         dataLabels: {
-          enabled: !props.isPrivateMode,
+          enabled: !isPrivateMode,
           format: '{point.displayValue}',
         },
         showInLegend: false,
@@ -128,14 +129,7 @@ export default function HoldingsCharts(props: Props) {
       return null;
     }
 
-    return (
-      <StockTimeline
-        isPrivateMode={props.isPrivateMode}
-        symbol={timelineSymbol}
-        position={position}
-        accounts={props.accounts}
-      />
-    );
+    return <StockTimeline symbol={timelineSymbol} position={position} accounts={props.accounts} />;
   };
 
   const { pie, column } = useMemo(() => {
@@ -149,18 +143,18 @@ export default function HoldingsCharts(props: Props) {
         yAxisTitle: 'Market Value ($)',
         subtitle: '(click on a stock to view transactions)',
         series: [column],
-        isPrivateMode: props.isPrivateMode,
+        isPrivateMode,
       }),
-    [column, props.isPrivateMode],
+    [column, isPrivateMode],
   );
   const pieChartOptions = useMemo(
     () =>
       getOptionsV2({
         subtitle: '(click on a stock to view timeline and transactions)',
         series: [pie],
-        isPrivateMode: props.isPrivateMode,
+        isPrivateMode,
       }),
-    [pie, props.isPrivateMode],
+    [pie, isPrivateMode],
   );
 
   return (
@@ -176,7 +170,6 @@ export default function HoldingsCharts(props: Props) {
           <StockSelector
             positions={props.positions}
             accounts={props.accounts}
-            isPrivateMode={props.isPrivateMode}
             selectedSymbol={timelineSymbol}
             setSelectedSymbol={setTimelineSymbol}
           />
@@ -185,7 +178,7 @@ export default function HoldingsCharts(props: Props) {
 
       {renderStockTimeline()}
 
-      <CompositionCharts {...props} />
+      <CompositionCharts positions={props.positions} accounts={props.accounts} />
     </>
   );
 }

@@ -6,7 +6,7 @@ import type { Account } from '../types';
 import { formatMoney, sumOf } from '../utils/common';
 import Collapsible from './Collapsible';
 
-type Props = { accounts: Account[]; isPrivateMode: boolean };
+type Props = { accounts: Account[] };
 
 function CashTable(props: Props) {
   const { baseCurrencyDisplay, getValue, allCurrencies } = useCurrency();

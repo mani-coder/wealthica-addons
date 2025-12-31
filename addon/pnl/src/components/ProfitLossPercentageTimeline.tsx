@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import React from 'react';
+import { useAddonContext } from '@/context/AddonContext';
 import type { Portfolio } from '../types';
 import { formatCurrency, max, min } from '../utils/common';
 import Charts from './Charts';
@@ -7,16 +8,16 @@ import Collapsible from './Collapsible';
 
 type Props = {
   portfolios: Portfolio[];
-  isPrivateMode: boolean;
 };
 
 function ProfitLossPercentageTimeline(props: Props) {
+  const { isPrivateMode } = useAddonContext();
   function getSeries(): any {
     const data = props.portfolios.map((portfolio) => {
       return {
         x: dayjs(portfolio.date).valueOf(),
         y: ((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100,
-        pnlValue: props.isPrivateMode ? '-' : formatCurrency(portfolio.value - portfolio.deposits, 2).toLocaleString(),
+        pnlValue: isPrivateMode ? '-' : formatCurrency(portfolio.value - portfolio.deposits, 2).toLocaleString(),
       };
     });
 

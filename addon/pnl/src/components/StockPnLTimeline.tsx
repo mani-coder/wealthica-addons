@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
@@ -15,7 +16,6 @@ import Charts from './Charts';
 type Props = {
   symbol: string;
   position: Position;
-  isPrivateMode: boolean;
   showValueChart?: boolean;
   accounts: Account[];
 };
@@ -23,7 +23,8 @@ type Props = {
 const POINT_FORMAT =
   'P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />';
 
-function StockPnLTimeline({ isPrivateMode, symbol, position, showValueChart, accounts }: Props) {
+function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props) {
+  const { isPrivateMode } = useAddonContext();
   const { baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<SecurityPriceData[]>([]);

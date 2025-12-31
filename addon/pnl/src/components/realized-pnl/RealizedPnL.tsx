@@ -8,6 +8,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { trackEvent } from '../../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT, DEBUG_LOCAL_STORAGE_KEY } from '../../constants';
+import { useAddonContext } from '../../context/AddonContext';
 import useCurrency from '../../hooks/useCurrency';
 import type { Account, AccountTransaction, SecurityTransaction, Transaction } from '../../types';
 import { formatCurrency, formatMoney, getLocalCache } from '../../utils/common';
@@ -24,9 +25,6 @@ type Props = {
   transactions: Transaction[];
   accountTransactions: AccountTransaction[];
   accounts: Account[];
-  isPrivateMode: boolean;
-  fromDate: string;
-  toDate: string;
 };
 
 type CurrentPosition = {
@@ -39,13 +37,14 @@ type CurrentPosition = {
 
 type TransactionType = 'income' | 'pnl' | 'expense';
 
-export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props) {
+export default function RealizedPnL({ accounts, ...props }: Props) {
   const [timeline, setTimeline] = useState<'month' | 'year' | 'week' | 'day'>('year');
+  const { isPrivateMode, fromDate: fromDateStr, toDate: toDateStr } = useAddonContext();
   const { getValue, baseCurrencyDisplay } = useCurrency();
 
   const { transactions, accountTransactions, fromDate, toDate } = useMemo(() => {
-    const fromDate = dayjs(props.fromDate);
-    const toDate = dayjs(props.toDate);
+    const fromDate = dayjs(fromDateStr, DATE_FORMAT);
+    const toDate = dayjs(toDateStr, DATE_FORMAT);
     return {
       transactions: props.transactions.filter((t) => t.date.isSameOrAfter(fromDate) && t.date.isSameOrBefore(toDate)),
       accountTransactions: props.accountTransactions.filter(
@@ -54,7 +53,7 @@ export default function RealizedPnL({ accounts, isPrivateMode, ...props }: Props
       fromDate,
       toDate,
     };
-  }, [props.transactions, props.fromDate, props.toDate, props.accountTransactions]);
+  }, [props.transactions, fromDateStr, toDateStr, props.accountTransactions]);
 
   const { expenseTransactions, totalExpense } = useMemo(() => {
     const expenseTransactions = accountTransactions

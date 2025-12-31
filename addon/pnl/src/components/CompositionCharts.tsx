@@ -2,6 +2,7 @@ import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { useCallback, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Account, Position } from '../types';
 import { getOptions, POSITION_TOOLTIP } from '../utils/chartHelpers';
@@ -15,13 +16,13 @@ import CompositionGroup from './CompositionGroup';
 type Props = {
   positions: Position[];
   accounts: Account[];
-  isPrivateMode: boolean;
 };
 
 const COLORS = Highcharts.getOptions().colors;
 
 export default function CompositionCharts(props: Props) {
   const [showHoldings, setShowHoldings] = useState(true);
+  const { isPrivateMode } = useAddonContext();
   const { getValue, baseCurrencyDisplay } = useCurrency();
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('currency');
 
@@ -116,10 +117,10 @@ export default function CompositionCharts(props: Props) {
               name: symbol,
               y: position.market_value,
               baseCurrency: baseCurrencyDisplay,
-              displayValue: props.isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
-              value: props.isPrivateMode ? '-' : formatMoney(position.market_value),
+              displayValue: isPrivateMode ? '-' : formatCurrency(position.market_value, 1),
+              value: isPrivateMode ? '-' : formatMoney(position.market_value),
               gain: position.gain_percent ? position.gain_percent * 100 : position.gain_percent,
-              profit: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
+              profit: isPrivateMode ? '-' : formatMoney(position.gain_amount),
               buyPrice: formatMoney(position.book_value / position.quantity),
               shares: position.quantity,
               lastPrice: formatMoney(position.security.last_price),
@@ -185,7 +186,7 @@ export default function CompositionCharts(props: Props) {
             tooltip: POSITION_TOOLTIP,
           };
     },
-    [baseCurrencyDisplay, getColor, props.accounts, props.isPrivateMode, showHoldings, getValue],
+    [baseCurrencyDisplay, getColor, props.accounts, isPrivateMode, showHoldings, getValue],
   );
 
   const getAccountsCompositionSeries = useCallback(
@@ -278,9 +279,9 @@ export default function CompositionCharts(props: Props) {
               drilldown: showHoldings ? undefined : account.name,
               y: account.value,
               baseCurrency: baseCurrencyDisplay,
-              displayValue: props.isPrivateMode ? '-' : account.value ? formatMoney(account.value) : account.value,
-              totalValue: props.isPrivateMode ? '-' : formatMoney(totalValue),
-              gain: props.isPrivateMode ? '-' : `${baseCurrencyDisplay} ${formatMoney(account.gainAmount)}`,
+              displayValue: isPrivateMode ? '-' : account.value ? formatMoney(account.value) : account.value,
+              totalValue: isPrivateMode ? '-' : formatMoney(totalValue),
+              gain: isPrivateMode ? '-' : `${baseCurrencyDisplay} ${formatMoney(account.gainAmount)}`,
               gainRatio: `${((account.gainAmount / (account.value - account.gainAmount)) * 100).toFixed(2)}%`,
               pnlColor: account.gainAmount >= 0 ? 'green' : 'red',
               cash,
@@ -327,7 +328,7 @@ export default function CompositionCharts(props: Props) {
           }
           <tr><td colspan="2"><hr /></td></tr>
           ${
-            !!point.cash && !props.isPrivateMode
+            !!point.cash && !isPrivateMode
               ? `<tr><td>Total Cash</td><td style="text-align: right;" class="position-tooltip-cash" style="color:${
                   point.cash < 0 ? 'red' : ''
                 };">${point.baseCurrency} ${formatMoney(point.cash)}</td></tr>`
@@ -344,7 +345,7 @@ export default function CompositionCharts(props: Props) {
     },
     [
       props.accounts,
-      props.isPrivateMode,
+      isPrivateMode,
       showHoldings,
       getAccountsCompositionHoldingsDrilldown,
       getValue,
@@ -377,9 +378,9 @@ export default function CompositionCharts(props: Props) {
       subtitle: showHoldings ? undefined : '(click on the category name to drill into the holdings.)',
       series,
       drilldown,
-      isPrivateMode: props.isPrivateMode,
+      isPrivateMode,
     });
-  }, [getCompositionGroupSeriesOptions, compositionGroup, showHoldings, props.isPrivateMode]);
+  }, [getCompositionGroupSeriesOptions, compositionGroup, showHoldings, isPrivateMode]);
 
   return (
     <Collapsible title="Holdings Composition">

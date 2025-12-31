@@ -1,6 +1,7 @@
 import { Table, type TableColumnProps, Typography } from 'antd';
 import React from 'react';
 
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Position } from '../types';
 import { formatMoney, getSymbol } from '../utils/common';
@@ -8,10 +9,10 @@ import Collapsible from './Collapsible';
 
 type Props = {
   positions: Position[];
-  isPrivateMode: boolean;
 };
 
 function HoldingsTable(props: Props) {
+  const { isPrivateMode } = useAddonContext();
   const { baseCurrencyDisplay, allCurrencies } = useCurrency();
   const marketValue = props.positions.reduce((sum, position) => {
     return sum + position.market_value;
@@ -132,7 +133,7 @@ function HoldingsTable(props: Props) {
         dataIndex: 'market_value',
         render: (text) => (
           <>
-            <Typography.Text strong>{props.isPrivateMode ? '-' : formatMoney(text)}</Typography.Text>
+            <Typography.Text strong>{isPrivateMode ? '-' : formatMoney(text)}</Typography.Text>
             <div style={{ fontSize: 13 }}>{text ? formatMoney((text / marketValue) * 100, 1) : 0}%</div>
           </>
         ),

@@ -3,15 +3,17 @@ import { Empty, Switch, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 
 import { trackEvent } from '../analytics';
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import StockPnLTimeline from './StockPnLTimeline';
 
-export function TopGainersLosers(props: { isPrivateMode: boolean; positions: Position[]; accounts: Account[] }) {
+export function TopGainersLosers(props: { positions: Position[]; accounts: Account[] }) {
   const [sortByValue, setSortByValue] = useState(false);
   const [pnlSymbol, setPnlSymbol] = useState<string>();
+  const { isPrivateMode } = useAddonContext();
   const { baseCurrencyDisplay } = useCurrency();
 
   function getTopGainersLosers(gainers: boolean): any[] {
@@ -42,9 +44,9 @@ export function TopGainersLosers(props: { isPrivateMode: boolean; positions: Pos
               y: sortByValue ? position.gain_amount : position.gain_percent * 100,
               gainRatio: position.gain_percent * 100,
               baseCurrency: baseCurrencyDisplay,
-              gain: props.isPrivateMode ? '-' : formatMoney(position.gain_amount),
+              gain: isPrivateMode ? '-' : formatMoney(position.gain_amount),
               xirr: position.xirr * 100,
-              gainDisplay: props.isPrivateMode ? '-' : formatCurrency(position.gain_amount, 1),
+              gainDisplay: isPrivateMode ? '-' : formatCurrency(position.gain_amount, 1),
             };
           }),
         tooltip: {
@@ -120,7 +122,7 @@ export function TopGainersLosers(props: { isPrivateMode: boolean; positions: Pos
 
       yAxis: {
         labels: {
-          enabled: sortByValue ? true : !props.isPrivateMode,
+          enabled: sortByValue ? true : !isPrivateMode,
         },
         title: {
           text: yAxisTitle,
@@ -196,13 +198,7 @@ export function TopGainersLosers(props: { isPrivateMode: boolean; positions: Pos
     }
 
     return (
-      <StockPnLTimeline
-        isPrivateMode={props.isPrivateMode}
-        symbol={pnlSymbol}
-        position={position}
-        showValueChart={sortByValue}
-        accounts={props.accounts}
-      />
+      <StockPnLTimeline symbol={pnlSymbol} position={position} showValueChart={sortByValue} accounts={props.accounts} />
     );
   };
 

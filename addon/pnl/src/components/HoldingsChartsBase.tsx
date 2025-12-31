@@ -1,5 +1,4 @@
 import { Select, Typography } from 'antd';
-
 import type { Account, Position } from '../types';
 import { getSymbol } from '../utils/common';
 import StockDetails from './StockDetails';
@@ -7,7 +6,6 @@ import StockDetails from './StockDetails';
 type StockSelectorProps = {
   positions: Position[];
   accounts: Account[];
-  isPrivateMode: boolean;
   selectedSymbol?: string;
   setSelectedSymbol: (symbol: string) => void;
 };

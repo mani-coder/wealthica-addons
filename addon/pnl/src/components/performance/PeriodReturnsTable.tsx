@@ -1,5 +1,7 @@
 import { Table, Typography } from 'antd';
+import dayjs from 'dayjs';
 import React from 'react';
+import { DATE_FORMAT } from '../../constants';
 import type { PeriodReturn } from '../../utils/benchmarkData';
 
 type Props = {
@@ -8,18 +10,26 @@ type Props = {
   benchmarkName: string;
   benchmarkSymbol: string;
   isPrivateMode: boolean;
+  fromDate: string;
+  toDate: string;
 };
 
 function PeriodReturnsTable(props: Props) {
-  const { periods, periodType, benchmarkName, benchmarkSymbol, isPrivateMode } = props;
+  const { periods, periodType, benchmarkName, benchmarkSymbol, isPrivateMode, fromDate, toDate } = props;
 
   if (periods.length === 0) return null;
+
+  const formattedFromDate = dayjs(fromDate, DATE_FORMAT).format('MMM D, YYYY');
+  const formattedToDate = dayjs(toDate, DATE_FORMAT).format('MMM D, YYYY');
 
   return (
     <div className="mt-6 bg-emerald-50 rounded">
       <Typography.Title level={5} className="pt-4 px-3">
         {periodType === 'yearly' ? 'Yearly' : 'Monthly'} Performance Breakdown
       </Typography.Title>
+      <Typography.Text className="px-3 text-gray-600 text-sm">
+        {formattedFromDate} to {formattedToDate}
+      </Typography.Text>
       <Table<PeriodReturn>
         dataSource={periods}
         rowKey="period"

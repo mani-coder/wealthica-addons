@@ -1,15 +1,16 @@
 import dayjs from 'dayjs';
 import React from 'react';
+import { useAddonContext } from '@/context/AddonContext';
 import type { Portfolio } from '../types';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 
 type Props = {
   portfolios: Portfolio[];
-  isPrivateMode: boolean;
 };
 
 function ProfitLossTimeline(props: Props) {
+  const { isPrivateMode } = useAddonContext();
   function getSeries(): any {
     return [
       {
@@ -19,7 +20,7 @@ function ProfitLossTimeline(props: Props) {
             x: dayjs(portfolio.date).valueOf(),
             y: portfolio.value - portfolio.deposits,
             pnlRatio: ((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100,
-            displayValue: props.isPrivateMode
+            displayValue: isPrivateMode
               ? '-'
               : Number((portfolio.value - portfolio.deposits).toFixed(2)).toLocaleString(),
           };
@@ -79,7 +80,7 @@ function ProfitLossTimeline(props: Props) {
             dashStyle: 'Dash',
           },
           labels: {
-            enabled: !props.isPrivateMode,
+            enabled: !isPrivateMode,
           },
           opposite: false,
         },

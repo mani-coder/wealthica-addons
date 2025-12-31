@@ -3,6 +3,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../analytics';
 import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../constants';
+import { useAddonContext } from '../context/AddonContext';
 import type { Portfolio } from '../types';
 import { formatCurrency, getPreviousWeekday } from '../utils/common';
 import Charts from './Charts';
@@ -10,10 +11,10 @@ import Collapsible from './Collapsible';
 
 type Props = {
   portfolios: Portfolio[];
-  isPrivateMode: boolean;
 };
 
 function YoYPnLChart(props: Props) {
+  const { isPrivateMode } = useAddonContext();
   const portfoliosByDate = props.portfolios.reduce((hash: { [key: string]: any }, portfolio) => {
     hash[portfolio.date] = portfolio;
     return hash;
@@ -55,7 +56,7 @@ function YoYPnLChart(props: Props) {
 
       yAxis: {
         labels: {
-          enabled: !props.isPrivateMode,
+          enabled: !isPrivateMode,
           format: '{value}%',
         },
         title: {
@@ -239,14 +240,14 @@ function YoYPnLChart(props: Props) {
           y: value.changeRatio,
 
           startDate: value.startDate,
-          startPnl: !props.isPrivateMode ? formatCurrency(value.startPnl, 2) : '-',
+          startPnl: !isPrivateMode ? formatCurrency(value.startPnl, 2) : '-',
           startRatio: value.startRatio,
 
           endDate: value.endDate,
-          endPnl: !props.isPrivateMode ? formatCurrency(value.endPnl, 2) : '-',
+          endPnl: !isPrivateMode ? formatCurrency(value.endPnl, 2) : '-',
           endRatio: value.endRatio,
 
-          changeValue: !props.isPrivateMode ? `$${formatCurrency(value.changeValue, 1)}` : '-',
+          changeValue: !isPrivateMode ? `$${formatCurrency(value.changeValue, 1)}` : '-',
         })),
         point: {
           events: {

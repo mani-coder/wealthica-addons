@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { trackEvent } from '../../analytics';
 import { DATE_FORMAT } from '../../constants';
-import { useAddon } from '../../context/AddonContext';
+import { useAddon, useAddonContext } from '../../context/AddonContext';
 import { useSecurityHistory } from '../../hooks/useSecurityHistory';
 import type { Portfolio } from '../../types';
 import {
@@ -30,13 +30,11 @@ type SecuritySearchResult = {
 
 type Props = {
   portfolios: Portfolio[];
-  isPrivateMode: boolean;
-  fromDate: string;
-  toDate: string;
 };
 
 function BenchmarkComparison(props: Props) {
   const addon = useAddon();
+  const { fromDate, toDate, isPrivateMode } = useAddonContext();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
 
   const [selectedBenchmark, setSelectedBenchmark] = useState<BenchmarkType | null>('SPY');
@@ -122,9 +120,9 @@ function BenchmarkComparison(props: Props) {
       return { periods: [], type: 'monthly' as const };
 
     // Determine number of calendar years
-    const fromDate = dayjs(props.fromDate, DATE_FORMAT);
-    const toDate = dayjs(props.toDate, DATE_FORMAT);
-    const yearsDiff = toDate.diff(fromDate, 'year', true);
+    const from = dayjs(fromDate, DATE_FORMAT);
+    const to = dayjs(toDate, DATE_FORMAT);
+    const yearsDiff = to.diff(from, 'year', true);
 
     // Use yearly if >= 2 calendar years, otherwise monthly
     if (yearsDiff >= 2) {
@@ -137,7 +135,7 @@ function BenchmarkComparison(props: Props) {
       periods: calculateMonthlyReturns(portfolioReturns, benchmarkReturns),
       type: 'monthly' as const,
     };
-  }, [portfolioReturns, benchmarkReturns, props.fromDate, props.toDate]);
+  }, [portfolioReturns, benchmarkReturns, fromDate, toDate]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {
@@ -151,11 +149,7 @@ function BenchmarkComparison(props: Props) {
 
       setLoading(true);
       try {
-        const data = await fetchBenchmarkData(
-          securityId,
-          dayjs(props.fromDate, DATE_FORMAT),
-          dayjs(props.toDate, DATE_FORMAT),
-        );
+        const data = await fetchBenchmarkData(securityId, dayjs(fromDate, DATE_FORMAT), dayjs(toDate, DATE_FORMAT));
         setBenchmarkData(data);
       } catch (error) {
         console.error('Failed to load benchmark data:', error);
@@ -165,7 +159,7 @@ function BenchmarkComparison(props: Props) {
     };
 
     loadBenchmarkData();
-  }, [selectedBenchmark, customSecurity, props.fromDate, props.toDate, fetchBenchmarkData]);
+  }, [selectedBenchmark, customSecurity, fromDate, toDate, fetchBenchmarkData]);
 
   const currentBenchmarkInfo = useMemo(() => {
     if (customSecurity) {
@@ -189,7 +183,7 @@ function BenchmarkComparison(props: Props) {
         data: portfolioReturns.map((point) => ({
           x: dayjs(point.date).valueOf(),
           y: point.value,
-          displayValue: props.isPrivateMode ? '-' : `${point.value.toFixed(2)}%`,
+          displayValue: isPrivateMode ? '-' : `${point.value.toFixed(2)}%`,
         })),
         type: 'spline',
         color: '#10b981',
@@ -362,9 +356,20 @@ function BenchmarkComparison(props: Props) {
     return '';
   }, [selectedBenchmark, customSecurity]);
 
+  const formattedFromDate = dayjs(fromDate, DATE_FORMAT).format('MMM D, YYYY');
+  const formattedToDate = dayjs(toDate, DATE_FORMAT).format('MMM D, YYYY');
+
   return (
     <div className="w-full">
-      <Card title="Performance Benchmark Comparison" styles={{ body: { padding: 0 } }}>
+      <Card
+        title="Performance Benchmark Comparison"
+        extra={
+          <Typography.Text className="text-gray-600 text-sm">
+            {formattedFromDate} to {formattedToDate}
+          </Typography.Text>
+        }
+        styles={{ body: { padding: 0 } }}
+      >
         <div className="p-4">
           <Typography.Text strong>Compare Against: </Typography.Text>
           <AutoComplete
@@ -406,7 +411,7 @@ function BenchmarkComparison(props: Props) {
               benchmarkReturns={benchmarkReturns}
               portfolios={props.portfolios}
               benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
-              isPrivateMode={props.isPrivateMode}
+              isPrivateMode={isPrivateMode}
             />
 
             {benchmarkReturns.length > 0 ? (
@@ -422,7 +427,9 @@ function BenchmarkComparison(props: Props) {
               periodType={periodReturns.type}
               benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
               benchmarkSymbol={currentBenchmarkInfo?.symbol || 'Benchmark'}
-              isPrivateMode={props.isPrivateMode}
+              isPrivateMode={isPrivateMode}
+              fromDate={fromDate}
+              toDate={toDate}
             />
           </>
         )}

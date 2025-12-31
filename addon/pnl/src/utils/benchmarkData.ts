@@ -369,8 +369,10 @@ export function calculateYearlyReturns(
     const pData = portfolioByYear.get(year);
     const bData = benchmarkByYear.get(year);
 
-    const portfolioReturn = pData ? pData.end - pData.start : 0;
-    const benchmarkReturn = bData ? bData.end - bData.start : 0;
+    // Calculate period return accounting for compounding
+    // Since values are cumulative returns from start, convert back to get period return
+    const portfolioReturn = pData ? ((100 + pData.end) / (100 + pData.start) - 1) * 100 : 0;
+    const benchmarkReturn = bData ? ((100 + bData.end) / (100 + bData.start) - 1) * 100 : 0;
     const difference = portfolioReturn - benchmarkReturn;
 
     return {
@@ -431,8 +433,10 @@ export function calculateMonthlyReturns(
     const pData = portfolioByMonth.get(monthKey);
     const bData = benchmarkByMonth.get(monthKey);
 
-    const portfolioReturn = pData ? pData.end - pData.start : 0;
-    const benchmarkReturn = bData ? bData.end - bData.start : 0;
+    // Calculate period return accounting for compounding
+    // Since values are cumulative returns from start, convert back to get period return
+    const portfolioReturn = pData ? ((100 + pData.end) / (100 + pData.start) - 1) * 100 : 0;
+    const benchmarkReturn = bData ? ((100 + bData.end) / (100 + bData.start) - 1) * 100 : 0;
     const difference = portfolioReturn - benchmarkReturn;
 
     // Format as "Jan 2024"

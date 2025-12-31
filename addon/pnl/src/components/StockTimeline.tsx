@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
+import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
@@ -13,11 +14,11 @@ import Charts from './Charts';
 type Props = {
   symbol: string;
   position: Position;
-  isPrivateMode: boolean;
   accounts: Account[];
 };
 
 function StockTimeline(props: Props) {
+  const { isPrivateMode } = useAddonContext();
   const [loading, setLoading] = useState<boolean>(false);
   const { baseCurrencyDisplay } = useCurrency();
   const [securityTimeline, setSecurityTimeline] = useState<SecurityPriceData[]>([]);
@@ -236,7 +237,7 @@ function StockTimeline(props: Props) {
         },
       },
       subtitle: {
-        text: props.isPrivateMode
+        text: isPrivateMode
           ? 'Shares: -, Market Value: -, Profit: -'
           : `Shares: ${props.position.quantity}@${formatMoney(
               props.position.investments.reduce((cost, investment) => {

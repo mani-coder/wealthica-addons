@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
+import { useAddonContext } from '@/context/AddonContext';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import type { CashFlow, Portfolio } from '../types';
 import { formatMoney } from '../utils/common';
@@ -10,7 +11,6 @@ import Collapsible from './Collapsible';
 type Props = {
   portfolios: Portfolio[];
   cashflows: CashFlow[];
-  isPrivateMode: boolean;
 };
 
 function DepositVsPortfolioValueTimeline(props: Props) {
@@ -21,6 +21,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
       .sort((a, b) => a.date.valueOf() - b.date.valueOf());
   }, [props.cashflows]);
   console.debug('[DEBUG] Cash Flows', { cashflows: props.cashflows.filter((t) => t.deposit || t.withdrawal) });
+  const { isPrivateMode } = useAddonContext();
 
   function getFlags(type: string): any {
     return {
@@ -63,7 +64,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
           return {
             x: dayjs(portfolio.date).valueOf(),
             y: portfolio.value,
-            displayValue: props.isPrivateMode ? '-' : Number(portfolio.value.toFixed(2)).toLocaleString(),
+            displayValue: isPrivateMode ? '-' : Number(portfolio.value.toFixed(2)).toLocaleString(),
           };
         }),
         type: 'spline',
@@ -76,7 +77,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
           return {
             x: dayjs(portfolio.date).valueOf(),
             y: portfolio.deposits,
-            displayValue: props.isPrivateMode ? '-' : Number(portfolio.deposits.toFixed(2)).toLocaleString(),
+            displayValue: isPrivateMode ? '-' : Number(portfolio.deposits.toFixed(2)).toLocaleString(),
           };
         }),
         type: 'spline',
@@ -131,7 +132,7 @@ function DepositVsPortfolioValueTimeline(props: Props) {
             dashStyle: 'Dash',
           },
           labels: {
-            enabled: !props.isPrivateMode,
+            enabled: !isPrivateMode,
           },
           opposite: false,
         },
