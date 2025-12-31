@@ -11,7 +11,11 @@ import {
   BENCHMARKS,
   type BenchmarkType,
   calculateAlpha,
+  calculateAverageRecoveryTime,
+  calculateConsistencyScore,
   calculateCorrelation,
+  calculateOpportunityCost,
+  calculateRiskLevel,
   normalizePortfolioToPercentageReturns,
   normalizeToPercentageReturns,
 } from '../utils/benchmarkData';
@@ -123,6 +127,24 @@ function BenchmarkComparison(props: Props) {
   const correlation = useMemo(() => {
     return calculateCorrelation(portfolioReturns, benchmarkReturns);
   }, [portfolioReturns, benchmarkReturns]);
+
+  // Calculate investor-friendly metrics
+  const consistencyScore = useMemo(() => {
+    return calculateConsistencyScore(portfolioReturns, benchmarkReturns);
+  }, [portfolioReturns, benchmarkReturns]);
+
+  const recoveryTime = useMemo(() => {
+    return calculateAverageRecoveryTime(portfolioReturns);
+  }, [portfolioReturns]);
+
+  const riskLevel = useMemo(() => {
+    return calculateRiskLevel(portfolioReturns, benchmarkReturns);
+  }, [portfolioReturns, benchmarkReturns]);
+
+  const opportunityCost = useMemo(() => {
+    const initialValue = props.portfolios.length > 0 ? props.portfolios[0].value : 0;
+    return calculateOpportunityCost(portfolioReturns, benchmarkReturns, initialValue);
+  }, [portfolioReturns, benchmarkReturns, props.portfolios]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {
@@ -357,7 +379,7 @@ function BenchmarkComparison(props: Props) {
           <Typography.Text strong>Compare Against: </Typography.Text>
           <AutoComplete
             key={displayValue} // Force re-render when selection changes to update display
-            style={{ width: 400, marginLeft: 8 }}
+            className="w-[400px] ml-2"
             defaultValue={displayValue}
             options={autoCompleteOptions}
             onSearch={searchSecurities}
@@ -384,12 +406,12 @@ function BenchmarkComparison(props: Props) {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center" style={{ minHeight: 200 }}>
+          <div className="flex justify-center items-center min-h-[200px]">
             <Spin size="large" />
           </div>
         ) : (
           <>
-            <div className="flex justify-evenly flex-wrap mb-6 p-4" style={{ backgroundColor: '#f9fafb' }}>
+            <div className="flex justify-evenly flex-wrap p-4 bg-fuchsia-50">
               <Statistic
                 title="Your Portfolio Return"
                 value={props.isPrivateMode ? '-' : `${portfolioFinalReturn.toFixed(2)}%`}
@@ -413,6 +435,57 @@ function BenchmarkComparison(props: Props) {
               />
             </div>
 
+            <div className="mb-6 p-4 bg-emerald-50">
+              <Typography.Title level={5}>Performance Insights</Typography.Title>
+              <div className="flex justify-evenly flex-wrap gap-4">
+                <Statistic
+                  title="Consistency Score"
+                  value={props.isPrivateMode ? '-' : `${consistencyScore.toFixed(1)}%`}
+                  valueStyle={{
+                    color: consistencyScore >= 60 ? '#10b981' : consistencyScore >= 40 ? '#f59e0b' : '#ef4444',
+                  }}
+                  suffix={
+                    <span className="text-xs text-gray-500 block mt-1">
+                      of days beating {currentBenchmarkInfo?.name || 'benchmark'}
+                    </span>
+                  }
+                />
+                <Statistic
+                  title="Average Recovery Time"
+                  value={props.isPrivateMode ? '-' : `${recoveryTime}`}
+                  valueStyle={{ color: recoveryTime <= 30 ? '#10b981' : recoveryTime <= 60 ? '#f59e0b' : '#ef4444' }}
+                  suffix={<span className="text-xs text-gray-500 block mt-1">days to bounce back</span>}
+                />
+                <Statistic
+                  title="Risk Level"
+                  value={props.isPrivateMode ? '-' : riskLevel}
+                  valueStyle={{
+                    color: riskLevel === 'Lower Risk' ? '#10b981' : riskLevel === 'Higher Risk' ? '#ef4444' : '#3b82f6',
+                    fontSize: '20px',
+                  }}
+                  suffix={
+                    <span className="text-xs text-gray-500 block mt-1">
+                      vs {currentBenchmarkInfo?.name || 'benchmark'}
+                    </span>
+                  }
+                />
+                <Statistic
+                  title="Opportunity Cost"
+                  value={
+                    props.isPrivateMode
+                      ? '-'
+                      : `${opportunityCost >= 0 ? '+' : ''}$${Math.abs(opportunityCost).toFixed(2)}`
+                  }
+                  valueStyle={{ color: opportunityCost >= 0 ? '#10b981' : '#ef4444' }}
+                  suffix={
+                    <span className="text-xs text-gray-500 block mt-1">
+                      {opportunityCost >= 0 ? 'gained' : 'missed'} vs {currentBenchmarkInfo?.name || 'benchmark'}
+                    </span>
+                  }
+                />
+              </div>
+            </div>
+
             {benchmarkReturns.length > 0 ? (
               <Charts constructorType="stockChart" options={getOptions()} />
             ) : (
@@ -421,7 +494,7 @@ function BenchmarkComparison(props: Props) {
               </div>
             )}
 
-            <div className="mt-4 p-4" style={{ backgroundColor: '#f9fafb', borderRadius: 4 }}>
+            <div className="mt-4 p-4 bg-gray-50 rounded">
               <Typography.Title level={5}>Understanding the Metrics</Typography.Title>
               <ul className="space-y-2">
                 <li>
@@ -431,6 +504,22 @@ function BenchmarkComparison(props: Props) {
                 <li>
                   <strong>Correlation:</strong> Measures how closely your portfolio moves with the benchmark (ranges
                   from -1 to 1). Higher correlation means your portfolio behaves similarly to the market.
+                </li>
+                <li>
+                  <strong>Consistency Score:</strong> Higher % means you're beating the benchmark more often. Shows what
+                  percentage of trading days your portfolio outperformed the benchmark.
+                </li>
+                <li>
+                  <strong>Recovery Time:</strong> How quickly you bounce back from losses (shorter is better). Measures
+                  the average number of days it takes for your portfolio to recover from a decline.
+                </li>
+                <li>
+                  <strong>Risk Level:</strong> How volatile your portfolio is compared to the market. Shown as "Lower
+                  Risk", "Similar Risk", or "Higher Risk" relative to the benchmark.
+                </li>
+                <li>
+                  <strong>Opportunity Cost:</strong> Whether you would have made more or less with the benchmark
+                  instead. Shows the dollar amount gained or missed compared to investing in the benchmark.
                 </li>
               </ul>
             </div>

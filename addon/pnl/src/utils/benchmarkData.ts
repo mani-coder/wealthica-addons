@@ -152,3 +152,165 @@ export function calculateCorrelation(
 
   return numerator / denominator;
 }
+
+/**
+ * Calculate portfolio beta (volatility relative to benchmark)
+ * Beta > 1: More volatile than benchmark
+ * Beta < 1: Less volatile than benchmark
+ * Beta = 1: Same volatility as benchmark
+ */
+export function calculateBeta(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): number {
+  // Align dates between portfolio and benchmark
+  const benchmarkMap = new Map(benchmarkReturns.map((b) => [b.date, b.value]));
+
+  const alignedData: Array<{ portfolio: number; benchmark: number }> = [];
+
+  portfolioReturns.forEach((p) => {
+    const benchmarkValue = benchmarkMap.get(p.date);
+    if (benchmarkValue !== undefined) {
+      alignedData.push({ portfolio: p.value, benchmark: benchmarkValue });
+    }
+  });
+
+  if (alignedData.length < 2) return 0;
+
+  // Calculate daily returns for both
+  const portfolioDailyReturns: number[] = [];
+  const benchmarkDailyReturns: number[] = [];
+
+  for (let i = 1; i < alignedData.length; i++) {
+    const pPrev = 100 + alignedData[i - 1].portfolio;
+    const pCurr = 100 + alignedData[i].portfolio;
+    const bPrev = 100 + alignedData[i - 1].benchmark;
+    const bCurr = 100 + alignedData[i].benchmark;
+
+    portfolioDailyReturns.push(((pCurr - pPrev) / pPrev) * 100);
+    benchmarkDailyReturns.push(((bCurr - bPrev) / bPrev) * 100);
+  }
+
+  const n = portfolioDailyReturns.length;
+  if (n === 0) return 0;
+
+  // Calculate means
+  const pMean = portfolioDailyReturns.reduce((sum, r) => sum + r, 0) / n;
+  const bMean = benchmarkDailyReturns.reduce((sum, r) => sum + r, 0) / n;
+
+  // Calculate covariance and variance
+  let covariance = 0;
+  let benchmarkVariance = 0;
+
+  for (let i = 0; i < n; i++) {
+    const pDiff = portfolioDailyReturns[i] - pMean;
+    const bDiff = benchmarkDailyReturns[i] - bMean;
+    covariance += pDiff * bDiff;
+    benchmarkVariance += bDiff * bDiff;
+  }
+
+  covariance /= n;
+  benchmarkVariance /= n;
+
+  if (benchmarkVariance === 0) return 0;
+
+  return covariance / benchmarkVariance;
+}
+
+/**
+ * Calculate consistency score - percentage of days portfolio beat the benchmark
+ */
+export function calculateConsistencyScore(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): number {
+  // Align dates between portfolio and benchmark
+  const benchmarkMap = new Map(benchmarkReturns.map((b) => [b.date, b.value]));
+
+  let daysBeatingBenchmark = 0;
+  let totalDays = 0;
+
+  portfolioReturns.forEach((p) => {
+    const benchmarkValue = benchmarkMap.get(p.date);
+    if (benchmarkValue !== undefined) {
+      totalDays++;
+      if (p.value > benchmarkValue) {
+        daysBeatingBenchmark++;
+      }
+    }
+  });
+
+  if (totalDays === 0) return 0;
+
+  return (daysBeatingBenchmark / totalDays) * 100;
+}
+
+/**
+ * Calculate average recovery time from drawdowns (in days)
+ */
+export function calculateAverageRecoveryTime(returns: { date: string; value: number }[]): number {
+  if (returns.length === 0) return 0;
+
+  const recoveryPeriods: number[] = [];
+  let peak = returns[0].value;
+  let drawdownStartIndex: number | null = null;
+
+  for (let i = 0; i < returns.length; i++) {
+    const point = returns[i];
+
+    if (point.value >= peak) {
+      // New peak or recovery
+      if (drawdownStartIndex !== null) {
+        // We were in a drawdown and just recovered
+        const recoveryDays = i - drawdownStartIndex;
+        recoveryPeriods.push(recoveryDays);
+        drawdownStartIndex = null;
+      }
+      peak = point.value;
+    } else {
+      // In a drawdown
+      if (drawdownStartIndex === null) {
+        drawdownStartIndex = i;
+      }
+    }
+  }
+
+  if (recoveryPeriods.length === 0) return 0;
+
+  const avgRecoveryDays = recoveryPeriods.reduce((sum, days) => sum + days, 0) / recoveryPeriods.length;
+  return Math.round(avgRecoveryDays);
+}
+
+/**
+ * Calculate risk level in plain English
+ */
+export function calculateRiskLevel(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): 'Lower Risk' | 'Similar Risk' | 'Higher Risk' {
+  const beta = calculateBeta(portfolioReturns, benchmarkReturns);
+
+  if (beta < 0.85) return 'Lower Risk';
+  if (beta > 1.15) return 'Higher Risk';
+  return 'Similar Risk';
+}
+
+/**
+ * Calculate opportunity cost - dollar difference vs benchmark
+ * Based on initial portfolio value
+ */
+export function calculateOpportunityCost(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+  initialValue: number,
+): number {
+  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return 0;
+
+  const portfolioFinalReturn = portfolioReturns[portfolioReturns.length - 1].value;
+  const benchmarkFinalReturn = benchmarkReturns[benchmarkReturns.length - 1].value;
+
+  const portfolioFinalValue = initialValue * (1 + portfolioFinalReturn / 100);
+  const benchmarkFinalValue = initialValue * (1 + benchmarkFinalReturn / 100);
+
+  return portfolioFinalValue - benchmarkFinalValue;
+}

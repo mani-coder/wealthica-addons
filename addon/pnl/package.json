@@ -28,7 +28,7 @@
     "format:check": "biome format .",
     "lint": "biome check --write .",
     "lint:check": "biome check .",
-    "check": "biome check --write ."
+    "check": "tsc && biome check --write ."
   },
   "browserslist": [
     ">0.2%",
