@@ -10,8 +10,7 @@ import type { Portfolio } from '../../types';
 import {
   BENCHMARKS,
   type BenchmarkType,
-  calculateMonthlyReturns,
-  calculateYearlyReturns,
+  calculateYearlyReturnsWithMonthlyBreakdown,
   normalizePortfolioToPercentageReturns,
   normalizeToPercentageReturns,
 } from '../../utils/benchmarkData';
@@ -114,28 +113,12 @@ function BenchmarkComparison(props: Props) {
     return normalizeToPercentageReturns(benchmarkData);
   }, [benchmarkData]);
 
-  // Calculate period returns (monthly or yearly based on date range)
+  // Calculate yearly returns with monthly breakdowns for nested table view
   const periodReturns = useMemo(() => {
-    if (portfolioReturns.length === 0 || benchmarkReturns.length === 0)
-      return { periods: [], type: 'monthly' as const };
+    if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
 
-    // Determine number of calendar years
-    const from = dayjs(fromDate, DATE_FORMAT);
-    const to = dayjs(toDate, DATE_FORMAT);
-    const yearsDiff = to.diff(from, 'year', true);
-
-    // Use yearly if >= 2 calendar years, otherwise monthly
-    if (yearsDiff >= 2) {
-      return {
-        periods: calculateYearlyReturns(portfolioReturns, benchmarkReturns),
-        type: 'yearly' as const,
-      };
-    }
-    return {
-      periods: calculateMonthlyReturns(portfolioReturns, benchmarkReturns),
-      type: 'monthly' as const,
-    };
-  }, [portfolioReturns, benchmarkReturns, fromDate, toDate]);
+    return calculateYearlyReturnsWithMonthlyBreakdown(portfolioReturns, benchmarkReturns);
+  }, [portfolioReturns, benchmarkReturns]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {
@@ -411,7 +394,6 @@ function BenchmarkComparison(props: Props) {
               benchmarkReturns={benchmarkReturns}
               portfolios={props.portfolios}
               benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
-              isPrivateMode={isPrivateMode}
             />
 
             {benchmarkReturns.length > 0 ? (
@@ -423,11 +405,9 @@ function BenchmarkComparison(props: Props) {
             )}
 
             <PeriodReturnsTable
-              periods={periodReturns.periods}
-              periodType={periodReturns.type}
+              periods={periodReturns}
               benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
               benchmarkSymbol={currentBenchmarkInfo?.symbol || 'Benchmark'}
-              isPrivateMode={isPrivateMode}
               fromDate={fromDate}
               toDate={toDate}
             />

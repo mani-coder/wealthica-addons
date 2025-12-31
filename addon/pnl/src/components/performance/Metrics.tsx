@@ -33,7 +33,6 @@ type Props = {
   benchmarkReturns: { date: string; value: number }[];
   portfolios: { value: number }[];
   benchmarkName: string;
-  isPrivateMode: boolean;
 };
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
@@ -58,7 +57,7 @@ function StatisticBox(props: StatisticProps & { tooltip?: string }) {
 }
 
 function Metrics(props: Props) {
-  const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName, isPrivateMode } = props;
+  const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName } = props;
 
   // Calculate metrics
   const alpha = useMemo(() => {
@@ -95,7 +94,7 @@ function Metrics(props: Props) {
         <StatisticBox
           title="Your Portfolio Return"
           tooltip={METRIC_DESCRIPTIONS.portfolioReturn}
-          value={isPrivateMode ? '-' : `${portfolioFinalReturn.toFixed(2)}%`}
+          value={`${portfolioFinalReturn.toFixed(2)}%`}
           valueStyle={{ color: portfolioFinalReturn >= 0 ? '#10b981' : '#ef4444' }}
         />
         <StatisticBox
@@ -107,14 +106,14 @@ function Metrics(props: Props) {
         <StatisticBox
           title="Alpha (Outperformance)"
           tooltip={METRIC_DESCRIPTIONS.alpha}
-          value={isPrivateMode ? '-' : `${alpha.toFixed(2)}%`}
+          value={`${alpha.toFixed(2)}%`}
           valueStyle={{ color: alpha >= 0 ? '#10b981' : '#ef4444' }}
           prefix={alpha >= 0 ? '+' : ''}
         />
         <StatisticBox
           title="Correlation"
           tooltip={METRIC_DESCRIPTIONS.correlation}
-          value={isPrivateMode ? '-' : correlation.toFixed(3)}
+          value={correlation.toFixed(3)}
           valueStyle={{ color: '#3b82f6' }}
         />
       </div>
@@ -127,7 +126,7 @@ function Metrics(props: Props) {
           <StatisticBox
             title="Consistency Score"
             tooltip={METRIC_DESCRIPTIONS.consistencyScore}
-            value={isPrivateMode ? '-' : `${consistencyScore.toFixed(1)}%`}
+            value={`${consistencyScore.toFixed(1)}%`}
             valueStyle={{
               color: consistencyScore >= 60 ? '#10b981' : consistencyScore >= 40 ? '#f59e0b' : '#ef4444',
             }}
@@ -136,14 +135,14 @@ function Metrics(props: Props) {
           <StatisticBox
             title="Average Recovery Time"
             tooltip={METRIC_DESCRIPTIONS.recoveryTime}
-            value={isPrivateMode ? '-' : `${recoveryTime}`}
+            value={recoveryTime}
             valueStyle={{ color: recoveryTime <= 30 ? '#10b981' : recoveryTime <= 60 ? '#f59e0b' : '#ef4444' }}
             suffix={<span className="text-xs text-gray-500 block mt-1">days to bounce back</span>}
           />
           <StatisticBox
             title="Risk Level"
             tooltip={METRIC_DESCRIPTIONS.riskLevel}
-            value={isPrivateMode ? '-' : riskLevel}
+            value={riskLevel}
             valueStyle={{
               color: riskLevel === 'Lower Risk' ? '#10b981' : riskLevel === 'Higher Risk' ? '#ef4444' : '#3b82f6',
             }}
@@ -152,7 +151,7 @@ function Metrics(props: Props) {
           <StatisticBox
             title="Opportunity Cost"
             tooltip={METRIC_DESCRIPTIONS.opportunityCost}
-            value={isPrivateMode ? '-' : `${opportunityCost >= 0 ? '+' : ''}$${formatMoney(opportunityCost)}`}
+            value={`${opportunityCost >= 0 ? '+' : ''}$${formatMoney(opportunityCost)}`}
             valueStyle={{ color: opportunityCost >= 0 ? '#10b981' : '#ef4444' }}
             suffix={
               <span className="text-xs text-gray-500 block mt-1">

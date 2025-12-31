@@ -321,6 +321,7 @@ export type PeriodReturn = {
   benchmarkReturn: number;
   difference: number;
   outperformed: boolean;
+  children?: PeriodReturn[]; // For nested monthly data under yearly rows
 };
 
 /**
@@ -448,6 +449,53 @@ export function calculateMonthlyReturns(
       benchmarkReturn,
       difference,
       outperformed: difference > 0,
+    };
+  });
+}
+
+/**
+ * Calculate yearly returns with nested monthly breakdowns
+ * Returns yearly rows with monthly data as children for expandable table view
+ */
+export function calculateYearlyReturnsWithMonthlyBreakdown(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): PeriodReturn[] {
+  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
+
+  // Get monthly returns first
+  const monthlyReturns = calculateMonthlyReturns(portfolioReturns, benchmarkReturns);
+
+  // Group monthly returns by year
+  const monthsByYear = new Map<string, PeriodReturn[]>();
+
+  monthlyReturns.forEach((monthReturn) => {
+    // Extract year from "MMM YYYY" format
+    const parts = monthReturn.period.split(' ');
+    const monthOnly = parts[0]; // e.g., "Jan"
+    const year = parts[1]; // e.g., "2024"
+
+    if (!monthsByYear.has(year)) {
+      monthsByYear.set(year, []);
+    }
+
+    // Store month with just the month name (no year) since it's nested under year
+    monthsByYear.get(year)?.push({
+      ...monthReturn,
+      period: monthOnly,
+    });
+  });
+
+  // Calculate yearly returns
+  const yearlyReturns = calculateYearlyReturns(portfolioReturns, benchmarkReturns);
+
+  // Attach monthly children to each year
+  return yearlyReturns.map((yearReturn) => {
+    const monthlyChildren = monthsByYear.get(yearReturn.period) || [];
+
+    return {
+      ...yearReturn,
+      children: monthlyChildren.length > 0 ? monthlyChildren : undefined,
     };
   });
 }

@@ -1,4 +1,5 @@
-import { Table, Typography } from 'antd';
+import { Card, Table, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import React from 'react';
 import { DATE_FORMAT } from '../../constants';
@@ -6,121 +7,160 @@ import type { PeriodReturn } from '../../utils/benchmarkData';
 
 type Props = {
   periods: PeriodReturn[];
-  periodType: 'yearly' | 'monthly';
   benchmarkName: string;
   benchmarkSymbol: string;
-  isPrivateMode: boolean;
   fromDate: string;
   toDate: string;
 };
 
+type MonthlyBreakdownTableProps = {
+  monthlyData: PeriodReturn[];
+  benchmarkSymbol: string;
+  benchmarkName: string;
+};
+
+/**
+ * Generate table columns for period returns
+ * @param isNested - Whether this is a nested monthly breakdown table (affects styling)
+ * @param benchmarkSymbol - Symbol to display for benchmark winner
+ * @param benchmarkName - Name for benchmark column header (only used when not nested)
+ */
+function getPeriodColumns(
+  isNested: boolean,
+  benchmarkSymbol: string,
+  benchmarkName: string,
+): ColumnsType<PeriodReturn> {
+  const textStyle = isNested ? 'text-sm' : '';
+  const periodClassName = isNested ? 'pl-8 text-sm' : 'font-medium';
+  const differenceClassName = isNested ? textStyle : 'font-semibold';
+  const winnerClassName = isNested ? textStyle : 'font-semibold';
+
+  return [
+    {
+      title: 'Period',
+      dataIndex: 'period',
+      key: 'period',
+      width: '20%',
+      className: periodClassName,
+    },
+    {
+      title: 'Portfolio',
+      dataIndex: 'portfolioReturn',
+      key: 'portfolioReturn',
+      width: '20%',
+      align: 'right',
+      render: (value: number) => (
+        <span className={`${textStyle} ${value >= 0 ? 'text-green-600' : 'text-red-600'}`.trim()}>
+          {value >= 0 ? '+' : ''}
+          {value.toFixed(2)}%
+        </span>
+      ),
+    },
+    {
+      title: benchmarkName,
+      dataIndex: 'benchmarkReturn',
+      key: 'benchmarkReturn',
+      width: '20%',
+      align: 'right',
+      render: (value: number) => (
+        <span className={`${textStyle} ${value >= 0 ? 'text-green-600' : 'text-red-600'}`.trim()}>
+          {value >= 0 ? '+' : ''}
+          {value.toFixed(2)}%
+        </span>
+      ),
+    },
+    {
+      title: 'Difference',
+      dataIndex: 'difference',
+      key: 'difference',
+      width: '20%',
+      align: 'right',
+      render: (value: number) => (
+        <span className={`${differenceClassName} ${value >= 0 ? 'text-green-600' : 'text-red-600'}`.trim()}>
+          {value >= 0 ? '+' : ''}
+          {value.toFixed(2)}%
+        </span>
+      ),
+    },
+    {
+      title: 'Winner',
+      dataIndex: 'outperformed',
+      key: 'winner',
+      width: '20%',
+      align: 'center',
+      render: (outperformed: boolean) =>
+        outperformed ? (
+          <span className={`text-green-600 ${winnerClassName}`.trim()}>You</span>
+        ) : (
+          <span className={`text-red-600 ${winnerClassName}`.trim()}>{benchmarkSymbol}</span>
+        ),
+    },
+  ];
+}
+
+function MonthlyBreakdownTable({ monthlyData, benchmarkSymbol, benchmarkName }: MonthlyBreakdownTableProps) {
+  return (
+    <Table<PeriodReturn>
+      className="ml-8"
+      dataSource={monthlyData}
+      rowKey="period"
+      pagination={false}
+      size="small"
+      showHeader={false}
+      rowClassName={(record) => (record.outperformed ? 'bg-green-50' : 'bg-red-50')}
+      columns={getPeriodColumns(true, benchmarkSymbol, benchmarkName)}
+    />
+  );
+}
+
 function PeriodReturnsTable(props: Props) {
-  const { periods, periodType, benchmarkName, benchmarkSymbol, isPrivateMode, fromDate, toDate } = props;
+  const { periods, benchmarkName, benchmarkSymbol, fromDate, toDate } = props;
 
   if (periods.length === 0) return null;
 
   const formattedFromDate = dayjs(fromDate, DATE_FORMAT).format('MMM D, YYYY');
   const formattedToDate = dayjs(toDate, DATE_FORMAT).format('MMM D, YYYY');
 
+  // Check if we have nested data (children)
+  const hasNestedData = periods.some((period) => period.children && period.children.length > 0);
+
   return (
-    <div className="mt-6 bg-emerald-50 rounded">
-      <Typography.Title level={5} className="pt-4 px-3">
-        {periodType === 'yearly' ? 'Yearly' : 'Monthly'} Performance Breakdown
-      </Typography.Title>
-      <Typography.Text className="px-3 text-gray-600 text-sm">
-        {formattedFromDate} to {formattedToDate}
-      </Typography.Text>
+    <Card
+      className="mt-6"
+      title="Yearly Performance Breakdown"
+      extra={
+        <Typography.Text className="text-gray-600 text-sm">
+          {formattedFromDate} to {formattedToDate}
+        </Typography.Text>
+      }
+      styles={{ body: { padding: 0 } }}
+    >
       <Table<PeriodReturn>
         dataSource={periods}
         rowKey="period"
         pagination={false}
         size="small"
-        className="mt-4"
         rowClassName={(record) => (record.outperformed ? 'bg-green-50' : 'bg-red-50')}
-        columns={[
-          {
-            title: 'Period',
-            dataIndex: 'period',
-            key: 'period',
-            width: '20%',
-            className: 'font-medium',
-          },
-          {
-            title: 'Portfolio',
-            dataIndex: 'portfolioReturn',
-            key: 'portfolioReturn',
-            width: '20%',
-            align: 'right',
-            render: (value: number) =>
-              isPrivateMode ? (
-                <span className="text-gray-500">-</span>
-              ) : (
-                <span className={value >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {value >= 0 ? '+' : ''}
-                  {value.toFixed(2)}%
-                </span>
-              ),
-          },
-          {
-            title: benchmarkName,
-            dataIndex: 'benchmarkReturn',
-            key: 'benchmarkReturn',
-            width: '20%',
-            align: 'right',
-            render: (value: number) => (
-              <span className={value >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {value >= 0 ? '+' : ''}
-                {value.toFixed(2)}%
-              </span>
-            ),
-          },
-          {
-            title: 'Difference',
-            dataIndex: 'difference',
-            key: 'difference',
-            width: '20%',
-            align: 'right',
-            render: (value: number) =>
-              isPrivateMode ? (
-                <span className="text-gray-500">-</span>
-              ) : (
-                <span className={`font-semibold ${value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {value >= 0 ? '+' : ''}
-                  {value.toFixed(2)}%
-                </span>
-              ),
-          },
-          {
-            title: 'Winner',
-            dataIndex: 'outperformed',
-            key: 'winner',
-            width: '20%',
-            align: 'center',
-            render: (outperformed: boolean) =>
-              outperformed ? (
-                <span className="text-green-600 font-semibold">You</span>
-              ) : (
-                <span className="text-red-600 font-semibold">{benchmarkSymbol}</span>
-              ),
-          },
-        ]}
-        summary={() => (
-          <Table.Summary fixed>
-            <Table.Summary.Row className="bg-gray-100 font-semibold">
-              <Table.Summary.Cell index={0}>Summary</Table.Summary.Cell>
-              <Table.Summary.Cell index={1} colSpan={3} align="right">
-                {isPrivateMode
-                  ? '-'
-                  : `Outperformed in ${periods.filter((p) => p.outperformed).length} of ${periods.length} ${periodType === 'yearly' ? 'years' : 'months'}`}
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} align="center">
-                {((periods.filter((p) => p.outperformed).length / periods.length) * 100).toFixed(0)}%
-              </Table.Summary.Cell>
-            </Table.Summary.Row>
-          </Table.Summary>
-        )}
+        expandable={
+          hasNestedData
+            ? {
+                childrenColumnName: '__none__',
+                expandedRowRender: (record) => {
+                  if (!record.children || record.children.length === 0) return null;
+                  return (
+                    <MonthlyBreakdownTable
+                      monthlyData={record.children}
+                      benchmarkSymbol={benchmarkSymbol}
+                      benchmarkName={benchmarkName}
+                    />
+                  );
+                },
+              }
+            : undefined
+        }
+        columns={getPeriodColumns(false, benchmarkSymbol, benchmarkName)}
       />
-    </div>
+    </Card>
   );
 }
 
