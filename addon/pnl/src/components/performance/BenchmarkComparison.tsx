@@ -115,10 +115,10 @@ function BenchmarkComparison(props: Props) {
 
   // Calculate yearly returns with monthly breakdowns for nested table view
   const periodReturns = useMemo(() => {
-    if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
+    if (props.portfolios.length === 0 || benchmarkData.length === 0) return [];
 
-    return calculateYearlyReturnsWithMonthlyBreakdown(portfolioReturns, benchmarkReturns);
-  }, [portfolioReturns, benchmarkReturns]);
+    return calculateYearlyReturnsWithMonthlyBreakdown(props.portfolios, benchmarkData);
+  }, [props.portfolios, benchmarkData]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {

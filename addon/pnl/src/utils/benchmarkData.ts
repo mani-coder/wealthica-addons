@@ -456,45 +456,74 @@ export function calculateMonthlyReturns(
 /**
  * Calculate yearly returns with nested monthly breakdowns
  * Returns yearly rows with monthly data as children for expandable table view
+ *
+ * For portfolio data, this function re-normalizes each year separately to accurately
+ * account for deposits/withdrawals within each year, ensuring the yearly returns
+ * match what you'd see if you isolated that year's data.
  */
 export function calculateYearlyReturnsWithMonthlyBreakdown(
-  portfolioReturns: { date: string; value: number }[],
-  benchmarkReturns: { date: string; value: number }[],
+  portfolios: { date: string; value: number; deposits: number }[],
+  benchmarkData: { date: string; value: number }[],
 ): PeriodReturn[] {
-  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
+  if (portfolios.length === 0 || benchmarkData.length === 0) return [];
 
-  // Get monthly returns first
-  const monthlyReturns = calculateMonthlyReturns(portfolioReturns, benchmarkReturns);
+  // Normalize benchmark data once (no deposits/withdrawals to account for)
+  const benchmarkReturns = normalizeToPercentageReturns(benchmarkData);
 
-  // Group monthly returns by year
-  const monthsByYear = new Map<string, PeriodReturn[]>();
+  // Group portfolios and benchmark data by year
+  const portfoliosByYear = new Map<string, typeof portfolios>();
+  const benchmarkByYear = new Map<string, typeof benchmarkData>();
 
-  monthlyReturns.forEach((monthReturn) => {
-    // Extract year from "MMM YYYY" format
-    const parts = monthReturn.period.split(' ');
-    const monthOnly = parts[0]; // e.g., "Jan"
-    const year = parts[1]; // e.g., "2024"
-
-    if (!monthsByYear.has(year)) {
-      monthsByYear.set(year, []);
+  portfolios.forEach((point) => {
+    const year = dayjs(point.date, DATE_FORMAT).year().toString();
+    if (!portfoliosByYear.has(year)) {
+      portfoliosByYear.set(year, []);
     }
-
-    // Store month with just the month name (no year) since it's nested under year
-    monthsByYear.get(year)?.push({
-      ...monthReturn,
-      period: monthOnly,
-    });
+    portfoliosByYear.get(year)?.push(point);
   });
 
-  // Calculate yearly returns
-  const yearlyReturns = calculateYearlyReturns(portfolioReturns, benchmarkReturns);
+  benchmarkData.forEach((point) => {
+    const year = dayjs(point.date, DATE_FORMAT).year().toString();
+    if (!benchmarkByYear.has(year)) {
+      benchmarkByYear.set(year, []);
+    }
+    benchmarkByYear.get(year)?.push(point);
+  });
 
-  // Attach monthly children to each year
-  return yearlyReturns.map((yearReturn) => {
-    const monthlyChildren = monthsByYear.get(yearReturn.period) || [];
+  // Get all years
+  const years = Array.from(new Set([...portfoliosByYear.keys(), ...benchmarkByYear.keys()])).sort();
+
+  // Calculate returns for each year
+  return years.map((year) => {
+    const yearPortfolios = portfoliosByYear.get(year) || [];
+    const yearBenchmark = benchmarkByYear.get(year) || [];
+
+    // Re-normalize portfolio for this year only (accounts for deposits/withdrawals in this year)
+    const yearPortfolioReturns = normalizePortfolioToPercentageReturns(yearPortfolios);
+    const yearBenchmarkReturns = normalizeToPercentageReturns(yearBenchmark);
+
+    // Get final returns for the year
+    const portfolioReturn = yearPortfolioReturns.length > 0
+      ? yearPortfolioReturns[yearPortfolioReturns.length - 1].value
+      : 0;
+    const benchmarkReturn = yearBenchmarkReturns.length > 0
+      ? yearBenchmarkReturns[yearBenchmarkReturns.length - 1].value
+      : 0;
+    const difference = portfolioReturn - benchmarkReturn;
+
+    // Calculate monthly breakdown for this year
+    const monthlyReturns = calculateMonthlyReturns(yearPortfolioReturns, yearBenchmarkReturns);
+    const monthlyChildren = monthlyReturns.map((monthReturn) => ({
+      ...monthReturn,
+      period: monthReturn.period.split(' ')[0], // Extract just "Jan" from "Jan 2024"
+    }));
 
     return {
-      ...yearReturn,
+      period: year,
+      portfolioReturn,
+      benchmarkReturn,
+      difference,
+      outperformed: difference > 0,
       children: monthlyChildren.length > 0 ? monthlyChildren : undefined,
     };
   });

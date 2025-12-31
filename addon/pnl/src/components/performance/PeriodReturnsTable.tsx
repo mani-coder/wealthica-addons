@@ -31,7 +31,6 @@ function getPeriodColumns(
   benchmarkName: string,
 ): ColumnsType<PeriodReturn> {
   const textStyle = isNested ? 'text-sm' : '';
-  const periodClassName = isNested ? 'pl-8 text-sm' : 'font-medium';
   const differenceClassName = isNested ? textStyle : 'font-semibold';
   const winnerClassName = isNested ? textStyle : 'font-semibold';
 
@@ -41,7 +40,7 @@ function getPeriodColumns(
       dataIndex: 'period',
       key: 'period',
       width: '20%',
-      className: periodClassName,
+      className: 'text-sm',
     },
     {
       title: 'Portfolio',
@@ -101,7 +100,6 @@ function getPeriodColumns(
 function MonthlyBreakdownTable({ monthlyData, benchmarkSymbol, benchmarkName }: MonthlyBreakdownTableProps) {
   return (
     <Table<PeriodReturn>
-      className="ml-8"
       dataSource={monthlyData}
       rowKey="period"
       pagination={false}
@@ -126,7 +124,7 @@ function PeriodReturnsTable(props: Props) {
 
   return (
     <Card
-      className="mt-6"
+      className="mt-6 rounded-none"
       title="Yearly Performance Breakdown"
       extra={
         <Typography.Text className="text-gray-600 text-sm">
@@ -144,18 +142,18 @@ function PeriodReturnsTable(props: Props) {
         expandable={
           hasNestedData
             ? {
-                childrenColumnName: '__none__',
-                expandedRowRender: (record) => {
-                  if (!record.children || record.children.length === 0) return null;
-                  return (
-                    <MonthlyBreakdownTable
-                      monthlyData={record.children}
-                      benchmarkSymbol={benchmarkSymbol}
-                      benchmarkName={benchmarkName}
-                    />
-                  );
-                },
-              }
+              childrenColumnName: '__none__',
+              expandedRowRender: (record) => {
+                if (!record.children || record.children.length === 0) return null;
+                return (
+                  <MonthlyBreakdownTable
+                    monthlyData={record.children}
+                    benchmarkSymbol={benchmarkSymbol}
+                    benchmarkName={benchmarkName}
+                  />
+                );
+              },
+            }
             : undefined
         }
         columns={getPeriodColumns(false, benchmarkSymbol, benchmarkName)}
