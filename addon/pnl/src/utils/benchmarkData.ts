@@ -40,7 +40,7 @@ export const BENCHMARKS: Record<BenchmarkType, BenchmarkInfo> = {
   },
   QQQM: {
     symbol: 'QQQM',
-    name: 'NASDAQ-100',
+    name: 'NASDAQ-100 Growth',
     description: 'Invesco NASDAQ 100 ETF',
     securityId: '5f8a0172903d5972b926af05',
   },
@@ -313,4 +313,137 @@ export function calculateOpportunityCost(
   const benchmarkFinalValue = initialValue * (1 + benchmarkFinalReturn / 100);
 
   return portfolioFinalValue - benchmarkFinalValue;
+}
+
+export type PeriodReturn = {
+  period: string; // e.g., "2024" or "Jan 2024"
+  portfolioReturn: number;
+  benchmarkReturn: number;
+  difference: number;
+  outperformed: boolean;
+};
+
+/**
+ * Calculate returns by year for multi-year periods
+ */
+export function calculateYearlyReturns(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): PeriodReturn[] {
+  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
+
+  // Group by year
+  const portfolioByYear = new Map<string, { start: number; end: number }>();
+  const benchmarkByYear = new Map<string, { start: number; end: number }>();
+
+  // Process portfolio data
+  portfolioReturns.forEach((point) => {
+    const year = dayjs(point.date, DATE_FORMAT).year().toString();
+    if (!portfolioByYear.has(year)) {
+      portfolioByYear.set(year, { start: point.value, end: point.value });
+    } else {
+      const yearData = portfolioByYear.get(year);
+      if (yearData) {
+        yearData.end = point.value;
+      }
+    }
+  });
+
+  // Process benchmark data
+  benchmarkReturns.forEach((point) => {
+    const year = dayjs(point.date, DATE_FORMAT).year().toString();
+    if (!benchmarkByYear.has(year)) {
+      benchmarkByYear.set(year, { start: point.value, end: point.value });
+    } else {
+      const yearData = benchmarkByYear.get(year);
+      if (yearData) {
+        yearData.end = point.value;
+      }
+    }
+  });
+
+  // Calculate yearly returns
+  const years = Array.from(new Set([...portfolioByYear.keys(), ...benchmarkByYear.keys()])).sort();
+
+  return years.map((year) => {
+    const pData = portfolioByYear.get(year);
+    const bData = benchmarkByYear.get(year);
+
+    const portfolioReturn = pData ? pData.end - pData.start : 0;
+    const benchmarkReturn = bData ? bData.end - bData.start : 0;
+    const difference = portfolioReturn - benchmarkReturn;
+
+    return {
+      period: year,
+      portfolioReturn,
+      benchmarkReturn,
+      difference,
+      outperformed: difference > 0,
+    };
+  });
+}
+
+/**
+ * Calculate returns by month for shorter periods
+ */
+export function calculateMonthlyReturns(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): PeriodReturn[] {
+  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return [];
+
+  // Group by year-month
+  const portfolioByMonth = new Map<string, { start: number; end: number }>();
+  const benchmarkByMonth = new Map<string, { start: number; end: number }>();
+
+  // Process portfolio data
+  portfolioReturns.forEach((point) => {
+    const date = dayjs(point.date, DATE_FORMAT);
+    const monthKey = date.format('YYYY-MM');
+    if (!portfolioByMonth.has(monthKey)) {
+      portfolioByMonth.set(monthKey, { start: point.value, end: point.value });
+    } else {
+      const monthData = portfolioByMonth.get(monthKey);
+      if (monthData) {
+        monthData.end = point.value;
+      }
+    }
+  });
+
+  // Process benchmark data
+  benchmarkReturns.forEach((point) => {
+    const date = dayjs(point.date, DATE_FORMAT);
+    const monthKey = date.format('YYYY-MM');
+    if (!benchmarkByMonth.has(monthKey)) {
+      benchmarkByMonth.set(monthKey, { start: point.value, end: point.value });
+    } else {
+      const monthData = benchmarkByMonth.get(monthKey);
+      if (monthData) {
+        monthData.end = point.value;
+      }
+    }
+  });
+
+  // Calculate monthly returns
+  const months = Array.from(new Set([...portfolioByMonth.keys(), ...benchmarkByMonth.keys()])).sort();
+
+  return months.map((monthKey) => {
+    const pData = portfolioByMonth.get(monthKey);
+    const bData = benchmarkByMonth.get(monthKey);
+
+    const portfolioReturn = pData ? pData.end - pData.start : 0;
+    const benchmarkReturn = bData ? bData.end - bData.start : 0;
+    const difference = portfolioReturn - benchmarkReturn;
+
+    // Format as "Jan 2024"
+    const period = dayjs(monthKey, 'YYYY-MM').format('MMM YYYY');
+
+    return {
+      period,
+      portfolioReturn,
+      benchmarkReturn,
+      difference,
+      outperformed: difference > 0,
+    };
+  });
 }

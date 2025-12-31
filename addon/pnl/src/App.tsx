@@ -12,7 +12,6 @@ import {
   parsePositionsResponse,
   parseSecurityTransactionsResponse,
 } from './api';
-import BenchmarkComparison from './components/BenchmarkComparison';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog, { setChangeLogViewDate } from './components/ChangeLog';
@@ -26,6 +25,7 @@ import PnLStatistics from './components/PnLStatistics';
 import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
+import BenchmarkComparison from './components/performance/BenchmarkComparison';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
 import TradingActivities from './components/TradingActivities';
