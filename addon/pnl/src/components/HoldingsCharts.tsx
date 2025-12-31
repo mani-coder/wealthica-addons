@@ -15,7 +15,6 @@ type Props = {
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;
-  addon?: any;
 };
 
 export default function HoldingsCharts(props: Props) {
@@ -134,7 +133,6 @@ export default function HoldingsCharts(props: Props) {
         isPrivateMode={props.isPrivateMode}
         symbol={timelineSymbol}
         position={position}
-        addon={props.addon}
         accounts={props.accounts}
       />
     );

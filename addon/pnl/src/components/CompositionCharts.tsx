@@ -16,7 +16,6 @@ type Props = {
   positions: Position[];
   accounts: Account[];
   isPrivateMode: boolean;
-  addon?: any;
 };
 
 const COLORS = Highcharts.getOptions().colors;
