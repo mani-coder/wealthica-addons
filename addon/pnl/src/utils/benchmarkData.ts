@@ -500,12 +500,10 @@ export function calculateYearlyReturnsWithMonthlyBreakdown(
     const yearBenchmarkReturns = normalizeToPercentageReturns(yearBenchmark);
 
     // Get final returns for the year
-    const portfolioReturn = yearPortfolioReturns.length > 0
-      ? yearPortfolioReturns[yearPortfolioReturns.length - 1].value
-      : 0;
-    const benchmarkReturn = yearBenchmarkReturns.length > 0
-      ? yearBenchmarkReturns[yearBenchmarkReturns.length - 1].value
-      : 0;
+    const portfolioReturn =
+      yearPortfolioReturns.length > 0 ? yearPortfolioReturns[yearPortfolioReturns.length - 1].value : 0;
+    const benchmarkReturn =
+      yearBenchmarkReturns.length > 0 ? yearBenchmarkReturns[yearBenchmarkReturns.length - 1].value : 0;
     const difference = portfolioReturn - benchmarkReturn;
 
     // Calculate monthly breakdown for this year

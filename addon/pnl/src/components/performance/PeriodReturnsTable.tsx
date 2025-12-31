@@ -142,18 +142,18 @@ function PeriodReturnsTable(props: Props) {
         expandable={
           hasNestedData
             ? {
-              childrenColumnName: '__none__',
-              expandedRowRender: (record) => {
-                if (!record.children || record.children.length === 0) return null;
-                return (
-                  <MonthlyBreakdownTable
-                    monthlyData={record.children}
-                    benchmarkSymbol={benchmarkSymbol}
-                    benchmarkName={benchmarkName}
-                  />
-                );
-              },
-            }
+                childrenColumnName: '__none__',
+                expandedRowRender: (record) => {
+                  if (!record.children || record.children.length === 0) return null;
+                  return (
+                    <MonthlyBreakdownTable
+                      monthlyData={record.children}
+                      benchmarkSymbol={benchmarkSymbol}
+                      benchmarkName={benchmarkName}
+                    />
+                  );
+                },
+              }
             : undefined
         }
         columns={getPeriodColumns(false, benchmarkSymbol, benchmarkName)}
