@@ -467,9 +467,6 @@ export function calculateYearlyReturnsWithMonthlyBreakdown(
 ): PeriodReturn[] {
   if (portfolios.length === 0 || benchmarkData.length === 0) return [];
 
-  // Normalize benchmark data once (no deposits/withdrawals to account for)
-  const benchmarkReturns = normalizeToPercentageReturns(benchmarkData);
-
   // Group portfolios and benchmark data by year
   const portfoliosByYear = new Map<string, typeof portfolios>();
   const benchmarkByYear = new Map<string, typeof benchmarkData>();
