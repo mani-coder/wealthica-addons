@@ -20,6 +20,7 @@ import { SEVERITY_COLORS } from '../../types/healthCheck';
 import { BENCHMARKS, type BenchmarkType } from '../../utils/benchmarkData';
 import { HealthCheckMetrics } from './HealthCheckMetrics';
 import { OpportunityCostChart } from './OpportunityCostChart';
+import { trackEvent } from '@/analytics';
 
 const { Text } = Typography;
 
@@ -43,6 +44,10 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
   const positionStartDate = useMemo(() => {
     return position.transactions?.length ? position.transactions[0].date : dayjs();
   }, [position.transactions]);
+
+  useEffect(() => {
+    trackEvent('stock-health-check', { benchmark });
+  }, [symbol, benchmark]);
 
   /**
    * Fetch historical price data for a security
