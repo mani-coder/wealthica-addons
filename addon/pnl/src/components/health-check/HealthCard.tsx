@@ -86,14 +86,14 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
       }}
       onClick={onClick}
     >
-      <div className="flex flex-col justify-center space-y-2 min-h-[120px]">
+      <div className="flex flex-col justify-center space-y-2">
         {/* Symbol with icon and subtle score */}
-        <div className="flex w-full justify-between gap-2">
-          <Text strong className="text-lg line-clamp-1">
+        <div className="flex w-full justify-between gap-2 items-start">
+          <Text strong className="text-lg truncate flex-1 min-w-0">
             {report.symbol}
           </Text>
           <Text
-            className="text-sm font-medium px-2 py-1 rounded-lg"
+            className="text-sm font-medium px-2 py-1 rounded-lg flex-shrink-0"
             style={{
               backgroundColor: `${getScoreColor(report.score)}15`,
               color: getScoreColor(report.score),
@@ -104,7 +104,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
         </div>
 
         {/* Company Name */}
-        <Text type="secondary" className="text-xs text-start line-clamp-1">
+        <Text type="secondary" className="text-xs text-start truncate">
           {report.name}
         </Text>
 
@@ -112,9 +112,6 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
         <Tag color={getRecommendationColor(report.recommendation)} className="text-sm text-center px-4 py-1">
           {report.recommendation}
         </Tag>
-
-        {/* Click to expand hint */}
-        <Text className="text-xs text-gray-400 mt-2">Click for details →</Text>
       </div>
     </Card>
   );

@@ -47,7 +47,6 @@ export function OpportunityCostChart({
 }: Props) {
   const { isPrivateMode } = useAddonContext();
   const { currencies } = useCurrency();
-  console.log('stockCurrency', stockCurrency);
 
   /**
    * Convert a date value to a Date object

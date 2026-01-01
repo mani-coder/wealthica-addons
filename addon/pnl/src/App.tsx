@@ -554,7 +554,7 @@ export default function App() {
                         label: (
                           <span>
                             Performance{' '}
-                            <Tag color="purple" variant="filled" className="text-xs">
+                            <Tag color="magenta" variant="filled" className="text-xs">
                               NEW
                             </Tag>
                           </span>
@@ -567,7 +567,7 @@ export default function App() {
                         label: (
                           <span>
                             Health Check{' '}
-                            <Tag color="purple" variant="filled" className="text-xs">
+                            <Tag color="magenta" variant="filled" className="text-xs">
                               NEW
                             </Tag>
                           </span>
