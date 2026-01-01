@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
+import { ConfigProvider, Empty, Spin, Tabs, Tag, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
@@ -549,7 +549,11 @@ export default function App() {
                         children: <TopGainersLosers positions={state.positions} accounts={state.accounts} />,
                       },
                       {
-                        label: 'Performance',
+                        label: (
+                          <span>
+                            Performance <Tag color='green' className='text-xs'>NEW</Tag>
+                          </span>
+                        ),
                         key: TabKeysEnum.PERFORMANCE,
                         destroyInactiveTabPane: true,
                         children: <BenchmarkComparison portfolios={state.allPortfolios} />,
