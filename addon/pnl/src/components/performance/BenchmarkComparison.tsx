@@ -197,20 +197,7 @@ function BenchmarkComparison(props: Props) {
         style: { color: '#1F2A33' },
       },
 
-      rangeSelector: {
-        buttonTheme: {
-          style: {
-            display: 'none',
-          },
-        },
-        dropdown: 'always',
-        buttonPosition: {
-          align: 'right',
-        },
-        selected: 1,
-        enabled: true as any,
-        inputEnabled: false,
-      },
+      rangeSelector: { enabled: true, inputEnabled: true, selected: 1 },
 
       navigator: { enabled: true },
       scrollbar: { enabled: false },
@@ -359,14 +346,14 @@ function BenchmarkComparison(props: Props) {
                 const symbol = value.replace('benchmark:', '') as BenchmarkType;
                 setSelectedBenchmark(symbol);
                 setCustomSecurity(null);
-                trackEvent('benchmark-selection', { benchmark: symbol });
+                trackEvent('benchmark-selection', { benchmarkId: symbol });
               } else if (value.startsWith('custom:')) {
                 const securityId = value.replace('custom:', '');
                 const security = searchResults.find((s) => s._id === securityId);
                 if (security) {
                   setCustomSecurity(security);
                   setSelectedBenchmark(null);
-                  trackEvent('custom-security-selection', { symbol: security.symbol });
+                  trackEvent('custom-security-selection', { isCustom: true });
                 }
               }
             }}

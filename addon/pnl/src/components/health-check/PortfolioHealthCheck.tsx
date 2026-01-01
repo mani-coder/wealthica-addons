@@ -262,7 +262,7 @@ export function PortfolioHealthCheck({ positions }: Props) {
             value={selectedBenchmark}
             onChange={(value) => {
               setSelectedBenchmark(value);
-              trackEvent('health-check-benchmark-change', { benchmark: value });
+              trackEvent('health-check-benchmark-change', { benchmarkId: value });
             }}
             style={{ width: 200 }}
             options={Object.entries(BENCHMARKS).map(([key, info]) => ({
@@ -366,7 +366,12 @@ export function PortfolioHealthCheck({ positions }: Props) {
                 <Text strong>Severity:</Text>
                 <Select
                   value={severityFilter}
-                  onChange={setSeverityFilter}
+                  onChange={(value) => {
+                    setSeverityFilter(value);
+                    trackEvent('health-check-severity-filter', {
+                      filter: value,
+                    });
+                  }}
                   style={{ width: 150 }}
                   options={[
                     { label: 'All', value: 'all' },
@@ -381,7 +386,12 @@ export function PortfolioHealthCheck({ positions }: Props) {
                 <Text strong>Recommendation:</Text>
                 <Select
                   value={recommendationFilter}
-                  onChange={setRecommendationFilter}
+                  onChange={(value) => {
+                    setRecommendationFilter(value);
+                    trackEvent('health-check-recommendation-filter', {
+                      filter: value,
+                    });
+                  }}
                   style={{ width: 150 }}
                   options={[
                     { label: 'All', value: 'all' },

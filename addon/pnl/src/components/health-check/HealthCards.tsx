@@ -2,6 +2,7 @@ import { Empty, Masonry } from 'antd';
 import type { MasonryItemType } from 'antd/es/masonry/MasonryItem';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { trackEvent } from '../../analytics';
 import type { HoldingHealthReport } from '../../types/healthCheck';
 import { HealthCard } from './HealthCard';
 
@@ -20,7 +21,19 @@ export const HealthCards: React.FC<HealthCardsProps> = ({ reports }) => {
   }));
 
   const handleCardClick = (symbol: string) => {
-    setExpandedCard((prev) => (prev === symbol ? null : symbol));
+    setExpandedCard((prev) => {
+      const isExpanding = prev !== symbol;
+      const report = reports.find((r) => r.symbol === symbol);
+
+      if (report) {
+        trackEvent(isExpanding ? 'health-card-expand' : 'health-card-collapse', {
+          severity: report.severity,
+          recommendation: report.recommendation,
+        });
+      }
+
+      return isExpanding ? symbol : null;
+    });
   };
 
   // Scroll to expanded card when it appears

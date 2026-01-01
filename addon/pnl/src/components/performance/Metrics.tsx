@@ -1,5 +1,6 @@
 import { Collapse, List, Typography } from 'antd';
 import React, { useMemo } from 'react';
+import { trackEvent } from '../../analytics';
 import {
   calculateAlpha,
   calculateAverageRecoveryTime,
@@ -144,7 +145,14 @@ function Metrics(props: Props) {
       </div>
 
       <div className=" w-full">
-        <Collapse ghost>
+        <Collapse
+          ghost
+          onChange={(keys) => {
+            trackEvent('performance-metrics-info-toggle', {
+              expanded: keys.includes('1'),
+            });
+          }}
+        >
           <Collapse.Panel key="1" header="Understanding the Metrics">
             <List
               size="small"

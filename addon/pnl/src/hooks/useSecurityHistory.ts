@@ -83,18 +83,16 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
 
   const fetchSecurityHistory = useCallback(
     async (securityId: string, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
-      // Adjust dates to previous trading day if they fall on holidays/weekends
-      const adjustedFromDate = isTradingDay(fromDate) ? fromDate : getPreviousTradingDay(fromDate);
       const adjustedToDate = isTradingDay(toDate) ? toDate : getPreviousTradingDay(toDate);
 
       // Check cache first (using adjusted dates)
-      const cacheKey = getCacheKey(securityId, adjustedFromDate, adjustedToDate);
+      const cacheKey = getCacheKey(securityId, fromDate, adjustedToDate);
       const cached = securityHistoryCache.get(cacheKey);
       if (cached) {
         return cached;
       }
 
-      const endpoint = `securities/${securityId}/history?from=${adjustedFromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
+      const endpoint = `securities/${securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
         DATE_FORMAT,
       )}`;
 
