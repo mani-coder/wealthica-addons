@@ -22,7 +22,7 @@ export function computeXIRR(position: Position) {
         if (
           hash.shares === 0 &&
           transaction.originalType !== 'transfer' &&
-          !transaction.description.includes('transfer')
+          !transaction.description?.toLowerCase().includes('transfer')
         ) {
           hash.transactions = [];
           return hash;

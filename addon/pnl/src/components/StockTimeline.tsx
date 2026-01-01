@@ -5,7 +5,7 @@ import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { formatCurrency } from '../utils/common';
+import { formatCurrency, formatMoney } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -205,7 +205,7 @@ function StockTimeline(props: Props) {
             x: transaction.date.valueOf(),
             title: isBuySell ? Math.round(shares).toLocaleString() : type.charAt(0).toUpperCase(),
             text: isBuySell
-              ? `${startCase(type)}: ${shares}@${transaction.price}`
+              ? `${startCase(type)}: ${shares}@${formatMoney(transaction.price)}`
               : `${startCase(type)}: $${formatCurrency(transaction.amount, 2)}`,
             account: getAccountName(transaction.account),
           };

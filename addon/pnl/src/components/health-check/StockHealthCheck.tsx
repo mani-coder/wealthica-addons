@@ -7,7 +7,7 @@
 
 import { Alert, Card, Spin, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { getSymbol } from '@/utils/common';
 import { DATE_FORMAT } from '../../constants';
 import { useAddonContext } from '../../context/AddonContext';
@@ -29,7 +29,7 @@ interface Props {
 }
 
 function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
-  const { fromDate, toDate } = useAddonContext();
+  const { toDate } = useAddonContext();
   const { currencies } = useCurrency();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
   const symbol = getSymbol(position.security);
@@ -40,31 +40,34 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
   const [stockHistory, setStockHistory] = useState<PriceHistory | null>(null);
   const [benchmarkHistory, setBenchmarkHistory] = useState<PriceHistory | null>(null);
 
+  const positionStartDate = useMemo(() => {
+    return position.transactions?.length ? position.transactions[0].date : dayjs();
+  }, [position.transactions]);
+
   /**
    * Fetch historical price data for a security
    */
   const fetchPriceHistory = useCallback(
     async (securityId: string, symbol: string): Promise<PriceHistory | null> => {
       try {
-        const data = await fetchSecurityHistory(
+        console.debug(
+          '[DEBUG] fetching price history for',
           securityId,
-          dayjs(fromDate, DATE_FORMAT).subtract(3, 'years'),
-          dayjs(toDate, DATE_FORMAT),
+          symbol,
+          positionStartDate.format(DATE_FORMAT),
+          toDate,
         );
-
+        const data = await fetchSecurityHistory(securityId, positionStartDate, dayjs(toDate, DATE_FORMAT));
         return {
           symbol,
-          prices: data.map((point) => ({
-            date: point.timestamp.toDate(),
-            close: point.closePrice,
-          })),
+          prices: data.map((point) => ({ date: point.timestamp.toDate(), close: point.closePrice })),
         };
       } catch (error) {
         console.error(`Failed to fetch price history for ${symbol}:`, error);
         return null;
       }
     },
-    [fetchSecurityHistory, fromDate, toDate],
+    [fetchSecurityHistory, positionStartDate, toDate],
   );
 
   /**

@@ -80,15 +80,13 @@ export default function StockDetails(props: Props) {
         value={`${(position.xirr ? position.xirr * 100 : position.xirr || 0).toFixed(2)}%`}
         valueProps={{ type: position.xirr > 0 ? 'success' : 'danger', strong: true }}
       />
-
-      <LabelValue label="Shares" value={`${position.quantity}`} />
-
       <LabelValue
         label="Buy / Last Price"
         value={`${currency} ${formatMoney(
           sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity,
         )} / ${formatMoney(position.security.last_price)}`}
       />
+      <LabelValue label="Shares" value={`${position.quantity}`} />
 
       <LabelValue
         label="Account"

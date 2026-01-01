@@ -3,7 +3,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { trackEvent } from '../../analytics';
-import { DATE_FORMAT } from '../../constants';
+import { BENCHMARK_SERIES_OPTIONS, DATE_FORMAT, PORTFOLIO_SERIES_OPTIONS } from '../../constants';
 import { useAddon, useAddonContext } from '../../context/AddonContext';
 import { useSecurityHistory } from '../../hooks/useSecurityHistory';
 import type { Portfolio } from '../../types';
@@ -161,29 +161,22 @@ function BenchmarkComparison(props: Props) {
   function getSeries(): any {
     return [
       {
-        id: 'portfolio',
         name: 'Your Portfolio',
         data: portfolioReturns.map((point) => ({
           x: dayjs(point.date).valueOf(),
           y: point.value,
           displayValue: isPrivateMode ? '-' : `${point.value.toFixed(2)}%`,
         })),
-        type: 'spline',
-        color: '#10b981',
-        lineWidth: 2,
+        ...PORTFOLIO_SERIES_OPTIONS,
       },
       {
-        id: 'benchmark',
         name: currentBenchmarkInfo?.name || 'Benchmark',
         data: benchmarkReturns.map((point) => ({
           x: dayjs(point.date).valueOf(),
           y: point.value,
           displayValue: `${point.value.toFixed(2)}%`,
         })),
-        type: 'spline',
-        color: '#f59e0b',
-        lineWidth: 2,
-        dashStyle: 'ShortDash',
+        ...BENCHMARK_SERIES_OPTIONS,
       },
     ];
   }

@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { DATE_FORMAT } from '../constants';
 import { useAddon } from '../context/AddonContext';
 import dayjs from '../dayjs';
-import { buildCorsFreeUrl, getDate, isTradingDay } from '../utils/common';
+import { buildCorsFreeUrl, getDate, getPreviousTradingDay, isTradingDay } from '../utils/common';
 
 export type SecurityPriceData = {
   timestamp: Dayjs;
@@ -83,14 +83,18 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
 
   const fetchSecurityHistory = useCallback(
     async (securityId: string, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
-      // Check cache first
-      const cacheKey = getCacheKey(securityId, fromDate, toDate);
+      // Adjust dates to previous trading day if they fall on holidays/weekends
+      const adjustedFromDate = isTradingDay(fromDate) ? fromDate : getPreviousTradingDay(fromDate);
+      const adjustedToDate = isTradingDay(toDate) ? toDate : getPreviousTradingDay(toDate);
+
+      // Check cache first (using adjusted dates)
+      const cacheKey = getCacheKey(securityId, adjustedFromDate, adjustedToDate);
       const cached = securityHistoryCache.get(cacheKey);
       if (cached) {
         return cached;
       }
 
-      const endpoint = `securities/${securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${toDate.format(
+      const endpoint = `securities/${securityId}/history?from=${adjustedFromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
         DATE_FORMAT,
       )}`;
 

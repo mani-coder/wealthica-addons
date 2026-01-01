@@ -233,18 +233,6 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
       }
     });
 
-    console.debug(
-      `[DEBUG] Open Book, csv download enabled: ${getLocalCache(DEBUG_LOCAL_STORAGE_KEY)}`,
-      Object.keys(book)
-        .filter((key) => book[key].shares !== 0)
-        .map((key) => ({
-          symbol: key,
-          securityId: book[key].security.id,
-          amount: book[key].price * book[key].shares,
-          ...book[key],
-        })),
-    );
-
     const openBook = Object.keys(book)
       .filter((key) => book[key].shares !== 0)
       .map((key) => ({
@@ -257,6 +245,42 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
         shares: book[key].shares,
         amount: book[key].price * book[key].shares,
       }));
+
+    const fullBook = Object.keys(book).reduce(
+      (fullBook, key) => {
+        const position = book[key];
+        if (!position || position.shares === 0) {
+          return fullBook;
+        }
+        const symbol = position.security.symbol;
+        if (!fullBook[symbol]) {
+          fullBook[symbol] = {
+            shares: 0,
+            price: 0,
+            date: position.date,
+            transactions: [],
+            security: { ...position.security },
+          };
+        }
+        fullBook[symbol].shares += position.shares;
+        fullBook[symbol].price =
+          (fullBook[symbol].price * fullBook[symbol].shares + position.price * position.shares) /
+          (fullBook[symbol].shares + position.shares);
+        fullBook[symbol].transactions.push(...position.transactions);
+        return fullBook;
+      },
+      {} as { [K: string]: CurrentPosition },
+    );
+
+    console.debug(
+      '[DEBUG] Open Book:',
+      Object.keys(fullBook)
+        .sort((a, b) => a.localeCompare(b))
+        .map((symbol) => ({
+          symbol,
+          ...fullBook[symbol],
+        })),
+    );
 
     return {
       closedPositions: closedPositions
@@ -647,7 +671,7 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
         )}
       </div>
 
-      <div className="flex w-full justify-center py-4 mb-8 mb-2">
+      <div className="flex w-full justify-center py-4 mb-2">
         <Radio.Group
           defaultValue={timeline}
           size="large"

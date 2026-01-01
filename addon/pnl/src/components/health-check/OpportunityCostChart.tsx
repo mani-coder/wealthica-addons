@@ -12,7 +12,8 @@
 import dayjs from 'dayjs';
 import type * as Highcharts from 'highcharts';
 import { useMemo } from 'react';
-import { formatDate } from '@/utils/common';
+import { BENCHMARK_SERIES_OPTIONS, PORTFOLIO_SERIES_OPTIONS, TYPE_TO_COLOR } from '@/constants';
+import { formatCurrency, formatDate, sumOf } from '@/utils/common';
 import { useAddonContext } from '../../context/AddonContext';
 import useCurrency from '../../hooks/useCurrency';
 import type { PriceHistory } from '../../services/healthCheckService';
@@ -142,8 +143,13 @@ export function OpportunityCostChart({
    * Memoize open transactions separately with currency conversion
    */
   const openTransactions = useMemo(() => {
-    return calculateOpenTransactions(transactions, currencies);
-  }, [transactions, currencies]);
+    const _openTransactions = calculateOpenTransactions(transactions, currencies);
+    console.debug(
+      `Open transactions for ${stockHistory.symbol}, openShares: ${sumOf(..._openTransactions.map((t) => t.shares))}`,
+      _openTransactions.map((t) => ({ ...t, date: formatDate(t.date) })),
+    );
+    return _openTransactions;
+  }, [transactions, currencies, stockHistory.symbol]);
 
   /**
    * Build timeline data comparing stock vs benchmark performance
@@ -151,17 +157,6 @@ export function OpportunityCostChart({
    */
   const timelineData = useMemo((): TimelinePoint[] => {
     if (openTransactions.length === 0) return [];
-
-    // Find the earliest open transaction date
-    const earliestDate = openTransactions.reduce(
-      (earliest, tx) => {
-        const txDate = new Date(tx.transaction.date.toDate());
-        return !earliest || txDate < earliest ? txDate : earliest;
-      },
-      null as Date | null,
-    );
-
-    if (!earliestDate) return [];
 
     // PRE-CALCULATE: Get prices at transaction dates ONCE (not for every timeline date!)
     interface TransactionShares {
@@ -171,8 +166,10 @@ export function OpportunityCostChart({
       benchmarkShares: number;
     }
 
+    // Find the earliest open transaction date
+    const earliestDate = openTransactions[0].date.toDate();
     const txShares: TransactionShares[] = openTransactions.map((openTx) => {
-      const txDate = new Date(openTx.transaction.date.toDate());
+      const txDate = openTx.date.toDate();
       const benchmarkPriceAtTx = getPriceOnDate(benchmarkPriceData.priceMap, txDate);
 
       return {
@@ -233,8 +230,7 @@ export function OpportunityCostChart({
 
   const chartOptions = useMemo((): Highcharts.Options => {
     const stockSeries: Highcharts.SeriesSplineOptions = {
-      type: 'spline',
-      id: 'stockSeries',
+      ...PORTFOLIO_SERIES_OPTIONS,
       name: `${stockHistory.symbol} P/L`,
       data: timelineData.map((point) => ({
         x: point.date.valueOf(),
@@ -242,12 +238,10 @@ export function OpportunityCostChart({
         stockValue: point.stockValue,
         benchmarkValue: point.benchmarkValue,
       })),
-      color: '#1890ff',
     };
 
     const benchmarkSeries: Highcharts.SeriesSplineOptions = {
-      type: 'spline',
-      id: 'benchmarkSeries',
+      ...BENCHMARK_SERIES_OPTIONS,
       name: `${BENCHMARKS[benchmark].name} (${benchmark}) P/L`,
       data: timelineData.map((point) => ({
         x: point.date.valueOf(),
@@ -255,63 +249,45 @@ export function OpportunityCostChart({
         stockValue: point.stockValue,
         benchmarkValue: point.benchmarkValue,
       })),
-      color: '#52c41a',
     };
 
     // Add buy transaction flags
     const buyFlags: Highcharts.SeriesFlagsOptions = {
+      id: 'buys',
+      name: 'Buy Amounts',
       type: 'flags',
-      name: 'Buys',
       shape: 'squarepin',
-      onSeries: 'stockSeries',
-      width: 25,
-      color: '#1890ff',
-      fillColor: '#1890ff',
-      style: {
-        color: 'white',
-      },
+      width: 50,
+      color: TYPE_TO_COLOR.buy,
+      fillColor: TYPE_TO_COLOR.buy,
+      style: { color: 'white' },
       enableMouseTracking: false,
-      data: openTransactions.map((t) => {
-        return {
-          x: t.transaction.date.toDate().getTime(),
-          title: Math.round(t.shares).toLocaleString(),
-          text: `Buy: ${t.shares.toFixed(0)}@$${t.transaction.price?.toFixed(2) || 0}`,
-        };
-      }),
+      data: openTransactions
+        .filter((t) => t.amount > 0)
+        .map((t) => {
+          return {
+            x: t.date.valueOf(),
+            title: `$${formatCurrency(Math.round(t.amount), 1)}`,
+          };
+        }),
     };
 
     return {
-      chart: {
-        height: 600,
-      },
-      rangeSelector: {
-        enabled: true,
-      },
-      navigator: {
-        enabled: true,
-      },
+      chart: { height: 600 },
+      rangeSelector: { enabled: true },
+      navigator: { enabled: true },
       title: {
         text: `Opportunity Cost Analysis: ${stockHistory.symbol} vs ${BENCHMARKS[benchmark].name} (${benchmark})`,
-        style: {
-          fontSize: '16px',
-          fontWeight: 'bold',
-        },
+        style: { fontSize: '16px', fontWeight: 'bold' },
       },
       subtitle: {
         text: 'Performance comparison if same amounts were invested in benchmark on same dates',
-        style: {
-          fontSize: '12px',
-        },
+        style: { fontSize: '12px' },
       },
 
       yAxis: {
-        title: {
-          text: 'P/L (%)',
-        },
-        labels: {
-          enabled: true,
-          format: '{value}%',
-        },
+        title: { text: 'P/L (%)' },
+        labels: { enabled: true, format: '{value}%' },
         opposite: false,
       },
       tooltip: {
@@ -339,10 +315,7 @@ export function OpportunityCostChart({
           return html;
         },
       },
-      legend: {
-        enabled: true,
-        align: 'center',
-      },
+      legend: { enabled: true, align: 'center' },
       series: [stockSeries, benchmarkSeries, buyFlags],
     };
   }, [timelineData, stockHistory.symbol, benchmark, isPrivateMode, openTransactions]);

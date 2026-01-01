@@ -1,8 +1,11 @@
+import usHolidays from '@date/holidays-us';
 import type { Dayjs } from 'dayjs';
-import { isHoliday } from 'nyse-holidays';
 import { DATE_FORMAT } from '../constants';
 import dayjs from '../dayjs';
 import type { PortfolioData, Security } from '../types';
+
+// Use bank holidays only (these are the ones NYSE/NASDAQ observe)
+const holidays = usHolidays.bank();
 
 export const isValidPortfolioData = (data: PortfolioData): boolean => {
   return Boolean(data.deposit || data.income || data.interest || data.value || data.withdrawal);
@@ -178,14 +181,36 @@ export function isTradingDay(date: Dayjs): boolean {
   // Skip weekends (Saturday = 6, Sunday = 0)
   if (date.day() === 0 || date.day() === 6) return false;
 
-  // Create a Date object representing this calendar date in local time
-  // This ensures isHoliday() gets the correct year/month/day values
-  const jsDate = new Date(date.year(), date.month(), date.date());
+  // IMPORTANT: We must create a Date object in local time, not UTC
+  // Using the format "YYYY-MM-DDTHH:mm:ss" forces local time interpretation
+  // This avoids timezone issues where "2021-01-01" gets parsed as Dec 31, 2020 in some timezones
+  const dateStr = `${date.format('YYYY-MM-DD')}T12:00:00`;
+  const jsDate = new Date(dateStr);
 
-  // Skip NYSE market holidays
-  if (isHoliday(jsDate)) return false;
+  // Skip US market holidays (NYSE/NASDAQ follow US federal holidays)
+  const isUsHoliday = holidays.isHoliday(jsDate);
 
-  return true;
+  return !isUsHoliday;
+}
+
+/**
+ * Get the previous trading day (skipping weekends and holidays)
+ * @param date - The date to start from
+ * @param maxIterations - Maximum number of days to look back (default: 10)
+ * @returns The previous trading day, or the input date if no trading day found within maxIterations
+ */
+export function getPreviousTradingDay(date: Dayjs, maxIterations: number = 10): Dayjs {
+  let candidate = date.subtract(1, 'day');
+  let iterations = 0;
+
+  while (iterations < maxIterations && !isTradingDay(candidate)) {
+    candidate = candidate.subtract(1, 'day');
+    iterations++;
+  }
+
+  // If we couldn't find a trading day, return the original date
+  // This prevents infinite loops or going too far back
+  return iterations < maxIterations ? candidate : date;
 }
 
 export function getNextWeekday(date: any) {

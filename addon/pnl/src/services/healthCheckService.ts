@@ -18,9 +18,9 @@ import {
   type HoldingHealthReport,
   type PortfolioHealthSummary,
 } from '../types/healthCheck';
-import { formatMoney } from '../utils/common';
+import { formatMoney, sumOf } from '../utils/common';
 import { calculateHealthScore, generateRecommendation, scoreToSeverity } from '../utils/healthScoring';
-import { calculateAverageCostPerShare, calculateOpenTransactions } from '../utils/transactionUtils';
+import { calculateOpenTransactions } from '../utils/transactionUtils';
 
 /**
  * Price point in historical data
@@ -200,7 +200,7 @@ export class HealthCheckService {
     const currentDrawdown = this.calculateCurrentDrawdown(priceHistory);
 
     // Underwater analysis
-    const daysUnderwater = this.calculateDaysUnderwater(transactions, priceHistory);
+    const daysUnderwater = this.calculateDaysUnderwater(transactions, priceHistory, position);
     const percentUnderwater = this.calculatePercentUnderwater(transactions, position);
     const holdingPeriodDays = this.calculateHoldingPeriodDays(transactions);
 
@@ -476,8 +476,7 @@ export class HealthCheckService {
 
     for (const openTx of openTransactions) {
       // Find benchmark price on transaction date
-      const txDate = dayjs(openTx.transaction.date);
-      const benchmarkPrice = this.getPriceOnDate(benchmarkHistory, txDate);
+      const benchmarkPrice = this.getPriceOnDate(benchmarkHistory, openTx.date);
 
       if (benchmarkPrice > 0) {
         // Amount is already converted to base currency by calculateOpenTransactions
@@ -550,33 +549,22 @@ export class HealthCheckService {
    * Days underwater means: days where you held the position AND the market price was below your cost basis.
    * If the position is currently profitable (market value > cost basis), returns 0.
    */
-  private calculateDaysUnderwater(transactions: Transaction[], priceHistory: PriceHistory): number {
-    const avgCostBasis = this.calculateAverageCostBasis(transactions);
-    if (avgCostBasis === 0) return 0;
+  private calculateDaysUnderwater(transactions: Transaction[], priceHistory: PriceHistory, position: Position): number {
+    const costBasis = sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity;
+    if (costBasis === 0) return 0;
 
     // Get first purchase date from open transactions
     const openTransactions = calculateOpenTransactions(transactions, this.currencies);
     if (openTransactions.length === 0) return 0;
 
-    const sortedOpenTxs = openTransactions.sort(
-      (a, b) => dayjs(a.transaction.date).valueOf() - dayjs(b.transaction.date).valueOf(),
-    );
-    const firstBuyDate = dayjs(sortedOpenTxs[0].transaction.date);
-
-    // Get current price
-    const currentPrice = priceHistory.prices.length > 0 ? priceHistory.prices[priceHistory.prices.length - 1].close : 0;
-
-    // If currently above cost basis, not underwater at all
-    if (currentPrice >= avgCostBasis) {
-      return 0;
-    }
+    const firstBuyDate = openTransactions.sort((a, b) => a.date.valueOf() - b.date.valueOf())[0].date;
 
     // Count trading days since first open purchase (excluding weekends/holidays)
     // Price history only contains trading days, so we count entries in price history
     let daysUnderwater = 0;
     for (const point of priceHistory.prices) {
       const pointDate = dayjs(point.date);
-      if (pointDate.isSameOrAfter(firstBuyDate, 'day') && point.close < avgCostBasis) {
+      if (pointDate.isSameOrAfter(firstBuyDate, 'day') && point.close < costBasis) {
         daysUnderwater++;
       }
     }
@@ -715,14 +703,6 @@ export class HealthCheckService {
   }
 
   /**
-   * Calculate average cost per share from open transactions only
-   */
-  private calculateAverageCostBasis(transactions: Transaction[]): number {
-    const openTransactions = calculateOpenTransactions(transactions, this.currencies);
-    return calculateAverageCostPerShare(openTransactions);
-  }
-
-  /**
    * Calculate number of days since first open purchase
    */
   private calculateHoldingPeriodDays(transactions: Transaction[]): number {
@@ -730,10 +710,8 @@ export class HealthCheckService {
     if (openTransactions.length === 0) return 0;
 
     // Get the earliest buy date from open transactions
-    const sortedOpenTxs = openTransactions.sort(
-      (a, b) => dayjs(a.transaction.date).valueOf() - dayjs(b.transaction.date).valueOf(),
-    );
-    const firstBuyDate = dayjs(sortedOpenTxs[0].transaction.date);
+    const sortedOpenTxs = openTransactions.sort((a, b) => a.date.valueOf() - b.date.valueOf());
+    const firstBuyDate = sortedOpenTxs[0].date;
     const today = dayjs();
 
     return today.diff(firstBuyDate, 'day');

@@ -220,6 +220,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
           institution: transaction.institution,
           investment: transaction.investment,
         },
+        note: transaction.note,
       };
 
       return _transaction;

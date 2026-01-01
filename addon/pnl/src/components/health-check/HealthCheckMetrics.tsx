@@ -27,7 +27,7 @@ const METRIC_DESCRIPTIONS = {
     'The biggest peak-to-trough drop this stock experienced. Shows worst-case scenario if you bought at the top',
   marketValue: 'Current market value of your position',
   buyValue: 'Total amount you invested in this position',
-  daysUnderwater: 'Number of days your position has been below its all-time high value',
+  daysUnderwater: 'Number of days your position has been below its cost basis / buy value',
 } as const;
 
 interface Props {

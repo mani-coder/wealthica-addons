@@ -62,6 +62,7 @@ export class Currencies {
   }
 
   getValue(from: string, value: number, date?: string | Dayjs): number {
+    if (from === this.baseCurrency) return value;
     return getCurrencyValue(this.baseCurrency, this.currencyCache, this.latestCurrencies, from, value, date);
   }
 }

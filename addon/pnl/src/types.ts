@@ -66,6 +66,7 @@ export type Transaction = {
   security: SecurityTransaction;
   securityType?: string;
   originalType: string;
+  note?: string;
 };
 
 export type CashFlow = {

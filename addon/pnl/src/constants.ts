@@ -17,6 +17,21 @@ export const TYPE_TO_COLOR: { [key: string]: string } = {
   transfer: '#06b6d4', // cyan-500
 };
 
+export const BENCHMARK_SERIES_OPTIONS: Highcharts.SeriesSplineOptions = {
+  id: 'benchmark',
+  type: 'spline',
+  color: '#f59e0b',
+  lineWidth: 2,
+  dashStyle: 'ShortDash',
+};
+
+export const PORTFOLIO_SERIES_OPTIONS: Highcharts.SeriesSplineOptions = {
+  id: 'portfolio',
+  type: 'spline',
+  color: '#10b981',
+  lineWidth: 2,
+};
+
 export const CHANGE_LOG_DATE_CACHE_KEY = '__pnl_change_log_date__';
 export const CURRENCY_DISPLAY_CACHE_KEY = '__current_display_cache__';
 

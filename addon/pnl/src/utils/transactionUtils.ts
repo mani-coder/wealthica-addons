@@ -5,17 +5,20 @@
  * and computing cost basis across multiple components.
  */
 
-import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import type { Currencies } from '../context/CurrencyContext';
 import type { Transaction } from '../types';
+import { formatDate } from './common';
 
 /**
  * Represents an open buy transaction with remaining shares
  */
 export interface OpenTransaction {
-  transaction: Transaction;
-  shares: number; // Remaining open shares from this transaction
+  transactions: Transaction[];
   amount: number; // Remaining open amount (cost basis) from this transaction
+  shares: number; // Remaining open shares from this transaction
+  date: Dayjs;
+  _handledSplits: Set<string>;
 }
 
 /**
@@ -31,26 +34,39 @@ export interface OpenTransaction {
 export function calculateOpenTransactions(transactions: Transaction[], currencies?: Currencies): OpenTransaction[] {
   // Sort transactions by date (FIFO)
   const sortedTxs = [...transactions]
-    .filter((t) => ['buy', 'sell', 'reinvest', 'split'].includes(t.type))
-    .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+    .filter((t) => ['buy', 'sell', 'split', 'reinvest'].includes(t.type))
+    .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 
   const openTransactions: OpenTransaction[] = [];
-
   for (const tx of sortedTxs) {
-    if (tx.type === 'buy' || (tx.type === 'reinvest' && tx.shares > 0)) {
-      // Convert amount to base currency if currencies are provided
-      let convertedAmount = tx.amount;
-      if (currencies && tx.currency) {
-        convertedAmount = currencies.getValue(tx.currency, tx.currencyAmount || tx.amount, tx.date);
-      }
+    if (
+      tx.originalType === 'transfer' &&
+      (tx.description.toLowerCase().includes('transfer') || tx.note?.includes('Accounts Transfer'))
+    ) {
+      // console.debug('[DEBUG] Skipping transfer transaction', tx.shares, tx.date.format(DATE_FORMAT), tx.description, tx.originalType);
+      continue;
+    }
 
-      // Add to open position
-      // For reinvest, cost basis might be zero or included in the transaction
-      openTransactions.push({
-        transaction: tx,
-        shares: tx.shares,
-        amount: convertedAmount,
-      });
+    if (tx.type === 'buy' || tx.type === 'reinvest') {
+      // Convert amount to base currency if currencies are provided
+      let amount = tx.type === 'buy' ? tx.currencyAmount || tx.amount : 0;
+      if (currencies && tx.currency && amount) {
+        amount = currencies.getValue(tx.currency, amount, tx.date);
+      }
+      const existingTx = openTransactions.find((t) => t.date.isSame(tx.date));
+      if (existingTx) {
+        existingTx.shares += tx.shares;
+        existingTx.amount += amount;
+        existingTx.transactions.push(tx);
+      } else {
+        openTransactions.push({
+          date: tx.date,
+          transactions: [tx],
+          shares: tx.shares,
+          amount,
+          _handledSplits: new Set(),
+        });
+      }
     } else if (tx.type === 'sell') {
       // Match sell against existing buys (FIFO)
       let sharesToSell = Math.abs(tx.shares);
@@ -72,53 +88,20 @@ export function calculateOpenTransactions(transactions: Transaction[], currencie
         }
       }
     } else if (tx.type === 'split' && tx.splitRatio) {
-      // Handle stock splits - adjust shares in all open transactions
+      // Handle stock splits - adjust shares in all open transactions corresponding to the same account
       const splitRatio = tx.splitRatio;
+      const splitKey = `${formatDate(tx.date)}-${splitRatio}`;
 
       for (const openTx of openTransactions) {
+        // Skip if the split has already been handled
+        if (openTx._handledSplits.has(splitKey)) {
+          continue;
+        }
+        openTx._handledSplits.add(splitKey);
         openTx.shares = openTx.shares / splitRatio;
-        // Cost basis (amount) remains the same, just split across more/fewer shares
       }
     }
   }
 
   return openTransactions;
-}
-
-/**
- * Calculate the total cost basis from open transactions
- *
- * @param openTransactions - Array of open transactions
- * @returns Total cost basis (sum of amounts from open transactions)
- */
-export function calculateTotalCostBasis(openTransactions: OpenTransaction[]): number {
-  return openTransactions.reduce((sum, tx) => sum + tx.amount, 0);
-}
-
-/**
- * Calculate the average cost per share from open transactions
- *
- * @param openTransactions - Array of open transactions
- * @returns Average cost per share
- */
-export function calculateAverageCostPerShare(openTransactions: OpenTransaction[]): number {
-  const totalShares = openTransactions.reduce((sum, tx) => sum + tx.shares, 0);
-  const totalCost = calculateTotalCostBasis(openTransactions);
-
-  return totalShares > 0 ? totalCost / totalShares : 0;
-}
-
-/**
- * Get just the Transaction objects from OpenTransaction array
- * (for backward compatibility with existing code)
- *
- * @param openTransactions - Array of open transactions
- * @returns Array of Transaction objects
- */
-export function getOpenTransactionsList(openTransactions: OpenTransaction[]): Transaction[] {
-  return openTransactions.map((open) => ({
-    ...open.transaction,
-    shares: open.shares, // Use the remaining shares, not the original
-    amount: open.amount, // Use the remaining amount, not the original
-  }));
 }
