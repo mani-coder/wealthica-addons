@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { Empty, Spin } from 'antd';
+import { Card, Empty, Spin } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
@@ -9,7 +9,7 @@ import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { formatCurrency, formatMoney, max, min } from '../utils/common';
+import { formatCurrency, formatMoney, getNextWeekday, max, min } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -67,13 +67,6 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
       fetchData();
     }
   }, [symbol, position, fetchSecurityHistory]);
-
-  function getNextWeekday(date: any) {
-    const referenceDate = dayjs(date);
-    const day = referenceDate.day();
-    const diff = day === 6 ? 2 : day === 0 ? 1 : 0;
-    return (diff ? referenceDate.add(diff, 'days') : referenceDate).format(DATE_FORMAT);
-  }
 
   function getSeries(): any[] {
     const book: {
@@ -296,14 +289,6 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
       .reduce((dividend, transaction) => dividend + transaction.amount, 0);
 
     return {
-      title: {
-        text: `P/L (${showValueChart ? '$' : '%'}) Timeline for ${symbol}`,
-        style: {
-          color: '#1F2A33',
-          textDecoration: 'underline',
-          fontWeight: 'bold',
-        },
-      },
       subtitle: {
         text: isPrivateMode
           ? ''
@@ -325,7 +310,7 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
         },
       },
 
-      rangeSelector: { selected: 1, enabled: true as any, inputEnabled: false },
+      rangeSelector: { selected: 1, enabled: true },
       navigator: { enabled: true },
       scrollbar: { enabled: false },
 
@@ -391,8 +376,11 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
   }, [getOptions, getSeries]);
 
   return (
-    <>
-      <hr />
+    <Card
+      title={`P/L (${showValueChart ? '$' : '%'}) Timeline: ${symbol}`}
+      variant="outlined"
+      styles={{ body: { paddingTop: 4 } }}
+    >
       {loading ? (
         <div className="flex justify-center items-center" style={{ height: 300 }}>
           <Spin size="large" />
@@ -400,10 +388,9 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
       ) : !prices || !prices.length ? (
         <Empty description={`Can't load stock price for ${symbol}`} />
       ) : (
-        <Charts constructorType={'stockChart'} options={options} />
+        <Charts constructorType="stockChart" options={options} />
       )}
-      <hr />
-    </>
+    </Card>
   );
 }
 

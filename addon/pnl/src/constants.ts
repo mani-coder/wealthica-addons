@@ -28,6 +28,7 @@ export enum TabKeysEnum {
   PERFORMANCE = 'performance',
   HOLDINGS = 'holdings',
   GAINERS_LOSERS = 'gainers-losers',
+  HEALTH_CHECK = 'health-check',
   REALIZED_PNL = 'realized-pnl',
   ACTIVITIES = 'activities',
   NEWS = 'news',

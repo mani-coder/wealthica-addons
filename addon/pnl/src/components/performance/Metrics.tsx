@@ -1,5 +1,4 @@
-import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Collapse, List, Statistic, type StatisticProps, Tooltip, Typography } from 'antd';
+import { Collapse, List, Typography } from 'antd';
 import React, { useMemo } from 'react';
 import {
   calculateAlpha,
@@ -10,6 +9,7 @@ import {
   calculateRiskLevel,
 } from '../../utils/benchmarkData';
 import { formatMoney } from '../../utils/common';
+import { MetricsStatistics } from '../common/MetricsStatistics';
 
 // Metric descriptions used in tooltips and "Understanding the Metrics" section
 export const METRIC_DESCRIPTIONS = {
@@ -34,27 +34,6 @@ type Props = {
   portfolios: { value: number }[];
   benchmarkName: string;
 };
-
-function StatisticBox(props: StatisticProps & { tooltip?: string }) {
-  const titleClass = 'text-xs font-semibold text-gray-500';
-  return (
-    <Statistic
-      {...props}
-      valueRender={(value) => <span className="text-lg font-semibold">{value}</span>}
-      title={
-        props.tooltip ? (
-          <Tooltip title={props.tooltip}>
-            <span className={titleClass}>
-              {props.title} <QuestionCircleOutlined className="text-[10px] text-slate-500" />
-            </span>
-          </Tooltip>
-        ) : (
-          <span className={titleClass}>{props.title}</span>
-        )
-      }
-    />
-  );
-}
 
 function Metrics(props: Props) {
   const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName } = props;
@@ -91,30 +70,30 @@ function Metrics(props: Props) {
   return (
     <div className="w-full mb-6">
       <div className="flex justify-between flex-wrap p-4 bg-purple-50">
-        <StatisticBox
+        <MetricsStatistics
           title="Your Portfolio Return"
           tooltip={METRIC_DESCRIPTIONS.portfolioReturn}
           value={`${portfolioFinalReturn.toFixed(2)}%`}
-          valueStyle={{ color: portfolioFinalReturn >= 0 ? '#10b981' : '#ef4444' }}
+          styles={{ content: { color: portfolioFinalReturn >= 0 ? '#10b981' : '#ef4444' } }}
         />
-        <StatisticBox
+        <MetricsStatistics
           title={`${benchmarkName} Return`}
           tooltip={METRIC_DESCRIPTIONS.benchmarkReturn}
           value={`${benchmarkFinalReturn.toFixed(2)}%`}
-          valueStyle={{ color: benchmarkFinalReturn >= 0 ? '#10b981' : '#ef4444' }}
+          styles={{ content: { color: benchmarkFinalReturn >= 0 ? '#10b981' : '#ef4444' } }}
         />
-        <StatisticBox
+        <MetricsStatistics
           title="Alpha (Outperformance)"
           tooltip={METRIC_DESCRIPTIONS.alpha}
           value={`${alpha.toFixed(2)}%`}
-          valueStyle={{ color: alpha >= 0 ? '#10b981' : '#ef4444' }}
+          styles={{ content: { color: alpha >= 0 ? '#10b981' : '#ef4444' } }}
           prefix={alpha >= 0 ? '+' : ''}
         />
-        <StatisticBox
+        <MetricsStatistics
           title="Correlation"
           tooltip={METRIC_DESCRIPTIONS.correlation}
           value={correlation.toFixed(3)}
-          valueStyle={{ color: '#3b82f6' }}
+          styles={{ content: { color: '#3b82f6' } }}
         />
       </div>
 
@@ -123,36 +102,38 @@ function Metrics(props: Props) {
           Performance Insights
         </Typography.Title>
         <div className="flex justify-between flex-wrap gap-4">
-          <StatisticBox
+          <MetricsStatistics
             title="Consistency Score"
             tooltip={METRIC_DESCRIPTIONS.consistencyScore}
             value={`${consistencyScore.toFixed(1)}%`}
-            valueStyle={{
-              color: consistencyScore >= 60 ? '#10b981' : consistencyScore >= 40 ? '#f59e0b' : '#ef4444',
+            styles={{
+              content: { color: consistencyScore >= 60 ? '#10b981' : consistencyScore >= 40 ? '#f59e0b' : '#ef4444' },
             }}
             suffix={<span className="text-xs text-gray-500 block mt-1">of days beating {benchmarkName}</span>}
           />
-          <StatisticBox
+          <MetricsStatistics
             title="Average Recovery Time"
             tooltip={METRIC_DESCRIPTIONS.recoveryTime}
             value={recoveryTime}
-            valueStyle={{ color: recoveryTime <= 30 ? '#10b981' : recoveryTime <= 60 ? '#f59e0b' : '#ef4444' }}
+            styles={{ content: { color: recoveryTime <= 30 ? '#10b981' : recoveryTime <= 60 ? '#f59e0b' : '#ef4444' } }}
             suffix={<span className="text-xs text-gray-500 block mt-1">days to bounce back</span>}
           />
-          <StatisticBox
+          <MetricsStatistics
             title="Risk Level"
             tooltip={METRIC_DESCRIPTIONS.riskLevel}
             value={riskLevel}
-            valueStyle={{
-              color: riskLevel === 'Lower Risk' ? '#10b981' : riskLevel === 'Higher Risk' ? '#ef4444' : '#3b82f6',
+            styles={{
+              content: {
+                color: riskLevel === 'Lower Risk' ? '#10b981' : riskLevel === 'Higher Risk' ? '#ef4444' : '#3b82f6',
+              },
             }}
             suffix={<span className="text-xs text-gray-500 block mt-1">vs {benchmarkName}</span>}
           />
-          <StatisticBox
+          <MetricsStatistics
             title="Opportunity Cost"
             tooltip={METRIC_DESCRIPTIONS.opportunityCost}
             value={`${opportunityCost >= 0 ? '+' : ''}$${formatMoney(opportunityCost)}`}
-            valueStyle={{ color: opportunityCost >= 0 ? '#10b981' : '#ef4444' }}
+            styles={{ content: { color: opportunityCost >= 0 ? '#10b981' : '#ef4444' } }}
             suffix={
               <span className="text-xs text-gray-500 block mt-1">
                 {opportunityCost >= 0 ? 'gained' : 'missed'} vs {benchmarkName}
@@ -163,7 +144,7 @@ function Metrics(props: Props) {
       </div>
 
       <div className=" w-full">
-        <Collapse bordered={false} rootClassName="rounded-none">
+        <Collapse ghost>
           <Collapse.Panel key="1" header="Understanding the Metrics">
             <List
               size="small"

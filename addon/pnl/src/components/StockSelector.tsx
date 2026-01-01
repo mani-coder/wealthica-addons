@@ -1,4 +1,4 @@
-import { Select, Typography } from 'antd';
+import { Select } from 'antd';
 
 import type { Account, Position } from '../types';
 import { getSymbol } from '../utils/common';
@@ -22,24 +22,24 @@ export const StockSelector = ({ positions, selectedSymbol, setSelectedSymbol, ..
     ));
 
   return (
-    <div className="flex p-6 w-full flex-col">
-      <Typography.Title style={{ textAlign: 'center' }} level={4}>
-        Search for a stock:
-      </Typography.Title>
+    <div className="flex py-1 px-4 w-full flex-col space-y-1">
+      <div className="text-center text-lg mb-2 font-semibold">Search for a stock:</div>
       <Select
-        showSearch
+        showSearch={{
+          filterOption: (inputValue, option) =>
+            ((option?.props?.value as string) ?? '').toUpperCase().indexOf(inputValue.toUpperCase()) !== -1,
+        }}
         value={selectedSymbol}
         placeholder="Enter a stock, e.g: FB, SHOP.TO"
         className="w-full"
         onChange={(symbol) => setSelectedSymbol(symbol)}
-        filterOption={(inputValue, option) =>
-          ((option?.props?.value as string) ?? '').toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-        }
       >
         {options}
       </Select>
 
-      {selectedSymbol && <StockDetails symbol={selectedSymbol} positions={positions} {...rest} />}
+      <div className="py-2">
+        {selectedSymbol && <StockDetails symbol={selectedSymbol} positions={positions} {...rest} />}
+      </div>
     </div>
   );
 };

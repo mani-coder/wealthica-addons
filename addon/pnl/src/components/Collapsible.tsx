@@ -14,7 +14,7 @@ export default function Collapsible({
     <div className="my-6 w-full mb-2">
       <Collapse
         defaultActiveKey={closed ? [] : ['1']}
-        expandIconPosition="right"
+        expandIconPlacement="end"
         onChange={() => trackEvent('collapse-panel', { title })}
       >
         <Collapse.Panel header={title} key="1" style={{ backgroundColor: '#d1fae5' }}>

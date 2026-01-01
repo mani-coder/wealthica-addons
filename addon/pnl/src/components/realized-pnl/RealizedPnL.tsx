@@ -618,7 +618,7 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
           value={isPrivateMode ? '--' : closedPnL}
           precision={2}
           suffix={baseCurrencyDisplay}
-          valueStyle={{ color: closedPnL >= 0 ? 'green' : 'red' }}
+          styles={{ content: { color: closedPnL >= 0 ? 'green' : 'red' } }}
           prefix={closedPnL >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         />
       </div>

@@ -8,8 +8,10 @@ import type { Account, Position } from '../types';
 import { getOptions, getOptionsV2, POSITION_TOOLTIP } from '../utils/chartHelpers';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
+import Collapsible from './Collapsible';
 import CompositionCharts from './CompositionCharts';
-import { StockSelector } from './HoldingsChartsBase';
+import { StockHealthCheck } from './health-check';
+import { StockSelector } from './StockSelector';
 import StockTimeline from './StockTimeline';
 
 type Props = {
@@ -129,7 +131,12 @@ export default function HoldingsCharts(props: Props) {
       return null;
     }
 
-    return <StockTimeline symbol={timelineSymbol} position={position} accounts={props.accounts} />;
+    return (
+      <div className="p-2 space-y-2">
+        <StockTimeline symbol={timelineSymbol} position={position} accounts={props.accounts} />
+        <StockHealthCheck position={position} />
+      </div>
+    );
   };
 
   const { pie, column } = useMemo(() => {
@@ -158,27 +165,30 @@ export default function HoldingsCharts(props: Props) {
   );
 
   return (
-    <>
-      <Charts options={columnChartOptions} />
+    <div className="zero-padding">
+      <Collapsible title="Holdings">
+        <Charts options={columnChartOptions} />
 
-      <div className="flex w-full flex-wrap items-stretch">
-        <div className="flex justify-center w-2/3 h-full">
-          <Charts options={pieChartOptions} />
+        <div className="flex w-full flex-wrap items-stretch">
+          <div className="flex justify-center w-2/3 h-full">
+            <Charts options={pieChartOptions} />
+          </div>
+
+          <div className="flex justify-center w-1/3 h-full">
+            <StockSelector
+              positions={props.positions}
+              accounts={props.accounts}
+              isPrivateMode={isPrivateMode}
+              selectedSymbol={timelineSymbol}
+              setSelectedSymbol={setTimelineSymbol}
+            />
+          </div>
         </div>
 
-        <div className="flex justify-center w-1/3 h-full">
-          <StockSelector
-            positions={props.positions}
-            accounts={props.accounts}
-            selectedSymbol={timelineSymbol}
-            setSelectedSymbol={setTimelineSymbol}
-          />
-        </div>
-      </div>
-
-      {renderStockTimeline()}
+        {renderStockTimeline()}
+      </Collapsible>
 
       <CompositionCharts positions={props.positions} accounts={props.accounts} />
-    </>
+    </div>
   );
 }

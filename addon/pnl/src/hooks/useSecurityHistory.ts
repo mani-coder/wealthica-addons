@@ -60,8 +60,22 @@ export type UseSecurityHistoryOptions = {
 };
 
 /**
+ * Simple in-memory cache for security price history
+ * Lives for the entire SPA session
+ */
+const securityHistoryCache = new Map<string, SecurityPriceData[]>();
+
+/**
+ * Generate cache key from request parameters
+ */
+function getCacheKey(securityId: string, fromDate: Dayjs, toDate: Dayjs): string {
+  return `${securityId}:${fromDate.format(DATE_FORMAT)}:${toDate.format(DATE_FORMAT)}`;
+}
+
+/**
  * Custom hook for fetching security price history data
  * Returns a function that fetches and parses security price data from Wealthica API
+ * Includes in-memory caching to avoid redundant API calls (e.g., for benchmarks)
  */
 export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
   const addon = useAddon();
@@ -69,6 +83,13 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
 
   const fetchSecurityHistory = useCallback(
     async (securityId: string, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
+      // Check cache first
+      const cacheKey = getCacheKey(securityId, fromDate, toDate);
+      const cached = securityHistoryCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const endpoint = `securities/${securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${toDate.format(
         DATE_FORMAT,
       )}`;
@@ -87,7 +108,12 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
       }
 
       // Parse the response using shared parsing logic
-      return parseSecurityPriceResponse(response, maxChangePercentage);
+      const data = parseSecurityPriceResponse(response, maxChangePercentage);
+
+      // Store in cache
+      securityHistoryCache.set(cacheKey, data);
+
+      return data;
     },
     [addon, maxChangePercentage],
   );

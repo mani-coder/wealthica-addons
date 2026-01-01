@@ -1,0 +1,198 @@
+/**
+ * Portfolio Health Check Type Definitions
+ *
+ * This file contains all type definitions for the Portfolio Health Check feature,
+ * which identifies underperforming holdings and suggests candidates for review/selling.
+ */
+
+import type { Position } from '@/types';
+
+export type HealthRecommendation = 'SELL' | 'REVIEW' | 'HOLD' | 'ACCUMULATE';
+
+export type Severity = 'critical' | 'warning' | 'info' | 'healthy';
+
+export type DividendTrend = 'growing' | 'flat' | 'declining' | 'suspended' | 'none';
+
+export type HealthFlag =
+  | 'NEGATIVE_RETURN_3Y' // Lost money over 3 years
+  | 'UNDERPERFORMED_BENCHMARK' // Lagged S&P 500 / TSX significantly
+  | 'HIGH_OPPORTUNITY_COST' // Would have made $X more in index fund
+  | 'EXTENDED_UNDERWATER' // Below cost basis for > 1 year
+  | 'DECLINING_DIVIDENDS' // Dividend cuts or suspensions
+  | 'HIGH_VOLATILITY' // High risk without commensurate return
+  | 'DEATH_CROSS' // 50-day MA crossed below 200-day MA
+  | 'CONSECUTIVE_DECLINE' // Multiple quarters of decline
+  | 'SMALL_POSITION'; // Position too small to matter (<1% portfolio)
+
+/**
+ * Comprehensive health metrics for a single holding
+ */
+export interface HealthMetrics {
+  // Return metrics
+  return1Y: number; // 1-year return %
+  return3Y: number; // 3-year return %
+  returnSinceInception: number; // Return since first purchase %
+  xirr: number; // Extended Internal Rate of Return (annualized) %
+
+  // Benchmark comparison
+  benchmarkReturn3Y: number; // Benchmark return over same period %
+  alpha3Y: number; // return3Y - benchmarkReturn3Y
+
+  // Opportunity cost
+  opportunityCost: number; // $ amount lost vs investing in benchmark
+
+  // Drawdown metrics
+  maxDrawdown: number; // Worst peak-to-trough decline %
+  currentDrawdown: number; // Current decline from peak %
+
+  // Underwater analysis
+  daysUnderwater: number; // Days below cost basis (since first purchase)
+  percentUnderwater: number; // How far below cost basis %
+  holdingPeriodDays: number; // Days since first purchase
+
+  // Risk metrics
+  volatility: number; // Annualized standard deviation
+  sharpeRatio: number; // Risk-adjusted return
+
+  // Dividend metrics (for dividend-paying stocks)
+  dividendYield: number; // Current yield %
+  dividendGrowth3Y: number; // 3-year dividend growth rate %
+  dividendTrend: DividendTrend;
+
+  // Position info
+  portfolioWeight: number; // % of total portfolio
+  positionSize: number; // $ market value
+  costBasis: number; // $ total cost basis
+}
+
+/**
+ * Health report for a single holding
+ */
+export interface HoldingHealthReport {
+  // Identification
+  symbol: string;
+  name: string;
+  position: Position;
+
+  // Scores
+  score: number; // 0-100, lower = worse health
+  recommendation: HealthRecommendation;
+  severity: Severity;
+
+  // Issues identified
+  flags: HealthFlag[];
+  flagDescriptions: string[]; // Human-readable explanations
+
+  // All metrics
+  metrics: HealthMetrics;
+
+  // Actionable insights
+  opportunityCostDescription: string; // "If invested in S&P 500, you'd have $X more"
+  suggestedAction: string; // Specific actionable advice
+}
+
+/**
+ * Summary of the entire portfolio health check
+ */
+export interface PortfolioHealthSummary {
+  // Overall scores
+  overallScore: number; // Weighted average of all holdings
+  totalOpportunityCost: number; // Sum of all opportunity costs
+
+  // Counts
+  holdingsReviewed: number;
+  flaggedHoldings: number;
+  criticalCount: number;
+  warningCount: number;
+  healthyCount: number;
+
+  // Individual reports
+  reports: HoldingHealthReport[];
+
+  // Sorted lists for quick access
+  worstPerformers: HoldingHealthReport[]; // Top 5 lowest scores
+  biggestDrags: HoldingHealthReport[]; // Top 5 highest opportunity cost
+
+  // Portfolio-level recommendations
+  recommendations: string[];
+
+  // Metadata
+  analysisDate: Date;
+  benchmarkUsed: string;
+  analysisPeriodYears: number;
+}
+
+/**
+ * Configuration for health check analysis
+ */
+export interface HealthCheckConfig {
+  // Benchmark settings
+  benchmarkSymbol: string; // Default: 'SPY' or '^GSPTSE' for Canadian
+  analysisPeriodYears: number; // Default: 3
+
+  // Scoring weights (must sum to 100)
+  weights: {
+    absoluteReturn: number; // Default: 25
+    relativeReturn: number; // Default: 25
+    underwater: number; // Default: 20
+    volatility: number; // Default: 15
+    dividends: number; // Default: 15
+  };
+
+  // Thresholds for triggering flags
+  thresholds: {
+    negativeReturnYears: number; // Default: 3 - flag if negative for X years
+    benchmarkUnderperformance: number; // Default: -15 - flag if alpha < X%
+    underwaterDays: number; // Default: 365 - flag if underwater > X days
+    opportunityCostMin: number; // Default: 500 - min $ to flag
+    smallPositionThreshold: number; // Default: 0.01 - ignore if < 1% of portfolio
+    volatilityMax: number; // Default: 0.4 - flag if annualized vol > 40%
+  };
+
+  // Exclusions
+  excludedSymbols: string[]; // Symbols to skip in analysis
+}
+
+/**
+ * Default configuration
+ */
+export const DEFAULT_HEALTH_CHECK_CONFIG: HealthCheckConfig = {
+  benchmarkSymbol: 'SPY',
+  analysisPeriodYears: 3,
+  weights: {
+    absoluteReturn: 25,
+    relativeReturn: 25,
+    underwater: 20,
+    volatility: 15,
+    dividends: 15,
+  },
+  thresholds: {
+    negativeReturnYears: 3,
+    benchmarkUnderperformance: -15,
+    underwaterDays: 365,
+    opportunityCostMin: 500,
+    smallPositionThreshold: 0.01,
+    volatilityMax: 0.4,
+  },
+  excludedSymbols: [],
+};
+
+/**
+ * Consistent colors for severity levels
+ */
+export const SEVERITY_COLORS = {
+  critical: '#EF4444', // Red-500
+  warning: '#F97316', // Orange-500
+  info: '#EAB308', // Yellow-500
+  healthy: '#22C55E', // Green-500
+};
+
+/**
+ * Color gradient for score visualization
+ */
+export const SCORE_GRADIENT = [
+  { stop: 0, color: '#EF4444' }, // 0-30: Red
+  { stop: 30, color: '#F97316' }, // 30-50: Orange
+  { stop: 50, color: '#EAB308' }, // 50-70: Yellow
+  { stop: 70, color: '#22C55E' }, // 70-100: Green
+];

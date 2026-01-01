@@ -7,11 +7,20 @@ import React from 'react';
 import type { Portfolio, Position } from '../types';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
+  const { styles, ...restProps } = props;
+  const mergedStyles = {
+    ...styles,
+    content: {
+      fontSize: '20px',
+      fontWeight: 600,
+      ...(typeof styles === 'object' && 'content' in styles ? styles.content : {}),
+    },
+  };
   return (
     <div className="p-1 mr-3 mb-1">
       <Statistic
-        {...props}
-        valueStyle={{ fontSize: '20px', fontWeight: 600, ...props.valueStyle }}
+        {...restProps}
+        styles={mergedStyles}
         title={
           props.tooltip ? (
             <Tooltip title={props.tooltip}>
@@ -88,7 +97,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
         />
         <StatisticBox
           title="XIRR %"
-          valueStyle={{ color: xirr > 0 ? 'green' : 'red' }}
+          styles={{ content: { color: xirr > 0 ? 'green' : 'red' } }}
           value={xirr * 100}
           precision={2}
           suffix="%"
@@ -99,7 +108,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
 
         <StatisticBox
           title="All Time P&L %"
-          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
+          styles={{ content: { color: portfolio.value >= portfolio.deposits ? 'green' : 'red' } }}
           value={((portfolio.value - portfolio.deposits) / Math.abs(portfolio.deposits)) * 100}
           precision={2}
           suffix="%"
@@ -107,7 +116,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
         />
         <StatisticBox
           title="All Time P&L Value"
-          valueStyle={{ color: portfolio.value >= portfolio.deposits ? 'green' : 'red' }}
+          styles={{ content: { color: portfolio.value >= portfolio.deposits ? 'green' : 'red' } }}
           value={privateMode ? '--' : portfolio.value - portfolio.deposits}
           precision={privateMode ? undefined : 2}
           prefix="$"
@@ -115,14 +124,14 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
 
         <StatisticBox
           title="Unrealized P&L Value"
-          valueStyle={{ color: noHoldings ? 'grey' : unrealizePnLValue >= 0 ? 'green' : 'red' }}
+          styles={{ content: { color: noHoldings ? 'grey' : unrealizePnLValue >= 0 ? 'green' : 'red' } }}
           value={privateMode ? '--' : noHoldings ? 'N/A' : unrealizePnLValue}
           precision={privateMode ? undefined : 2}
           prefix={noHoldings ? undefined : '$'}
         />
         <StatisticBox
           title="Unrealized P&L %"
-          valueStyle={{ color: noHoldings ? 'grey' : unrealizedPnLRatio >= 0 ? 'green' : 'red' }}
+          styles={{ content: { color: noHoldings ? 'grey' : unrealizedPnLRatio >= 0 ? 'green' : 'red' } }}
           value={privateMode ? '--' : noHoldings ? 'N/A' : unrealizedPnLRatio}
           precision={privateMode ? undefined : 2}
           suffix={noHoldings ? undefined : '%'}
@@ -149,7 +158,7 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
             <StatisticBox
               title="P/L % Change"
               tooltip={`P/L Ratio change from ${fromDateDisplay} to ${toDateDisplay}`}
-              valueStyle={{ color: timelinePnlChangeRatio >= 0 ? 'green' : 'red' }}
+              styles={{ content: { color: timelinePnlChangeRatio >= 0 ? 'green' : 'red' } }}
               value={timelinePnlChangeRatio}
               precision={2}
               suffix="%"
@@ -158,7 +167,9 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
             <StatisticBox
               title="P/L $ Change"
               tooltip={`P/L Value change from ${fromDateDisplay} to ${toDateDisplay}`}
-              valueStyle={{ color: timelinePnlChangeValue ? (timelinePnlChangeValue >= 0 ? 'green' : 'red') : 'grey' }}
+              styles={{
+                content: { color: timelinePnlChangeValue ? (timelinePnlChangeValue >= 0 ? 'green' : 'red') : 'grey' },
+              }}
               value={privateMode ? '--' : timelinePnlChangeValue}
               precision={privateMode ? undefined : 2}
               prefix="$"

@@ -187,3 +187,10 @@ export function isTradingDay(date: Dayjs): boolean {
 
   return true;
 }
+
+export function getNextWeekday(date: any) {
+  const referenceDate = dayjs(date);
+  const day = referenceDate.day();
+  const diff = day === 6 ? 2 : day === 0 ? 1 : 0;
+  return (diff ? referenceDate.add(diff, 'days') : referenceDate).format(DATE_FORMAT);
+}

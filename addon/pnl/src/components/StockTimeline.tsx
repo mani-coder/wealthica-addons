@@ -1,13 +1,11 @@
-import { Spin } from 'antd';
+import { Card, Spin } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
-import { useAddonContext } from '../context/AddonContext';
-import useCurrency from '../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { formatCurrency, formatMoney } from '../utils/common';
+import { formatCurrency } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -18,9 +16,7 @@ type Props = {
 };
 
 function StockTimeline(props: Props) {
-  const { isPrivateMode } = useAddonContext();
   const [loading, setLoading] = useState<boolean>(false);
-  const { baseCurrencyDisplay } = useCurrency();
   const [securityTimeline, setSecurityTimeline] = useState<SecurityPriceData[]>([]);
   const { fetchSecurityHistory } = useSecurityHistory();
 
@@ -223,42 +219,8 @@ function StockTimeline(props: Props) {
   };
 
   function getOptions(): Highcharts.Options {
-    const dividends = props.position.transactions
-      .filter((transaction) => transaction.type === 'dividend')
-      .reduce((dividend, transaction) => dividend + transaction.amount, 0);
-
     return {
-      title: {
-        text: `${props.symbol}`,
-        style: {
-          color: '#1F2A33',
-          textDecoration: 'underline',
-          fontWeight: 'bold',
-        },
-      },
-      subtitle: {
-        text: isPrivateMode
-          ? 'Shares: -, Market Value: -, Profit: -'
-          : `Shares: ${props.position.quantity}@${formatMoney(
-              props.position.investments.reduce((cost, investment) => {
-                return cost + investment.book_value;
-              }, 0) / props.position.quantity,
-            )}, Market Value: ${baseCurrencyDisplay} ${formatCurrency(
-              props.position.market_value,
-              2,
-            )}, XIRR: ${formatMoney(props.position.xirr * 100)}%, P/L:  ${formatMoney(
-              props.position.gain_percent * 100,
-              2,
-            )}% / ${baseCurrencyDisplay} ${formatCurrency(props.position.gain_amount, 2)}${
-              dividends ? `, Dividends: ${baseCurrencyDisplay} ${formatCurrency(dividends, 2)}` : ''
-            }`,
-        style: {
-          color: '#1F2A33',
-          fontWeight: 'bold',
-        },
-      },
-
-      rangeSelector: { selected: 1, enabled: true as any, inputEnabled: false },
+      rangeSelector: { selected: 1, enabled: true },
       navigator: { enabled: true },
       scrollbar: { enabled: false },
 
@@ -305,12 +267,16 @@ function StockTimeline(props: Props) {
     };
   }
 
-  return loading ? (
-    <div style={{ textAlign: 'center', margin: '12px' }}>
-      <Spin size="large" />
-    </div>
-  ) : (
-    <Charts constructorType="stockChart" options={getOptions()} />
+  return (
+    <Card title={`${props.symbol} History`} variant="outlined" styles={{ body: { padding: 2 } }}>
+      {loading ? (
+        <div style={{ textAlign: 'center', margin: '12px' }}>
+          <Spin size="large" />
+        </div>
+      ) : (
+        <Charts constructorType="stockChart" options={getOptions()} />
+      )}
+    </Card>
   );
 }
 

@@ -20,6 +20,7 @@ import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioVal
 import { Events } from './components/Events';
 import HoldingsCharts from './components/HoldingsCharts';
 import HoldingsTable from './components/HoldingsTable';
+import { PortfolioHealthCheck } from './components/health-check/PortfolioHealthCheck';
 import News from './components/News';
 import PnLStatistics from './components/PnLStatistics';
 import PortfolioVisualizer from './components/PortfolioVisualizer';
@@ -488,6 +489,7 @@ export default function App() {
 
                   <Tabs
                     defaultActiveKey={TabKeysEnum.PNL}
+                    type="card"
                     onChange={(tab) => {
                       if (tab === 'change-log') {
                         setChangeLogViewDate();
@@ -499,7 +501,7 @@ export default function App() {
                       {
                         label: 'P&L Charts',
                         key: TabKeysEnum.PNL,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         forceRender: true,
                         children: (
                           <>
@@ -545,23 +547,39 @@ export default function App() {
                       {
                         label: 'Gainers/Losers',
                         key: TabKeysEnum.GAINERS_LOSERS,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: <TopGainersLosers positions={state.positions} accounts={state.accounts} />,
                       },
                       {
                         label: (
                           <span>
-                            Performance <Tag color='green' className='text-xs'>NEW</Tag>
+                            Performance{' '}
+                            <Tag color="purple" variant="filled" className="text-xs">
+                              NEW
+                            </Tag>
                           </span>
                         ),
                         key: TabKeysEnum.PERFORMANCE,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: <BenchmarkComparison portfolios={state.allPortfolios} />,
+                      },
+                      {
+                        label: (
+                          <span>
+                            Health Check{' '}
+                            <Tag color="purple" variant="filled" className="text-xs">
+                              NEW
+                            </Tag>
+                          </span>
+                        ),
+                        key: TabKeysEnum.HEALTH_CHECK,
+                        destroyOnHidden: true,
+                        children: <PortfolioHealthCheck positions={state.positions} />,
                       },
                       {
                         label: 'Realized P&L',
                         key: TabKeysEnum.REALIZED_PNL,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: (
                           <RealizedPnL
                             transactions={state.securityTransactions}
@@ -573,7 +591,7 @@ export default function App() {
                       {
                         label: 'Activities',
                         key: TabKeysEnum.ACTIVITIES,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: (
                           <TradingActivities
                             fromDate={addOnOptions.fromDate}
@@ -587,19 +605,19 @@ export default function App() {
                       {
                         label: 'News',
                         key: TabKeysEnum.NEWS,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: <News positions={state.positions} />,
                       },
                       {
                         label: 'Events',
                         key: TabKeysEnum.EVENTS,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: <Events positions={state.positions} />,
                       },
                       {
                         label: 'Change Log',
                         key: TabKeysEnum.CHANGE_LOG,
-                        destroyInactiveTabPane: true,
+                        destroyOnHidden: true,
                         children: <ChangeLog />,
                       },
                     ]}

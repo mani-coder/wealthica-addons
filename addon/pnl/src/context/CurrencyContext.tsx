@@ -11,14 +11,8 @@ interface CurrencyContextType {
   baseCurrencyDisplay: string;
   allCurrencies: string[];
   getValue: (from: string, value: number, date?: string | Dayjs) => number;
+  currencies: Currencies;
 }
-
-const CurrencyContext = createContext<CurrencyContextType>({
-  baseCurrency: DEFAULT_BASE_CURRENCY,
-  baseCurrencyDisplay: DEFAULT_BASE_CURRENCY.toUpperCase(),
-  allCurrencies: [DEFAULT_BASE_CURRENCY],
-  getValue: (_from, value) => value,
-});
 
 function getCurrencyValue(
   baseCurrency: string,
@@ -72,6 +66,16 @@ export class Currencies {
   }
 }
 
+const defaultCurrencies = new Currencies(DEFAULT_BASE_CURRENCY, {});
+
+const CurrencyContext = createContext<CurrencyContextType>({
+  baseCurrency: DEFAULT_BASE_CURRENCY,
+  baseCurrencyDisplay: DEFAULT_BASE_CURRENCY.toUpperCase(),
+  allCurrencies: [DEFAULT_BASE_CURRENCY],
+  getValue: (_from, value) => value,
+  currencies: defaultCurrencies,
+});
+
 export const CurrencyContextProvider = ({
   children,
   currencyRef,
@@ -100,6 +104,7 @@ export const CurrencyContextProvider = ({
         baseCurrencyDisplay: currencyRef.current.baseCurrency.toUpperCase(),
         allCurrencies: Object.keys(currencyRef.current.latestCurrencies),
         getValue,
+        currencies: currencyRef.current,
       }}
     >
       {children}

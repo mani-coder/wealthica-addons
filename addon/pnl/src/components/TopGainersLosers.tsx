@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Empty, Switch, Typography } from 'antd';
+import { Card, Empty, Switch, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 
 import { trackEvent } from '../analytics';
@@ -8,6 +8,7 @@ import useCurrency from '../hooks/useCurrency';
 import type { Account, Position } from '../types';
 import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
+import { StockHealthCheck } from './health-check/StockHealthCheck';
 import StockPnLTimeline from './StockPnLTimeline';
 
 export function TopGainersLosers(props: { positions: Position[]; accounts: Account[] }) {
@@ -198,32 +199,47 @@ export function TopGainersLosers(props: { positions: Position[]; accounts: Accou
     }
 
     return (
-      <StockPnLTimeline symbol={pnlSymbol} position={position} showValueChart={sortByValue} accounts={props.accounts} />
+      <div className="space-y-2 px-1">
+        <StockPnLTimeline
+          symbol={pnlSymbol}
+          position={position}
+          showValueChart={sortByValue}
+          accounts={props.accounts}
+        />
+        <StockHealthCheck position={position} />
+      </div>
     );
   };
 
   return props.positions.length ? (
-    <>
-      <div className="flex mb-6 w-full justify-center items-center">
-        <Switch
-          checked={sortByValue}
-          onChange={(checked) => {
-            setSortByValue(checked);
-            trackEvent('gainers-show-by-pnl-value', { checked });
-          }}
-        />
-        <div className="px-2 mb-2" />
-        <Typography.Text strong mark={sortByValue} style={{ fontSize: 17 }}>
-          Show By P&amp;L Value ($)
-        </Typography.Text>
-      </div>
+    <Card
+      title="Top Gainers & Losers"
+      extra={
+        <div className="flex justify-center items-center">
+          <Switch
+            checked={sortByValue}
+            onChange={(checked) => {
+              setSortByValue(checked);
+              trackEvent('gainers-show-by-pnl-value', { checked });
+            }}
+          />
+          <div className="px-2 mb-2" />
+          <Typography.Text strong mark={sortByValue} style={{ fontSize: 17 }}>
+            Show By P&amp;L Value ($)
+          </Typography.Text>
+        </div>
+      }
+      variant="outlined"
+      styles={{ body: { padding: 0 } }}
+    >
+      <div className="p-2" />
 
       {!!(gainers.series?.[0] && (gainers.series[0] as any).data.length) && <Charts options={gainers} />}
 
       {renderStockPnLTimeline()}
 
       {!!(losers.series?.[0] && (losers.series[0] as any).data.length) && <Charts options={losers} />}
-    </>
+    </Card>
   ) : (
     <Empty description="No Holdings" />
   );
