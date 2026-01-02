@@ -8,12 +8,12 @@ import ArrowUp from './icons/ArrowUp.svelte';
 import PnLRanges from './PnLRanges.svelte';
 import Tooltip from './Tooltip.svelte';
 
-export const portfolios: Portfolio[] = [];
+export let portfolios: Portfolio[] = [];
 export let privateMode: boolean;
 export let prod: boolean;
 
 let selectedPnLIndex = 0;
-const portfolioByDate = portfolios.reduce(
+$: portfolioByDate = portfolios.reduce(
   (hash, portfolio) => {
     hash[portfolio.date] = portfolio;
     return hash;
@@ -28,6 +28,11 @@ function getNearestPortfolioDate(date: string): Portfolio | undefined {
 }
 
 function getData() {
+  // Return empty data if no portfolios are available yet
+  if (portfolios.length === 0) {
+    return [];
+  }
+
   let currentPortfolio = portfolios[portfolios.length - 1];
   const currentDate = dayjs().utc();
   if (currentDate.format('YYYY-MM-DD') === currentPortfolio.date && currentDate.hour() < 20 && portfolios.length > 1) {
@@ -174,7 +179,7 @@ function getData() {
   return data;
 }
 
-const data = getData();
+$: data = getData();
 $: pnl = selectedPnLIndex < data.length ? data[selectedPnLIndex] : data[0];
 
 function handlePnlClick(pnlIndex: number) {
@@ -185,12 +190,13 @@ function handlePnlClick(pnlIndex: number) {
 <div class="w-full h-full overflow-scroll no-scrollbar">
   <!-- <img src="favicon.png" alt="P&L" width={20} height={20} /> -->
 
-  <h5 class="my-0 mb-1 text-sm text-center text-gray-500">
-    {#if !prod}
-      <div class="font-semibold">P&L % CHANGE</div>
-    {/if}
-    <div class="font-bold">{pnl.label.toUpperCase()}</div>
-  </h5>
+  {#if pnl}
+    <h5 class="my-0 mb-1 text-sm text-center text-gray-500">
+      {#if !prod}
+        <div class="font-semibold">P&L % CHANGE</div>
+      {/if}
+      <div class="font-bold">{pnl.label.toUpperCase()}</div>
+    </h5>
 
   <div class="flex flex-col space-y-1 w-full p-2 bg-gray-100 rounded-lg">
     <div class="flex items-center px-2 space-x-3">
@@ -234,7 +240,8 @@ function handlePnlClick(pnlIndex: number) {
     </div>
   </div>
 
-  <div class="w-full mt-3 px-1">
-    <PnLRanges {data} onClick={handlePnlClick} {selectedPnLIndex} />
-  </div>
+    <div class="w-full mt-3 px-1">
+      <PnLRanges {data} onClick={handlePnlClick} {selectedPnLIndex} />
+    </div>
+  {/if}
 </div>
