@@ -13,6 +13,13 @@ export let privateMode: boolean;
 export let prod: boolean;
 
 let selectedPnLIndex = 0;
+$: {
+  console.log('[pnl-widget] PnLWidget received portfolios:', portfolios.length);
+  if (portfolios.length > 0) {
+    console.log('[pnl-widget] First portfolio:', portfolios[0].date);
+    console.log('[pnl-widget] Last portfolio:', portfolios[portfolios.length - 1].date);
+  }
+}
 $: portfolioByDate = portfolios.reduce(
   (hash, portfolio) => {
     hash[portfolio.date] = portfolio;
@@ -149,6 +156,8 @@ function getData() {
     }
   });
 
+  console.log('[pnl-widget] portfolioValues count:', portfolioValues.length);
+
   const data = portfolioValues
     .filter((value) => value.endPortfolio.date !== value.startPortfolio.date)
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
@@ -175,6 +184,11 @@ function getData() {
         changeValue,
       };
     });
+
+  console.log('[pnl-widget] getData() produced data entries:', data.length);
+  if (data.length > 0) {
+    console.log('[pnl-widget] First data entry:', data[0]);
+  }
 
   return data;
 }

@@ -88,7 +88,12 @@ async function loadStaticPortfolioData() {
 }
 
 function computePortfolios(portfolioData, transactions, accounts, currencyData) {
+  console.log('[pnl-widget] computePortfolios - portfolioData keys:', Object.keys(portfolioData).length);
+  console.log('[pnl-widget] computePortfolios - transactions count:', transactions?.length || 0);
+  console.log('[pnl-widget] computePortfolios - accounts count:', accounts?.length || 0);
+
   const transactionsByDate = parseTransactionsResponse(transactions, currencyData, accounts);
+  console.log('[pnl-widget] transactionsByDate keys:', Object.keys(transactionsByDate).length);
 
   const portfolioPerDay = Object.keys(portfolioData).reduce((hash, date) => {
     const data = transactionsByDate[date] || {};
@@ -105,6 +110,12 @@ function computePortfolios(portfolioData, transactions, accounts, currencyData) 
   const _portfolios: Portfolio[] = [];
 
   const sortedDates = Object.keys(portfolioPerDay).sort();
+  console.log('[pnl-widget] sortedDates count:', sortedDates.length);
+  if (sortedDates.length > 0) {
+    console.log('[pnl-widget] First date:', sortedDates[0]);
+    console.log('[pnl-widget] Last date:', sortedDates[sortedDates.length - 1]);
+  }
+
   let deposits = Object.keys(transactionsByDate)
     .filter((date) => date < sortedDates[0])
     .reduce((totalDeposits, date) => {
@@ -123,6 +134,7 @@ function computePortfolios(portfolioData, transactions, accounts, currencyData) 
     });
   });
 
+  console.log('[pnl-widget] Final portfolios count:', _portfolios.length);
   portfolios = _portfolios;
 }
 
