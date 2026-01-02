@@ -1,4 +1,4 @@
-import type { Moment } from 'moment';
+import type { Dayjs } from 'dayjs';
 
 // This is the data of the portfolio on the single day.
 export type PortfolioData = {
@@ -37,7 +37,7 @@ export type Investment = {
 };
 
 export type Transaction = {
-  date: Moment;
+  date: Dayjs;
   symbol: string;
   amount: number;
   currency: string;
@@ -69,7 +69,7 @@ export type Account = {
   currency: string;
   cash: number;
   value: number;
-  created_at: Moment;
+  created_at: Dayjs;
   institution: string;
   positions: (Position & { symbol: string })[];
 };

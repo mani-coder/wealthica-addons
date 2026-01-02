@@ -1,11 +1,11 @@
 <script lang="ts">
-  export let tooltip: string;
+export let tooltip: string;
 </script>
 
-<div class="flex w-full">
-  <div class="tooltip flex flex-grow items-center space-x-2">
-    <slot />
+<div class="flex w-full items-center space-x-2">
+  <slot />
 
+  <div class="tooltip">
     <svg
       class="cursor-pointer text-gray-400"
       xmlns="http://www.w3.org/2000/svg"
@@ -19,7 +19,7 @@
       />
     </svg>
 
-    <span class="tooltiptext text-sm p-1 text-center border rounded-lg text-white">{tooltip}</span>
+    <span class="tooltiptext text-sm p-2 text-center border rounded-lg text-white">{tooltip}</span>
   </div>
 </div>
 
@@ -30,16 +30,16 @@
 
   .tooltip .tooltiptext {
     visibility: hidden;
-    width: 180px;
+    width: 200px;
     background-color: #000;
     background-color: hsla(0, 0%, 20%, 0.9);
 
     /* Position the tooltip */
     position: absolute;
     z-index: 1;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 50%;
-    margin-left: -105px;
+    transform: translateX(-50%);
   }
 
   .tooltip:hover .tooltiptext {

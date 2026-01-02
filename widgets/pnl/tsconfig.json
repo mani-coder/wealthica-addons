@@ -7,7 +7,6 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
@@ -17,7 +16,8 @@
     "baseUrl": "./src",
     "noImplicitAny": false,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "outDir": "public/assets"
   },
   "include": ["src/**/*", "ambient.d.ts", "global.d.ts"],
   "exclude": ["node_modules/*", "public/*"]

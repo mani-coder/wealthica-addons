@@ -1,8 +1,8 @@
 export const DATA = {
   history: {
     total: {
-      from: "2018-03-01T00:00:00.000Z",
-      to: "2019-03-04T00:00:00.000Z",
+      from: '2018-03-01T00:00:00.000Z',
+      to: '2019-03-04T00:00:00.000Z',
       data: [
         null,
         null,

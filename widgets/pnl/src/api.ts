@@ -5,7 +5,7 @@ import { getCurrencyInCAD, getDate, getSymbol } from './utils';
 export function parseCurrencyReponse(response: any) {
   const date = getDate(response.from);
   return response.data.reduce((hash, value) => {
-    if (!!value) {
+    if (value) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
     // Move the date forward.
@@ -17,7 +17,7 @@ export function parseCurrencyReponse(response: any) {
 const isSecuritiesAccountsTransfer = (transaction: any) =>
   transaction.type &&
   transaction.type.toLowerCase() === 'transfer' &&
-  ((transaction.description && transaction.description.startsWith('[Accounts Transfer]')) ||
+  (transaction.description?.startsWith('[Accounts Transfer]') ||
     (transaction.notes && transaction.notes === 'Accounts Transfer'));
 
 export function parseInstitutionsResponse(response: any, groups?: string[], institutions?: string[]): Account[] {
@@ -34,7 +34,7 @@ export function parseInstitutionsResponse(response: any, groups?: string[], inst
               institution: instutition.id,
               name: instutition.name,
               created_at: getDate(instutition.creation_date),
-              type: account.name && account.name.includes('-') ? account.name.split('-')[1].trim() : account.name,
+              type: account.name?.includes('-') ? account.name.split('-')[1].trim() : account.name,
               group: account.group,
               cash: account.cash,
               value: account.value,
@@ -53,7 +53,7 @@ export function parsePortfolioResponse(response: any) {
   const data = response.history.total;
   const date = getDate(data.from);
   return data.data.reduce((hash, value) => {
-    if (!!value) {
+    if (value) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
 
@@ -93,10 +93,7 @@ export function parseTransactionsResponse(response: any, currencyCache: any, acc
           };
 
       let amount = Number(transaction.currency_amount);
-      amount =
-        transaction.investment && transaction.investment.includes(':usd')
-          ? getCurrencyInCAD(date, amount, currencyCache)
-          : amount;
+      amount = transaction.investment?.includes(':usd') ? getCurrencyInCAD(date, amount, currencyCache) : amount;
 
       if (['deposit'].includes(type)) {
         portfolioData.deposit += amount;

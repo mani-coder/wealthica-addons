@@ -1,188 +1,185 @@
 <script lang="ts">
-  import moment, { Moment } from 'moment';
-  import type { Portfolio } from '../types';
-  import { getPreviousWeekday } from '../utils';
-  import DateValue from './DateValue.svelte';
-  import ArrowDown from './icons/ArrowDown.svelte';
-  import ArrowUp from './icons/ArrowUp.svelte';
-  import PnLRanges from './PnLRanges.svelte';
-  import Tooltip from './Tooltip.svelte';
+import dayjs, { type Dayjs } from 'dayjs';
+import type { Portfolio } from '../types';
+import { getPreviousWeekday } from '../utils';
+import DateValue from './DateValue.svelte';
+import ArrowDown from './icons/ArrowDown.svelte';
+import ArrowUp from './icons/ArrowUp.svelte';
+import PnLRanges from './PnLRanges.svelte';
+import Tooltip from './Tooltip.svelte';
 
-  export let portfolios: Portfolio[] = [];
-  export let privateMode: boolean;
-  export let prod: boolean;
+export const portfolios: Portfolio[] = [];
+export let privateMode: boolean;
+export let prod: boolean;
 
-  let selectedPnLIndex = 0;
-  const portfolioByDate = portfolios.reduce((hash, portfolio) => {
+let selectedPnLIndex = 0;
+const portfolioByDate = portfolios.reduce(
+  (hash, portfolio) => {
     hash[portfolio.date] = portfolio;
     return hash;
-  }, {} as { [K: string]: Portfolio });
+  },
+  {} as { [K: string]: Portfolio },
+);
 
-  const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
+const DATE_DISPLAY_FORMAT = 'MMM DD, YYYY';
 
-  function getNearestPortfolioDate(date: string): Portfolio | undefined {
-    return portfolioByDate[date];
+function getNearestPortfolioDate(date: string): Portfolio | undefined {
+  return portfolioByDate[date];
+}
+
+function getData() {
+  let currentPortfolio = portfolios[portfolios.length - 1];
+  const currentDate = dayjs().utc();
+  if (currentDate.format('YYYY-MM-DD') === currentPortfolio.date && currentDate.hour() < 20 && portfolios.length > 1) {
+    currentPortfolio = portfolios[portfolios.length - 2];
+  }
+  if (dayjs(currentPortfolio.date).isoWeekday() > 5) {
+    const weekday = getPreviousWeekday(currentPortfolio.date).format('YYYY-MM-DD');
+    currentPortfolio = portfolioByDate[weekday];
   }
 
-  function getData() {
-    let currentPortfolio = portfolios[portfolios.length - 1];
-    const currentDate = moment().utc();
-    if (
-      currentDate.format('YYYY-MM-DD') === currentPortfolio.date &&
-      currentDate.hour() < 20 &&
-      portfolios.length > 1
-    ) {
-      currentPortfolio = portfolios[portfolios.length - 2];
-    }
-    if (moment(currentPortfolio.date).isoWeekday() > 5) {
-      const weekday = getPreviousWeekday(currentPortfolio.date).format('YYYY-MM-DD');
-      currentPortfolio = portfolioByDate[weekday];
-    }
+  const lastDate = currentPortfolio.date;
 
-    const lastDate = currentPortfolio.date;
+  const portfolioKeys = new Set();
+  const portfolioValues: {
+    id: string;
+    label: string;
+    date: Dayjs;
+    startPortfolio: Portfolio;
+    endPortfolio: Portfolio;
+  }[] = [];
 
-    const portfolioKeys = new Set();
-    const portfolioValues: {
-      id: string;
-      label: string;
-      date: Moment;
-      startPortfolio: Portfolio;
-      endPortfolio: Portfolio;
-    }[] = [];
-
-    [
-      { id: '1D', label: '1 Day', date: getPreviousWeekday(lastDate) },
-      {
-        id: '1W',
-        label: '1 Week',
-        date: moment(lastDate).subtract(1, 'weeks'),
-      },
-      {
-        id: '1M',
-        label: '1 Month',
-        date: moment(lastDate).subtract(1, 'months').add(1, 'days'),
-      },
-      {
-        id: '3M',
-        label: '3 Months',
-        date: moment(lastDate).subtract(3, 'months').add(1, 'days'),
-      },
-      {
-        id: '6M',
-        label: '6 Months',
-        date: moment(lastDate).subtract(6, 'months').add(1, 'days'),
-      },
-      {
-        id: '1Y',
-        label: '1 Year',
-        date: moment(lastDate).subtract(1, 'years').add(1, 'days'),
-      },
-      {
-        id: '2Y',
-        label: '2 Years',
-        date: moment(lastDate).subtract(2, 'years').add(1, 'days'),
-      },
-      {
-        id: '3Y',
-        label: '3 Years',
-        date: moment(lastDate).subtract(3, 'years').add(1, 'days'),
-      },
-      {
-        id: '5Y',
-        label: '5 Years',
-        date: moment(lastDate).subtract(5, 'years').add(1, 'days'),
-      },
-      {
-        id: 'MTD',
-        label: 'Month To Date',
-        date: moment(lastDate).startOf('month'),
-      },
-      {
-        id: 'WTD',
-        label: 'Week To Date',
-        date: moment(lastDate).startOf('week'),
-      },
-      {
-        id: 'YTD',
-        label: 'Year To Date',
-        date: moment(lastDate).startOf('year'),
-      },
-    ].map((value) => {
-      const portfolio = getNearestPortfolioDate(value.date.format('YYYY-MM-DD'));
-      if (portfolio) {
-        const key = `${portfolio.date}-${currentPortfolio.date}`;
-        if (!portfolioKeys.has(key)) {
-          portfolioValues.push({
-            id: value.id,
-            label: value.label,
-            date: value.date,
-            startPortfolio: portfolio,
-            endPortfolio: currentPortfolio,
-          });
-          portfolioKeys.add(key);
-        }
-      }
-    });
-
-    [1, 2, 3, 4].forEach((value) => {
-      const year = moment(lastDate).subtract(value, 'years').year();
-      const startDate = moment().year(year).month('Jan').startOf('month');
-      const startPortfolio = getNearestPortfolioDate(startDate.format('YYYY-MM-DD'));
-      const endPortfolio = getNearestPortfolioDate(
-        moment().year(year).month('Dec').endOf('month').format('YYYY-MM-DD'),
-      );
-
-      if (startPortfolio && endPortfolio) {
-        const key = `${startPortfolio.date}-${endPortfolio.date}`;
-        if (!portfolioKeys.has(key)) {
-          portfolioValues.push({
-            id: `FY ${year}`,
-            label: `Jan - Dec ${year}`,
-            date: startDate,
-            startPortfolio,
-            endPortfolio,
-          });
-          portfolioKeys.add(key);
-        }
-      }
-    });
-
-    const data = portfolioValues
-      .filter((value) => value.endPortfolio.date !== value.startPortfolio.date)
-      .sort((a, b) => b.date.valueOf() - a.date.valueOf())
-      .map((value) => {
-        const startPnl = value.startPortfolio.value - value.startPortfolio.deposits;
-        const endPnl = value.endPortfolio.value - value.endPortfolio.deposits;
-        const startRatio = (startPnl / value.startPortfolio.deposits) * 100;
-        const endRatio = (endPnl / value.endPortfolio.deposits) * 100;
-
-        const changeValue = endPnl - startPnl;
-        const changeRatio = endRatio - startRatio;
-
-        return {
+  [
+    { id: '1D', label: '1 Day', date: getPreviousWeekday(lastDate) },
+    {
+      id: '1W',
+      label: '1 Week',
+      date: dayjs(lastDate).subtract(1, 'weeks'),
+    },
+    {
+      id: '1M',
+      label: '1 Month',
+      date: dayjs(lastDate).subtract(1, 'months').add(1, 'days'),
+    },
+    {
+      id: '3M',
+      label: '3 Months',
+      date: dayjs(lastDate).subtract(3, 'months').add(1, 'days'),
+    },
+    {
+      id: '6M',
+      label: '6 Months',
+      date: dayjs(lastDate).subtract(6, 'months').add(1, 'days'),
+    },
+    {
+      id: '1Y',
+      label: '1 Year',
+      date: dayjs(lastDate).subtract(1, 'years').add(1, 'days'),
+    },
+    {
+      id: '2Y',
+      label: '2 Years',
+      date: dayjs(lastDate).subtract(2, 'years').add(1, 'days'),
+    },
+    {
+      id: '3Y',
+      label: '3 Years',
+      date: dayjs(lastDate).subtract(3, 'years').add(1, 'days'),
+    },
+    {
+      id: '5Y',
+      label: '5 Years',
+      date: dayjs(lastDate).subtract(5, 'years').add(1, 'days'),
+    },
+    {
+      id: 'MTD',
+      label: 'Month To Date',
+      date: dayjs(lastDate).startOf('month'),
+    },
+    {
+      id: 'WTD',
+      label: 'Week To Date',
+      date: dayjs(lastDate).startOf('week'),
+    },
+    {
+      id: 'YTD',
+      label: 'Year To Date',
+      date: dayjs(lastDate).startOf('year'),
+    },
+  ].map((value) => {
+    const portfolio = getNearestPortfolioDate(value.date.format('YYYY-MM-DD'));
+    if (portfolio) {
+      const key = `${portfolio.date}-${currentPortfolio.date}`;
+      if (!portfolioKeys.has(key)) {
+        portfolioValues.push({
           id: value.id,
           label: value.label,
-          date: value.date.format(DATE_DISPLAY_FORMAT),
-          startDate: moment(value.startPortfolio.date).format(DATE_DISPLAY_FORMAT),
-          endDate: moment(value.endPortfolio.date).format(DATE_DISPLAY_FORMAT),
-          startPnl,
-          startRatio,
-          endPnl,
-          endRatio,
-          changeRatio,
-          changeValue,
-        };
-      });
+          date: value.date,
+          startPortfolio: portfolio,
+          endPortfolio: currentPortfolio,
+        });
+        portfolioKeys.add(key);
+      }
+    }
+  });
 
-    return data;
-  }
+  [1, 2, 3, 4].forEach((value) => {
+    const year = dayjs(lastDate).subtract(value, 'years').year();
+    const startDate = dayjs().year(year).month(0).startOf('month');
+    const startPortfolio = getNearestPortfolioDate(startDate.format('YYYY-MM-DD'));
+    const endPortfolio = getNearestPortfolioDate(dayjs().year(year).month(11).endOf('month').format('YYYY-MM-DD'));
 
-  const data = getData();
-  $: pnl = selectedPnLIndex < data.length ? data[selectedPnLIndex] : data[0];
+    if (startPortfolio && endPortfolio) {
+      const key = `${startPortfolio.date}-${endPortfolio.date}`;
+      if (!portfolioKeys.has(key)) {
+        portfolioValues.push({
+          id: `FY ${year}`,
+          label: `Jan - Dec ${year}`,
+          date: startDate,
+          startPortfolio,
+          endPortfolio,
+        });
+        portfolioKeys.add(key);
+      }
+    }
+  });
 
-  function handlePnlClick(pnlIndex: number) {
-    selectedPnLIndex = pnlIndex;
-  }
+  const data = portfolioValues
+    .filter((value) => value.endPortfolio.date !== value.startPortfolio.date)
+    .sort((a, b) => b.date.valueOf() - a.date.valueOf())
+    .map((value) => {
+      const startPnl = value.startPortfolio.value - value.startPortfolio.deposits;
+      const endPnl = value.endPortfolio.value - value.endPortfolio.deposits;
+      const startRatio = (startPnl / value.startPortfolio.deposits) * 100;
+      const endRatio = (endPnl / value.endPortfolio.deposits) * 100;
+
+      const changeValue = endPnl - startPnl;
+      const changeRatio = endRatio - startRatio;
+
+      return {
+        id: value.id,
+        label: value.label,
+        date: value.date.format(DATE_DISPLAY_FORMAT),
+        startDate: dayjs(value.startPortfolio.date).format(DATE_DISPLAY_FORMAT),
+        endDate: dayjs(value.endPortfolio.date).format(DATE_DISPLAY_FORMAT),
+        startPnl,
+        startRatio,
+        endPnl,
+        endRatio,
+        changeRatio,
+        changeValue,
+      };
+    });
+
+  return data;
+}
+
+const data = getData();
+$: pnl = selectedPnLIndex < data.length ? data[selectedPnLIndex] : data[0];
+
+function handlePnlClick(pnlIndex: number) {
+  selectedPnLIndex = pnlIndex;
+}
 </script>
 
 <div class="w-full h-full overflow-scroll no-scrollbar">
@@ -221,7 +218,7 @@
       </div>
     </div>
 
-    <div class="border-gray-300 border-t px-1" />
+    <div class="border-gray-300 border-t px-1"></div>
 
     <div class="flex-col space-y-1 pt-1">
       <div class="flex text-xs font-light text-gray-500">

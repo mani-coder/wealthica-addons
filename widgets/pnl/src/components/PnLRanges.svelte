@@ -1,13 +1,16 @@
 <script lang="ts">
-  export let data: { id: string; changeRatio: number }[];
-  export let onClick: (index: number) => void;
-  export let selectedPnLIndex: number;
+export let data: { id: string; changeRatio: number }[];
+export let onClick: (index: number) => void;
+export let selectedPnLIndex: number;
 </script>
 
 <div class="flex flex-wrap rounded-lg" role="group">
   {#each data as value, index}
     <span
       on:click={() => onClick(index)}
+      on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick(index)}
+      tabindex="0"
+      role="button"
       class={`inline-flex items-center cursor-pointer justify-center px-2 py-1 mr-2 mb-1 text-xs font-bold leading-none ${
         index === selectedPnLIndex
           ? `text-white ${value.changeRatio >= 0 ? 'bg-green-400' : 'bg-red-400'}`

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { formatCurrency } from 'utils';
+import { formatCurrency } from 'utils';
 
-  export let date: string;
-  export let value: number;
-  export let ratio: number;
-  export let privateMode: boolean;
+export let date: string;
+export let value: number;
+export let ratio: number;
+export let privateMode: boolean;
 </script>
 
 <div class="flex w-full text-xs text-gray-600">
