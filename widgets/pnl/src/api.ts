@@ -51,12 +51,8 @@ export function parseInstitutionsResponse(response: any, groups?: string[], inst
 
 export function parsePortfolioResponse(response: any) {
   const data = response.history.total;
-  console.log('[pnl-widget] parsePortfolioResponse - data.from:', data.from);
-  console.log('[pnl-widget] parsePortfolioResponse - data.to:', data.to);
-  console.log('[pnl-widget] parsePortfolioResponse - data.data.length:', data.data.length);
-
   let date = getDate(data.from);
-  const result = data.data.reduce((hash, value) => {
+  return data.data.reduce((hash, value) => {
     if (value) {
       hash[date.format(DATE_FORMAT)] = Number(value);
     }
@@ -65,9 +61,6 @@ export function parsePortfolioResponse(response: any) {
     date = date.add(1, 'days');
     return hash;
   }, {});
-
-  console.log('[pnl-widget] parsePortfolioResponse - result keys:', Object.keys(result).length);
-  return result;
 }
 
 export function parseTransactionsResponse(response: any, currencyCache: any, accounts: Account[]) {

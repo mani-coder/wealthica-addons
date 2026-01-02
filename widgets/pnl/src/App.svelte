@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Addon } from '@wealthica/wealthica.js/index';
 import { initTracking, trackEvent } from 'analytics';
+import dayjs from 'dayjs';
 import {
   parseCurrencyReponse,
   parseInstitutionsResponse,
@@ -9,7 +10,7 @@ import {
 } from './api';
 import Loading from './components/Loading.svelte';
 import PnLWidget from './components/PnLWidget.svelte';
-import { TRANSACTIONS_FROM_DATE } from './constants';
+import { DATE_FORMAT, TRANSACTIONS_FROM_DATE } from './constants';
 import Tailwindcss from './styles/Tailwindcss.svelte';
 import type { Portfolio } from './types';
 
@@ -21,12 +22,46 @@ let privateMode: boolean;
 let timer;
 let prod = !(window.location.search || '').includes('?developer');
 
+// Track only data-loading options that should trigger reloads
+const DATA_OPTIONS = ['fromDate', 'toDate', 'groupsFilter', 'institutionsFilter', 'investmentsFilter'];
+
+const addonOptions = {
+  fromDate: TRANSACTIONS_FROM_DATE,
+  toDate: dayjs().format(DATE_FORMAT),
+  groupsFilter: undefined,
+  institutionsFilter: undefined,
+  investmentsFilter: undefined,
+};
+
+function updateOptions(options: any) {
+  const changedOptions: any = {};
+
+  // Update privateMode separately (doesn't trigger reload)
+  if ('privateMode' in options) {
+    privateMode = options.privateMode;
+  }
+
+  // Track changes in data-loading options
+  DATA_OPTIONS.forEach((field) => {
+    if (field in options) {
+      const value = options[field] || undefined;
+      if (value !== addonOptions[field]) {
+        addonOptions[field] = value;
+        changedOptions[field] = value;
+      }
+    }
+  });
+
+  return changedOptions;
+}
+
 try {
   addon = new Addon(prod ? { id: 'mani-coder/wealthica-portfolio-addon/widgets/pnl' } : {});
 
   addon.on('init', (options) => {
-    console.debug('[pnl-widget] Addon initialization', options);
-    debounced(options);
+    updateOptions(options);
+    debug('[pnl-widget] Addon initialization', options);
+    debounced(); // Always load on init
     initTracking(options.authUser && options.authUser.id);
   });
 
@@ -36,10 +71,13 @@ try {
   });
 
   addon.on('update', (options) => {
-    // Update according to the received options
-    console.debug('[pnl-widget] Addon update - options: ', options);
-    debounced(options);
-    trackEvent('update');
+    const changedDataOptions = updateOptions(options);
+    debug('[pnl-widget] Addon update:', { options, changedDataOptions });
+    // Only reload if data-loading options changed
+    if (changedDataOptions && Object.keys(changedDataOptions).length > 0) {
+      debounced();
+      trackEvent('update');
+    }
   });
 } catch (error) {
   prod = false;
@@ -47,24 +85,23 @@ try {
   setTimeout(() => loadStaticPortfolioData(), 100);
 }
 
-const debounced = (options) => {
+const debounced = () => {
   clearTimeout(timer);
-  timer = setTimeout(() => load(options), 100);
+  timer = setTimeout(() => load(), 100);
 };
 
-async function load(options) {
-  privateMode = options.privateMode;
+async function load() {
   loading = true;
   const [currencyData, portfolioData, accounts, transactions] = await Promise.all([
     loadCurrenciesCache(),
-    loadPortfolioData(options),
-    loadInstitutionsData(options),
-    loadTransactions(options),
+    loadPortfolioData(addonOptions),
+    loadInstitutionsData(addonOptions),
+    loadTransactions(addonOptions),
   ]);
   currencyCache = currencyData ? currencyData : currencyCache;
   computePortfolios(portfolioData, transactions, accounts, currencyCache);
   loading = false;
-  debug('Done with loading data', { portfolios });
+  debug('[pnl-widget] Done with loading data:', { portfolios });
 }
 
 async function loadStaticPortfolioData() {
@@ -88,12 +125,7 @@ async function loadStaticPortfolioData() {
 }
 
 function computePortfolios(portfolioData, transactions, accounts, currencyData) {
-  console.log('[pnl-widget] computePortfolios - portfolioData keys:', Object.keys(portfolioData).length);
-  console.log('[pnl-widget] computePortfolios - transactions count:', transactions?.length || 0);
-  console.log('[pnl-widget] computePortfolios - accounts count:', accounts?.length || 0);
-
   const transactionsByDate = parseTransactionsResponse(transactions, currencyData, accounts);
-  console.log('[pnl-widget] transactionsByDate keys:', Object.keys(transactionsByDate).length);
 
   const portfolioPerDay = Object.keys(portfolioData).reduce((hash, date) => {
     const data = transactionsByDate[date] || {};
@@ -110,11 +142,6 @@ function computePortfolios(portfolioData, transactions, accounts, currencyData) 
   const _portfolios: Portfolio[] = [];
 
   const sortedDates = Object.keys(portfolioPerDay).sort();
-  console.log('[pnl-widget] sortedDates count:', sortedDates.length);
-  if (sortedDates.length > 0) {
-    console.log('[pnl-widget] First date:', sortedDates[0]);
-    console.log('[pnl-widget] Last date:', sortedDates[sortedDates.length - 1]);
-  }
 
   let deposits = Object.keys(transactionsByDate)
     .filter((date) => date < sortedDates[0])
@@ -134,14 +161,11 @@ function computePortfolios(portfolioData, transactions, accounts, currencyData) 
     });
   });
 
-  console.log('[pnl-widget] Final portfolios count:', _portfolios.length);
   portfolios = _portfolios;
 }
 
 function debug(...data: any[]) {
-  if (!process.env.production) {
-    console.debug(...data);
-  }
+  console.debug(...data);
 }
 
 function loadCurrenciesCache() {
@@ -165,7 +189,7 @@ function loadCurrenciesCache() {
 }
 
 function loadPortfolioData(options) {
-  debug('[pnl-widget] Loading portfolio data.');
+  debug('[pnl-widget] Loading portfolio data:', options);
   const query = {
     assets: false,
     from: options.fromDate,
@@ -187,7 +211,7 @@ function loadPortfolioData(options) {
 }
 
 function loadInstitutionsData(options) {
-  debug('[pnl-widget] Loading institutions data..');
+  debug('[pnl-widget] Loading institutions data:', options);
   const query = {
     assets: false,
     groups: options.groupsFilter,
@@ -213,7 +237,7 @@ function loadInstitutionsData(options) {
 }
 
 function loadTransactions(options) {
-  debug('[pnl-widget] Loading transactions data.');
+  debug('[pnl-widget] Loading transactions data:', options);
   const fromDate = options.fromDate;
   const query = {
     assets: false,
