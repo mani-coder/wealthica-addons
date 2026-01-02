@@ -12,11 +12,12 @@ import { getSymbol } from '@/utils/common';
 import { trackEvent } from '../../analytics';
 import { DATE_FORMAT } from '../../constants';
 import { useAddonContext } from '../../context/AddonContext';
-import { useSecurityHistory } from '../../hooks/useSecurityHistory';
+import { useBenchmark } from '../../context/BenchmarkContext';
 import type { Position } from '../../types';
 import type { HealthRecommendation, PortfolioHealthSummary, Severity } from '../../types/healthCheck';
 import { SEVERITY_COLORS } from '../../types/healthCheck';
-import { BENCHMARKS, type BenchmarkType } from '../../utils/benchmarkData';
+import type { BenchmarkType } from '../../utils/benchmarkData';
+import { BenchmarkSelector } from '../common/BenchmarkSelector';
 import { HealthCards } from './HealthCards';
 
 const { Text } = Typography;
@@ -27,11 +28,10 @@ interface Props {
 
 export function PortfolioHealthCheck({ positions }: Props) {
   const { fromDate, toDate } = useAddonContext();
-  const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
+  const { selectedBenchmark, benchmarkInfo, fetchBenchmarkHistory } = useBenchmark();
 
   const [summary, setSummary] = useState<PortfolioHealthSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedBenchmark, setSelectedBenchmark] = useState<BenchmarkType>('SPY');
   const [benchmarkReturn3Y, setBenchmarkReturn3Y] = useState<number>(30); // Default assumption
 
   // Filter states
@@ -44,9 +44,7 @@ export function PortfolioHealthCheck({ positions }: Props) {
    */
   const fetchBenchmarkReturn = useCallback(async () => {
     try {
-      const benchmarkInfo = BENCHMARKS[selectedBenchmark];
-      const data = await fetchSecurityHistory(
-        benchmarkInfo.securityId,
+      const data = await fetchBenchmarkHistory(
         dayjs(fromDate, DATE_FORMAT).subtract(3, 'years'),
         dayjs(toDate, DATE_FORMAT),
       );
@@ -61,7 +59,7 @@ export function PortfolioHealthCheck({ positions }: Props) {
       console.error('Failed to fetch benchmark data:', error);
       // Keep default assumption if fetch fails
     }
-  }, [selectedBenchmark, fetchSecurityHistory, fromDate, toDate]);
+  }, [fetchBenchmarkHistory, fromDate, toDate]);
 
   /**
    * Fetch benchmark data when benchmark changes
@@ -256,20 +254,9 @@ export function PortfolioHealthCheck({ positions }: Props) {
   return (
     <Card
       extra={
-        <div className="flex flex-col items-end gap-2 mt-2">
+        <div className="mt-2">
           <div className="text-sm font-normal text-gray-400">Benchmark</div>
-          <Select
-            value={selectedBenchmark}
-            onChange={(value) => {
-              setSelectedBenchmark(value);
-              trackEvent('health-check-benchmark-change', { benchmarkId: value });
-            }}
-            style={{ width: 200 }}
-            options={Object.entries(BENCHMARKS).map(([key, info]) => ({
-              label: `${info.name} (${info.symbol})`,
-              value: key,
-            }))}
-          />
+          <BenchmarkSelector analyticsEvent="health-check-benchmark-change" />
         </div>
       }
       styles={{ body: { padding: 16 } }}
@@ -330,7 +317,7 @@ export function PortfolioHealthCheck({ positions }: Props) {
               styles={{ content: { color: summary.totalOpportunityCost > 5000 ? SEVERITY_COLORS.warning : '#52c41a' } }}
             />
             <Text type="secondary" className="text-xs">
-              vs {summary.benchmarkUsed}
+              vs {benchmarkInfo.name}
             </Text>
           </Card>
         </div>

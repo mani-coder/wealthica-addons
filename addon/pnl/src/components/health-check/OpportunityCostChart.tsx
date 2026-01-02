@@ -15,11 +15,10 @@ import { useMemo } from 'react';
 import { BENCHMARK_SERIES_OPTIONS, PORTFOLIO_SERIES_OPTIONS, TYPE_TO_COLOR } from '@/constants';
 import { formatCurrency, formatDate, sumOf } from '@/utils/common';
 import { useAddonContext } from '../../context/AddonContext';
+import { useBenchmark } from '../../context/BenchmarkContext';
 import useCurrency from '../../hooks/useCurrency';
 import type { PriceHistory } from '../../services/healthCheckService';
 import type { Transaction } from '../../types';
-import type { BenchmarkType } from '../../utils/benchmarkData';
-import { BENCHMARKS } from '../../utils/benchmarkData';
 import { calculateOpenTransactions } from '../../utils/transactionUtils';
 import { Charts } from '../Charts';
 
@@ -27,7 +26,6 @@ interface Props {
   transactions: Transaction[];
   stockHistory: PriceHistory;
   benchmarkHistory: PriceHistory;
-  benchmark: BenchmarkType;
   stockCurrency: string; // Currency of the stock (e.g., "CAD", "USD")
 }
 
@@ -39,15 +37,10 @@ interface TimelinePoint {
   benchmarkPnl: number;
 }
 
-export function OpportunityCostChart({
-  transactions,
-  stockHistory,
-  benchmarkHistory,
-  benchmark,
-  stockCurrency,
-}: Props) {
+export function OpportunityCostChart({ transactions, stockHistory, benchmarkHistory, stockCurrency }: Props) {
   const { isPrivateMode } = useAddonContext();
   const { currencies } = useCurrency();
+  const { benchmarkInfo } = useBenchmark();
 
   /**
    * Convert a date value to a Date object
@@ -242,7 +235,7 @@ export function OpportunityCostChart({
 
     const benchmarkSeries: Highcharts.SeriesSplineOptions = {
       ...BENCHMARK_SERIES_OPTIONS,
-      name: `${BENCHMARKS[benchmark].name} (${benchmark}) P/L`,
+      name: `${benchmarkInfo.name} P/L`,
       data: timelineData.map((point) => ({
         x: point.date.valueOf(),
         y: point.benchmarkPnl,
@@ -277,7 +270,7 @@ export function OpportunityCostChart({
       rangeSelector: { enabled: true },
       navigator: { enabled: true },
       title: {
-        text: `Opportunity Cost Analysis: ${stockHistory.symbol} vs ${BENCHMARKS[benchmark].name} (${benchmark})`,
+        text: `Opportunity Cost Analysis: ${stockHistory.symbol} vs ${benchmarkInfo.name}`,
         style: { fontSize: '16px', fontWeight: 'bold' },
       },
       subtitle: {
@@ -318,7 +311,7 @@ export function OpportunityCostChart({
       legend: { enabled: true, align: 'center' },
       series: [stockSeries, benchmarkSeries, buyFlags],
     };
-  }, [timelineData, stockHistory.symbol, benchmark, isPrivateMode, openTransactions]);
+  }, [timelineData, stockHistory.symbol, benchmarkInfo.name, isPrivateMode, openTransactions]);
 
   if (timelineData.length === 0) {
     return null;

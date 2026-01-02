@@ -2,67 +2,87 @@ import dayjs from 'dayjs';
 import { DATE_FORMAT } from '../constants';
 import { isTradingDay } from './common';
 
-export type BenchmarkType = 'SPY' | 'VOO' | 'VOOG' | 'QQQ' | 'QQQM' | 'VTI' | 'DIA' | 'IWM';
-
-export type BenchmarkInfo = {
-  symbol: BenchmarkType;
-  name: string;
-  description: string;
-  securityId: string;
-};
-
-// To find security IDs: curl 'https://app.wealthica.com/api/securities?search=SYMBOL'
-// Sorted by index type: S&P 500, NASDAQ-100, Total Market, Dow Jones, Russell 2000
-export const BENCHMARKS: Record<BenchmarkType, BenchmarkInfo> = {
+// Sorted by region and index type
+export const BENCHMARKS = {
+  // === US EQUITY BENCHMARKS ===
   SPY: {
     symbol: 'SPY',
     name: 'S&P 500',
     description: 'SPDR S&P 500 ETF Trust',
+    currency: 'USD',
     securityId: '55e127778a64ac0619047c0f',
   },
   VOO: {
     symbol: 'VOO',
     name: 'S&P 500',
     description: 'Vanguard S&P 500 ETF',
+    currency: 'USD',
     securityId: '590e0a21bb797d001085fa56',
   },
   VOOG: {
     symbol: 'VOOG',
     name: 'S&P 500 Growth',
     description: 'Vanguard S&P 500 Growth ETF',
+    currency: 'USD',
     securityId: '5ba595fc5f675e1d885ba48e',
   },
   QQQ: {
     symbol: 'QQQ',
     name: 'NASDAQ-100',
     description: 'Invesco QQQ Trust',
+    currency: 'USD',
     securityId: '573a09835cfa2be20553ea64',
-  },
-  QQQM: {
-    symbol: 'QQQM',
-    name: 'NASDAQ-100 Growth',
-    description: 'Invesco NASDAQ 100 ETF',
-    securityId: '5f8a0172903d5972b926af05',
   },
   VTI: {
     symbol: 'VTI',
     name: 'Total US Market',
     description: 'Vanguard Total Stock Market ETF - Tracks entire US market',
+    currency: 'USD',
     securityId: '5760492dd0ffb39201256e2c',
   },
   DIA: {
     symbol: 'DIA',
     name: 'Dow Jones',
     description: 'SPDR Dow Jones Industrial Average ETF',
+    currency: 'USD',
     securityId: '57dfec605046a4390adf535a',
   },
   IWM: {
     symbol: 'IWM',
     name: 'Russell 2000',
     description: 'iShares Russell 2000 ETF - Tracks small-cap stocks',
+    currency: 'USD',
     securityId: '579a74552a34030e00ab7ef1',
   },
-};
+
+  // === CANADIAN EQUITY BENCHMARKS ===
+  XIC: {
+    symbol: 'XIC',
+    name: 'S&P/TSX Composite',
+    description: 'iShares Core S&P/TSX Capped Composite Index ETF - Tracks broad Canadian market (~239 holdings)',
+    currency: 'CAD',
+    securityId: '56daa905c3a79c03002c4dff',
+  },
+  VCN: {
+    symbol: 'VCN',
+    name: 'FTSE Canada All Cap',
+    description:
+      'Vanguard FTSE Canada All Cap Index ETF - Tracks large, mid, and small-cap Canadian stocks (~173-205 holdings)',
+    currency: 'CAD',
+    securityId: '574b7828109d820e001ae526',
+  },
+  XIU: {
+    symbol: 'XIU',
+    name: 'S&P/TSX 60',
+    description: 'iShares S&P/TSX 60 Index ETF - Tracks 60 largest Canadian stocks',
+    currency: 'CAD',
+    securityId: '55e127778a64ac0619047c0d',
+  },
+} as const;
+
+export type BenchmarkType = keyof typeof BENCHMARKS;
+
+export type BenchmarkInfo = (typeof BENCHMARKS)[BenchmarkType];
 
 /**
  * Normalize data to percentage returns from start value

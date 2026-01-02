@@ -134,7 +134,7 @@ export default function HoldingsCharts(props: Props) {
     return (
       <div className="p-2 space-y-2">
         <StockTimeline symbol={timelineSymbol} position={position} accounts={props.accounts} />
-        <StockHealthCheck position={position} />
+        <StockHealthCheck position={position} showBenchmarkSelector />
       </div>
     );
   };

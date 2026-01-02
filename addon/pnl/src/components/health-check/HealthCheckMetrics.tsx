@@ -7,6 +7,7 @@
 
 import { Collapse, List, Typography } from 'antd';
 import { useAddonContext } from '../../context/AddonContext';
+import { useBenchmark } from '../../context/BenchmarkContext';
 import type { Position } from '../../types';
 import type { HoldingHealthReport } from '../../types/healthCheck';
 import { formatMoneyWithCurrency } from '../../utils/common';
@@ -32,12 +33,12 @@ const METRIC_DESCRIPTIONS = {
 
 interface Props {
   report: HoldingHealthReport;
-  benchmark: string;
   position: Position;
 }
 
-export function HealthCheckMetrics({ report, benchmark, position }: Props) {
+export function HealthCheckMetrics({ report, position }: Props) {
   const { isPrivateMode } = useAddonContext();
+  const { benchmarkInfo } = useBenchmark();
   return (
     <>
       {/* Performance Metrics */}
@@ -59,10 +60,10 @@ export function HealthCheckMetrics({ report, benchmark, position }: Props) {
             tooltip={METRIC_DESCRIPTIONS.xirr}
           />
           <MetricsStatistics
-            title={`Alpha vs ${benchmark}`}
+            title={`Alpha vs ${benchmarkInfo.name}`}
             value={`${report.metrics.alpha3Y.toFixed(1)}%`}
             styles={{ content: { color: report.metrics.alpha3Y >= 0 ? '#10b981' : '#ef4444' } }}
-            tooltip={METRIC_DESCRIPTIONS.alpha(benchmark)}
+            tooltip={METRIC_DESCRIPTIONS.alpha(benchmarkInfo.name)}
           />
           <MetricsStatistics
             title="Volatility"
@@ -118,7 +119,10 @@ export function HealthCheckMetrics({ report, benchmark, position }: Props) {
               dataSource={[
                 { title: '3Y Return', description: METRIC_DESCRIPTIONS.return3Y },
                 { title: 'XIRR', description: METRIC_DESCRIPTIONS.xirr },
-                { title: `Alpha vs ${benchmark}`, description: METRIC_DESCRIPTIONS.alpha(benchmark) },
+                {
+                  title: `Alpha vs ${benchmarkInfo.name}`,
+                  description: METRIC_DESCRIPTIONS.alpha(benchmarkInfo.name),
+                },
                 { title: 'Volatility', description: METRIC_DESCRIPTIONS.volatility },
                 { title: 'Sharpe Ratio', description: METRIC_DESCRIPTIONS.sharpeRatio },
                 { title: 'Max Drawdown', description: METRIC_DESCRIPTIONS.maxDrawdown },
@@ -139,7 +143,7 @@ export function HealthCheckMetrics({ report, benchmark, position }: Props) {
       {/* Footer */}
       <div className="p-2 border-t border-gray-200">
         <Text type="secondary" className="text-xs">
-          Analysis based on 3-year historical data vs {benchmark}
+          Analysis based on 3-year historical data vs {benchmarkInfo.name}
         </Text>
       </div>
     </>

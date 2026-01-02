@@ -50,7 +50,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
       >
         <div>
           {/* StockHealthCheck has all the details */}
-          <StockHealthCheck position={report.position} />
+          <StockHealthCheck position={report.position} showBenchmarkSelector={false} />
 
           {/* Click to collapse */}
           <div className="text-center py-4 border-t border-gray-100">

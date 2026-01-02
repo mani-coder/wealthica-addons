@@ -206,7 +206,7 @@ export function TopGainersLosers(props: { positions: Position[]; accounts: Accou
           showValueChart={sortByValue}
           accounts={props.accounts}
         />
-        <StockHealthCheck position={position} />
+        <StockHealthCheck position={position} showBenchmarkSelector />
       </div>
     );
   };

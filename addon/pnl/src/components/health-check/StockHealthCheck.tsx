@@ -8,31 +8,38 @@
 import { Alert, Card, Spin, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { trackEvent } from '@/analytics';
 import { getSymbol } from '@/utils/common';
 import { DATE_FORMAT } from '../../constants';
 import { useAddonContext } from '../../context/AddonContext';
+import { useBenchmark } from '../../context/BenchmarkContext';
 import useCurrency from '../../hooks/useCurrency';
-import { useSecurityHistory } from '../../hooks/useSecurityHistory';
-import { HealthCheckService, type PriceHistory } from '../../services/healthCheckService';
+import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecurityHistory';
+import { HealthCheckService, type PriceHistory, type PricePoint } from '../../services/healthCheckService';
 import type { Position } from '../../types';
 import type { HoldingHealthReport } from '../../types/healthCheck';
 import { SEVERITY_COLORS } from '../../types/healthCheck';
-import { BENCHMARKS, type BenchmarkType } from '../../utils/benchmarkData';
+import { BenchmarkSelector } from '../common/BenchmarkSelector';
 import { HealthCheckMetrics } from './HealthCheckMetrics';
 import { OpportunityCostChart } from './OpportunityCostChart';
-import { trackEvent } from '@/analytics';
 
 const { Text } = Typography;
 
 interface Props {
   position: Position;
-  benchmark?: BenchmarkType; // Optional, defaults to SPY (S&P 500)
+  /** Show benchmark selector dropdown for quick benchmark switching (default: false) */
+  showBenchmarkSelector?: boolean;
 }
 
-function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
+function toPricePoints(prices: SecurityPriceData[]): PricePoint[] {
+  return prices.map((price) => ({ date: price.timestamp.toDate(), close: price.closePrice }));
+}
+
+export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false }) => {
   const { toDate } = useAddonContext();
   const { currencies } = useCurrency();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
+  const { selectedBenchmark, fetchBenchmarkHistory } = useBenchmark();
   const symbol = getSymbol(position.security);
 
   const [report, setReport] = useState<HoldingHealthReport | null>(null);
@@ -46,8 +53,8 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
   }, [position.transactions]);
 
   useEffect(() => {
-    trackEvent('stock-health-check', { benchmark });
-  }, [symbol, benchmark]);
+    trackEvent('stock-health-check', { benchmark: selectedBenchmark });
+  }, [symbol, selectedBenchmark]);
 
   /**
    * Fetch historical price data for a security
@@ -63,10 +70,7 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
           toDate,
         );
         const data = await fetchSecurityHistory(securityId, positionStartDate, dayjs(toDate, DATE_FORMAT));
-        return {
-          symbol,
-          prices: data.map((point) => ({ date: point.timestamp.toDate(), close: point.closePrice })),
-        };
+        return { symbol, prices: toPricePoints(data) };
       } catch (error) {
         console.error(`Failed to fetch price history for ${symbol}:`, error);
         return null;
@@ -84,23 +88,21 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
       setError(null);
 
       // Fetch benchmark data
-      const benchmarkInfo = BENCHMARKS[benchmark];
-      const fetchedBenchmarkHistory = await fetchPriceHistory(benchmarkInfo.securityId, benchmarkInfo.symbol);
-
-      if (!fetchedBenchmarkHistory || fetchedBenchmarkHistory.prices.length === 0) {
-        throw new Error('Failed to fetch benchmark data');
-      }
-
-      // Fetch stock price history
-      const fetchedStockHistory = await fetchPriceHistory(position.security.id, symbol);
+      const [benchmarkPrices, fetchedStockHistory] = await Promise.all([
+        fetchBenchmarkHistory(positionStartDate, dayjs(toDate, DATE_FORMAT)),
+        fetchPriceHistory(position.security.id, symbol),
+      ]);
 
       if (!fetchedStockHistory || fetchedStockHistory.prices.length === 0) {
         throw new Error('Failed to fetch stock price history');
       }
+      if (!benchmarkPrices || benchmarkPrices.length === 0) {
+        throw new Error('Failed to fetch benchmark data');
+      }
+      const fetchedBenchmarkHistory = { symbol: selectedBenchmark, prices: toPricePoints(benchmarkPrices) };
 
-      // Save to state for the chart
-      setStockHistory(fetchedStockHistory);
       setBenchmarkHistory(fetchedBenchmarkHistory);
+      setStockHistory(fetchedStockHistory);
 
       // Calculate total portfolio value (just this position for individual analysis)
       const totalPortfolioValue = position.market_value;
@@ -110,7 +112,7 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
       priceHistoriesMap.set(symbol, fetchedStockHistory);
 
       // Use HealthCheckService for detailed analysis with currency conversion
-      const service = new HealthCheckService({ benchmarkSymbol: benchmark }, currencies);
+      const service = new HealthCheckService({ benchmarkSymbol: selectedBenchmark }, currencies);
       const holdingReport = await service.analyzeHolding(
         position,
         position.transactions || [],
@@ -126,7 +128,16 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [position, symbol, benchmark, fetchPriceHistory, currencies]);
+  }, [
+    position,
+    symbol,
+    selectedBenchmark,
+    positionStartDate,
+    toDate,
+    fetchPriceHistory,
+    fetchBenchmarkHistory,
+    currencies,
+  ]);
 
   useEffect(() => {
     analyzeStock();
@@ -166,7 +177,7 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
     return (
       <Card title={`Health Check Analysis: ${symbol}`}>
         <Alert
-          message="Analysis Unavailable"
+          title="Analysis Unavailable"
           description={error || 'Unable to analyze this stock at the moment.'}
           type="warning"
           showIcon
@@ -181,6 +192,7 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
       title={
         <div className="flex items-center justify-between">
           <span>Health Check Analysis: {symbol}</span>
+          {showBenchmarkSelector && <BenchmarkSelector analyticsEvent="stock-health-check-benchmark-change" />}
           <div className="flex items-center gap-3">
             <Text strong style={{ fontSize: 20, color: getScoreColor(report.score) }}>
               {report.score}/100
@@ -197,7 +209,6 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
           transactions={position.transactions}
           stockHistory={stockHistory}
           benchmarkHistory={benchmarkHistory}
-          benchmark={benchmark}
           stockCurrency={position.security.currency}
         />
       )}
@@ -220,10 +231,7 @@ function StockHealthCheckComponent({ position, benchmark = 'SPY' }: Props) {
       )}
 
       {/* Health Check Metrics */}
-      <HealthCheckMetrics report={report} benchmark={benchmark} position={position} />
+      <HealthCheckMetrics report={report} position={position} />
     </Card>
   );
-}
-
-// Memoize to prevent unnecessary re-renders when parent re-renders
-export const StockHealthCheck = memo(StockHealthCheckComponent);
+});

@@ -5,7 +5,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '../../analytics';
 import { BENCHMARK_SERIES_OPTIONS, DATE_FORMAT, PORTFOLIO_SERIES_OPTIONS } from '../../constants';
 import { useAddon, useAddonContext } from '../../context/AddonContext';
-import { useSecurityHistory } from '../../hooks/useSecurityHistory';
+import { useBenchmark } from '../../context/BenchmarkContext';
+import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecurityHistory';
 import type { Portfolio } from '../../types';
 import {
   BENCHMARKS,
@@ -34,11 +35,10 @@ type Props = {
 function BenchmarkComparison(props: Props) {
   const addon = useAddon();
   const { fromDate, toDate, isPrivateMode } = useAddonContext();
-  const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
+  const { setSelectedBenchmark, benchmarkInfo, fetchBenchmarkHistory } = useBenchmark();
 
-  const [selectedBenchmark, setSelectedBenchmark] = useState<BenchmarkType | null>('SPY');
   const [customSecurity, setCustomSecurity] = useState<SecuritySearchResult | null>(null);
-  const [benchmarkData, setBenchmarkData] = useState<{ date: string; value: number }[]>([]);
+  const [benchmarkData, setBenchmarkData] = useState<SecurityPriceData[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<SecuritySearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -80,23 +80,19 @@ function BenchmarkComparison(props: Props) {
   );
 
   /**
-   * Fetch benchmark historical data from Wealthica Securities API
+   * Fetch custom security historical data from Wealthica Securities API
    */
-  const fetchBenchmarkData = useCallback(
-    async (securityId: string, fromDate: Dayjs, toDate: Dayjs): Promise<{ date: string; value: number }[]> => {
+  const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
+
+  const fetchCustomSecurityData = useCallback(
+    async (securityId: string, fromDate: Dayjs, toDate: Dayjs) => {
       try {
-        console.debug('Fetching benchmark data for security', securityId);
+        console.debug('Fetching custom security data for', securityId);
 
         // Use the shared fetchSecurityHistory callback
-        const parsedData = await fetchSecurityHistory(securityId, fromDate, toDate);
-
-        // Convert to BenchmarkData format
-        return parsedData.map((point) => ({
-          date: point.timestamp.format(DATE_FORMAT),
-          value: point.closePrice,
-        }));
+        return await fetchSecurityHistory(securityId, fromDate, toDate);
       } catch (error) {
-        console.error(`Failed to fetch benchmark data for ${securityId}:`, error);
+        console.error(`Failed to fetch custom security data for ${securityId}:`, error);
         return [];
       }
     },
@@ -110,39 +106,53 @@ function BenchmarkComparison(props: Props) {
 
   // Normalize benchmark data to percentage returns
   const benchmarkReturns = useMemo(() => {
-    return normalizeToPercentageReturns(benchmarkData);
+    // Convert SecurityPriceData to BenchmarkData format for normalization
+    const benchmarkDataFormatted = benchmarkData.map((point) => ({
+      date: point.timestamp.format(DATE_FORMAT),
+      value: point.closePrice,
+    }));
+    return normalizeToPercentageReturns(benchmarkDataFormatted);
   }, [benchmarkData]);
 
   // Calculate yearly returns with monthly breakdowns for nested table view
   const periodReturns = useMemo(() => {
     if (props.portfolios.length === 0 || benchmarkData.length === 0) return [];
 
-    return calculateYearlyReturnsWithMonthlyBreakdown(props.portfolios, benchmarkData);
+    // Convert SecurityPriceData to BenchmarkData format for calculation
+    const benchmarkDataFormatted = benchmarkData.map((point) => ({
+      date: point.timestamp.format(DATE_FORMAT),
+      value: point.closePrice,
+    }));
+    return calculateYearlyReturnsWithMonthlyBreakdown(props.portfolios, benchmarkDataFormatted);
   }, [props.portfolios, benchmarkData]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {
     const loadBenchmarkData = async () => {
-      const securityId = customSecurity?._id || (selectedBenchmark ? BENCHMARKS[selectedBenchmark]?.securityId : null);
-
-      if (!securityId) {
-        setBenchmarkData([]);
-        return;
-      }
-
       setLoading(true);
       try {
-        const data = await fetchBenchmarkData(securityId, dayjs(fromDate, DATE_FORMAT), dayjs(toDate, DATE_FORMAT));
+        const _fromDate = dayjs(fromDate, DATE_FORMAT);
+        const _toDate = dayjs(toDate, DATE_FORMAT);
+
+        let data: SecurityPriceData[];
+        if (customSecurity) {
+          // Fetch custom security data (no currency conversion)
+          data = await fetchCustomSecurityData(customSecurity._id, _fromDate, _toDate);
+        } else {
+          // Fetch benchmark data with automatic currency conversion
+          data = await fetchBenchmarkHistory(_fromDate, _toDate);
+        }
         setBenchmarkData(data);
       } catch (error) {
         console.error('Failed to load benchmark data:', error);
+        setBenchmarkData([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadBenchmarkData();
-  }, [selectedBenchmark, customSecurity, fromDate, toDate, fetchBenchmarkData]);
+  }, [customSecurity, fromDate, toDate, fetchBenchmarkHistory, fetchCustomSecurityData]);
 
   const currentBenchmarkInfo = useMemo(() => {
     if (customSecurity) {
@@ -152,11 +162,12 @@ function BenchmarkComparison(props: Props) {
         description: `${customSecurity.name} (${customSecurity.currency.toUpperCase()})`,
       };
     }
-    if (selectedBenchmark) {
-      return BENCHMARKS[selectedBenchmark];
-    }
-    return null;
-  }, [selectedBenchmark, customSecurity]);
+    return {
+      symbol: benchmarkInfo.symbol,
+      name: benchmarkInfo.name,
+      description: benchmarkInfo.description,
+    };
+  }, [benchmarkInfo, customSecurity]);
 
   function getSeries(): any {
     return [
@@ -298,7 +309,7 @@ function BenchmarkComparison(props: Props) {
         value: `benchmark:${benchmark.symbol}`,
         label: (
           <div>
-            <div className="font-medium">{`${benchmark.name} (${benchmark.symbol})`}</div>
+            <div className="font-medium">{`${benchmark.name} (${benchmark.symbol}) - ${benchmark.currency}`}</div>
             <div className="text-xs text-gray-500">{benchmark.description}</div>
           </div>
         ),
@@ -313,11 +324,8 @@ function BenchmarkComparison(props: Props) {
     if (customSecurity) {
       return `${customSecurity.symbol} - ${customSecurity.name}`;
     }
-    if (selectedBenchmark) {
-      return `${BENCHMARKS[selectedBenchmark].name} (${selectedBenchmark})`;
-    }
-    return '';
-  }, [selectedBenchmark, customSecurity]);
+    return `${benchmarkInfo.name} (${benchmarkInfo.symbol}) - ${benchmarkInfo.currency}`;
+  }, [benchmarkInfo, customSecurity]);
 
   const formattedFromDate = dayjs(fromDate, DATE_FORMAT).format('MMM D, YYYY');
   const formattedToDate = dayjs(toDate, DATE_FORMAT).format('MMM D, YYYY');
@@ -340,7 +348,7 @@ function BenchmarkComparison(props: Props) {
             className="w-[400px] ml-2"
             defaultValue={displayValue}
             options={autoCompleteOptions}
-            onSearch={searchSecurities}
+            showSearch={{ onSearch: searchSecurities }}
             onSelect={(value) => {
               if (value.startsWith('benchmark:')) {
                 const symbol = value.replace('benchmark:', '') as BenchmarkType;
@@ -352,7 +360,6 @@ function BenchmarkComparison(props: Props) {
                 const security = searchResults.find((s) => s._id === securityId);
                 if (security) {
                   setCustomSecurity(security);
-                  setSelectedBenchmark(null);
                   trackEvent('custom-security-selection', { isCustom: true });
                 }
               }
