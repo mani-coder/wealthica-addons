@@ -42,7 +42,8 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
         className="w-full text-center rounded-lg"
         type="info"
         banner
-        closable={{ onClose }}
+        closable={true}
+        onClose={onClose}
         title={
           <>
             All amounts are displayed in <b>{baseCurrencyDisplay}</b>, as per your currency preference.

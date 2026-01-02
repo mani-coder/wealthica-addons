@@ -1,8 +1,9 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
+import { ConfigProvider, Empty, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
+import { BarLoader } from './components/common/BarLoader';
 import {
   computeCashFlowByDate,
   parseAccountTransactionsResponse,
@@ -485,10 +486,8 @@ export default function App() {
                         !! This is sample data !!
                       </p>
                     )}
-                    {isLoadingOnUpdate ? (
-                      <div className="flex justify-center items-center w-full">
-                        <Spin size="large" />
-                      </div>
+                    {true ? (
+                      <BarLoader className="my-3" />
                     ) : (
                       <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
                     )}
@@ -613,9 +612,7 @@ export default function App() {
                     />
                   </>
                 ) : (
-                  <div className="flex justify-center w-full">
-                    <Spin size="large" spinning />
-                  </div>
+                  <BarLoader className="mb-8 mt-16" />
                 )}
 
                 <br />
