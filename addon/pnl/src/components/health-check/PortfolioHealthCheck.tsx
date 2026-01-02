@@ -90,10 +90,10 @@ export function PortfolioHealthCheck({ positions }: Props) {
     const totalValue = positions.reduce((sum, p) => sum + p.market_value, 0);
 
     const reports = positions
-      .filter((p) => p.market_value / totalValue > 0.005) // Filter small positions
       .map((position) => {
         // Simplified scoring based on gain_percent
         const gainPercent = position.gain_percent * 100;
+        const portfolioWeight = position.market_value / totalValue;
         let score = 50; // Default neutral score
 
         if (gainPercent > 20) score = 85;
@@ -103,11 +103,23 @@ export function PortfolioHealthCheck({ positions }: Props) {
         else if (gainPercent > -20) score = 30;
         else score = 15;
 
+        // Reduce score for positions with minimal impact (less than 1% of portfolio)
+        if (portfolioWeight < 0.01) {
+          score = Math.max(15, score - 10); // Reduce score by 10 points, minimum 15
+        }
+
+        // Reduce score for large positions (more than 15% of portfolio) - concentration risk
+        if (portfolioWeight > 0.15) {
+          score = Math.max(15, score - 10); // Reduce score by 10 points, minimum 15
+        }
+
         const severity = score <= 30 ? 'critical' : score <= 50 ? 'warning' : score <= 70 ? 'info' : 'healthy';
         const recommendation = score <= 25 ? 'SELL' : score <= 50 ? 'REVIEW' : score >= 85 ? 'ACCUMULATE' : 'HOLD';
 
         const flags: any[] = [];
         const flagDescriptions: string[] = [];
+        const strengths: any[] = [];
+        const strengthDescriptions: string[] = [];
 
         if (gainPercent < 0) {
           flags.push('NEGATIVE_RETURN_3Y');
@@ -119,6 +131,35 @@ export function PortfolioHealthCheck({ positions }: Props) {
           flagDescriptions.push('Significant underperformance');
         }
 
+        // Flag positions that are less than 1% of portfolio (minimal impact)
+        if (portfolioWeight < 0.01) {
+          flags.push('SMALL_POSITION');
+          flagDescriptions.push(
+            `Only ${(portfolioWeight * 100).toFixed(2)}% of portfolio - consider consolidating to reduce complexity`,
+          );
+        }
+
+        // Flag positions that are more than 15% of portfolio (concentration risk)
+        if (portfolioWeight > 0.15) {
+          flags.push('LARGE_POSITION');
+          flagDescriptions.push(
+            `Large position (${(portfolioWeight * 100).toFixed(1)}% of portfolio) - concentration risk`,
+          );
+        }
+
+        // Identify strengths
+        if (gainPercent > 0) {
+          strengths.push('POSITIVE_RETURN_3Y');
+          strengthDescriptions.push(`Positive return of ${gainPercent.toFixed(1)}%`);
+        }
+
+        if (gainPercent > benchmarkReturn + 5) {
+          strengths.push('OUTPERFORMED_BENCHMARK');
+          strengthDescriptions.push(
+            `Outperformed ${benchmarkSymbol} by ${(gainPercent - benchmarkReturn).toFixed(1)}%`,
+          );
+        }
+
         return {
           symbol: getSymbol(position.security),
           name: position.security.name,
@@ -128,6 +169,8 @@ export function PortfolioHealthCheck({ positions }: Props) {
           severity: severity as any,
           flags,
           flagDescriptions,
+          strengths,
+          strengthDescriptions,
           metrics: {
             return1Y: gainPercent,
             return3Y: gainPercent,

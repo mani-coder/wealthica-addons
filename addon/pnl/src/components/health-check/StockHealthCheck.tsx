@@ -36,7 +36,7 @@ function toPricePoints(prices: SecurityPriceData[]): PricePoint[] {
 }
 
 export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false }) => {
-  const { toDate } = useAddonContext();
+  const { toDate, portfolioValue } = useAddonContext();
   const { currencies } = useCurrency();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
   const { selectedBenchmark, fetchBenchmarkHistory } = useBenchmark();
@@ -104,21 +104,18 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       setBenchmarkHistory(fetchedBenchmarkHistory);
       setStockHistory(fetchedStockHistory);
 
-      // Calculate total portfolio value (just this position for individual analysis)
-      const totalPortfolioValue = position.market_value;
-
       // Create a temporary portfolio with just this position
       const priceHistoriesMap = new Map<string, PriceHistory>();
       priceHistoriesMap.set(symbol, fetchedStockHistory);
 
       // Use HealthCheckService for detailed analysis with currency conversion
       const service = new HealthCheckService({ benchmarkSymbol: selectedBenchmark }, currencies);
-      const holdingReport = await service.analyzeHolding(
+      const holdingReport = service.analyzeHolding(
         position,
         position.transactions || [],
         fetchedStockHistory,
         fetchedBenchmarkHistory,
-        totalPortfolioValue,
+        portfolioValue, // Use actual total portfolio value from context
       );
 
       setReport(holdingReport);
@@ -137,6 +134,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     fetchPriceHistory,
     fetchBenchmarkHistory,
     currencies,
+    portfolioValue,
   ]);
 
   useEffect(() => {
@@ -213,20 +211,46 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
         />
       )}
 
-      {/* Issues Found */}
-      {report.flagDescriptions.length > 0 && (
-        <div className="p-4 bg-amber-50 border border-amber-200">
-          <h3 className="text-sm font-semibold text-amber-900 mb-3">Issues Identified</h3>
-          <div className="space-y-2">
-            {report.flagDescriptions.map((desc, index) => (
-              <div key={`issue-${desc}`} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-amber-200 text-amber-900 rounded-full text-xs font-semibold">
-                  {index + 1}
-                </span>
-                <span className="flex-1">{desc}</span>
+      {/* Issues and Strengths */}
+      {(report.flagDescriptions.length > 0 || report.strengthDescriptions.length > 0) && (
+        <div
+          className={`grid grid-cols-1 ${
+            report.flagDescriptions.length > 0 && report.strengthDescriptions.length > 0 ? 'md:grid-cols-2' : ''
+          }`}
+        >
+          {/* Issues Found */}
+          {report.flagDescriptions.length > 0 && (
+            <div className="p-4 bg-amber-50 border border-amber-200">
+              <h3 className="text-sm font-semibold text-amber-900 mb-3">Issues Identified</h3>
+              <div className="space-y-2">
+                {report.flagDescriptions.map((desc, index) => (
+                  <div key={`issue-${desc}`} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-amber-200 text-amber-900 rounded-full text-xs font-semibold">
+                      {index + 1}
+                    </span>
+                    <span className="flex-1">{desc}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Strengths Found */}
+          {report.strengthDescriptions.length > 0 && (
+            <div className="p-4 bg-emerald-50 border border-emerald-200">
+              <h3 className="text-sm font-semibold text-emerald-900 mb-3">Strengths Identified</h3>
+              <div className="space-y-2">
+                {report.strengthDescriptions.map((desc, index) => (
+                  <div key={`strength-${desc}`} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-emerald-200 text-emerald-900 rounded-full text-xs font-semibold">
+                      {index + 1}
+                    </span>
+                    <span className="flex-1">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -127,27 +127,43 @@ export function calculateHealthScore(metrics: HealthMetrics, weights: HealthChec
   const riskScore = calculateRiskScore(metrics.sharpeRatio);
   const dividendScore = calculateDividendScore(metrics.dividendTrend, metrics.dividendGrowth3Y);
 
+  let score: number;
+
   // If non-dividend stock, redistribute dividend weight proportionally
   if (dividendScore === null) {
     const totalOtherWeights = weights.absoluteReturn + weights.relativeReturn + weights.underwater + weights.volatility;
 
     const multiplier = 100 / totalOtherWeights;
 
-    return Math.round(
+    score = Math.round(
       absoluteScore * (weights.absoluteReturn / 25) * multiplier +
         relativeScore * (weights.relativeReturn / 25) * multiplier +
         underwaterScore * (weights.underwater / 20) * multiplier +
         riskScore * (weights.volatility / 15) * multiplier,
     );
+  } else {
+    score = Math.round(
+      absoluteScore * (weights.absoluteReturn / 25) +
+        relativeScore * (weights.relativeReturn / 25) +
+        underwaterScore * (weights.underwater / 20) +
+        riskScore * (weights.volatility / 15) +
+        dividendScore * (weights.dividends / 15),
+    );
   }
 
-  return Math.round(
-    absoluteScore * (weights.absoluteReturn / 25) +
-      relativeScore * (weights.relativeReturn / 25) +
-      underwaterScore * (weights.underwater / 20) +
-      riskScore * (weights.volatility / 15) +
-      dividendScore * (weights.dividends / 15),
-  );
+  // Apply penalty for small positions (less than 1% of portfolio)
+  // Reduce score by 10 points to encourage consolidation
+  if (metrics.portfolioWeight < 0.01) {
+    score = Math.max(15, score - 10); // Minimum score of 15
+  }
+
+  // Apply penalty for large positions (more than 15% of portfolio)
+  // Reduce score by 10 points to discourage concentration risk
+  if (metrics.portfolioWeight > 0.15) {
+    score = Math.max(15, score - 10); // Minimum score of 15
+  }
+
+  return score;
 }
 
 /**

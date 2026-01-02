@@ -1,14 +1,7 @@
-import { Divider, Image, Modal, Tag, Timeline, Typography } from 'antd';
+import { Divider, Image, Tag, Timeline, Typography } from 'antd';
 import dayjs from 'dayjs';
-import { useState } from 'react';
-import { VariableSizeList as List } from 'react-window';
-
+import { formatDate } from '@/utils/common';
 import { trackEvent } from '../analytics';
-import AutoReSizer from '../hooks/useResizeHook';
-import {
-  getNewChangeLogsCount as getNewChangeLogsCountHelper,
-  setChangeLogViewDate as setChangeLogViewDateHelper,
-} from '../utils/changeLogHelpers';
 
 const LOGS: {
   title: string;
@@ -18,6 +11,42 @@ const LOGS: {
   date: string;
   link?: React.ReactElement;
 }[] = [
+  {
+    date: '2026-01-01',
+    tab: 'Holdings',
+    title: 'Enhanced Holding Details & Health Check Cards',
+    description:
+      'Holding details now include comprehensive health check analysis with opportunity cost charts, issues identification, and strength indicators. The health check card provides quick insights into individual stock performance compared to benchmarks.',
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Holding%20Details%20_1_giueSJbLm.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Holding%20Details%20_2_eDMAvx7sQ.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Holding%20Details%20_3_IFsLm9xZD.png',
+    ],
+  },
+  {
+    date: '2026-01-01',
+    tab: 'Health Check',
+    title: 'Portfolio Health Check - Identify Underperformers',
+    description:
+      'The new Health Check tab analyzes all your holdings and provides actionable recommendations. It identifies issues like underperformance vs. benchmarks, high opportunity costs, extended periods below cost basis, and concentration risks. Each holding is scored 0-100 with specific strengths and weaknesses highlighted. Filter by severity, recommendation, or search for specific holdings.',
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/HealthCheck%20_1_TbKQQ0ix_G.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/HealthCheck%20Card%20_1_gOTVe5P1hT.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/HealthCheck%20Card%20_2_PFojYyDSSG.png',
+    ],
+  },
+  {
+    date: '2026-01-01',
+    tab: 'Performance',
+    title: 'Benchmark Comparison Analysis',
+    description:
+      'Compare your portfolio performance against major market benchmarks including S&P 500, NASDAQ, TSX, and more. View detailed performance metrics, correlation analysis, and interactive charts showing how your portfolio stacks up. Switch between Canadian and US benchmarks with detailed information about each index.',
+    images: [
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Performance%20Tab%20_1_Rp50YCcZhq.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Performance%20Tab%20Chart_QM49NGr6XV.png',
+      'https://ik.imagekit.io/manicoder/wealthica-portfolio-addon/Performance%20Tab%20Yearly%20Breakdown_4y2GP4EKeR.png',
+    ],
+  },
   {
     date: '2024-01-22',
     tab: 'P&L Charts',
@@ -223,89 +252,52 @@ const LOGS: {
   },
 ];
 
-function LogItem({ index, style }: { index: number; style: React.CSSProperties }) {
-  const [preview, setPreview] = useState<string>();
-  const log = LOGS[index];
+function LogItem({ log }: { log: (typeof LOGS)[number] }) {
   return (
-    <div style={style}>
-      <Timeline.Item key={index}>
-        <Typography.Title level={4}>{log.title}</Typography.Title>
-        <div className="pb-6">
-          <Tag color="magenta">{dayjs(log.date).format('MMM DD, YYYY')}</Tag>
-          {log.tab && <Tag color="green">{log.tab} Tab</Tag>}
-        </div>
-        {log.description && <Typography.Text>{log.description}</Typography.Text>}
-        {log.link && <div className="py-2 mb-2">{log.link}</div>}
-        <div className="flex my-6 flex-wrap">
-          {log.images?.map((src) => (
-            <div
-              className="mr-4"
-              key={src}
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                setPreview(src);
-                trackEvent('preview-change-log-image', { title: log.title });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setPreview(src);
-                  trackEvent('preview-change-log-image', { title: log.title });
-                }
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              <Image
-                src={`${src}?tr=w-200,fo-auto`}
-                width={200}
-                preview={false}
-                fallback="data:image/png;base64,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"
-              />
-            </div>
-          ))}
-        </div>
-        <Divider />
-        <Modal
-          width="fit-content"
-          style={{ maxWidth: '100%', top: 10 }}
-          closable
-          maskClosable
-          footer={null}
-          visible={!!preview}
-          onCancel={() => setPreview(undefined)}
-        >
-          <div className="flex w-full justify-center mb-2">{preview && <Image src={preview} preview={false} />}</div>
-        </Modal>
-      </Timeline.Item>
-    </div>
+    <>
+      <div className="mb-2 flex space-x-2 items-center">
+        <div className="text-lg font-bold">{log.title}</div>
+        {log.tab && (
+          <Tag variant="outlined" color="green">
+            {log.tab} Tab
+          </Tag>
+        )}
+      </div>
+
+      {log.description && <Typography.Text>{log.description}</Typography.Text>}
+      {log.link && <div className="py-2 mb-2">{log.link}</div>}
+      <div className="flex my-6 flex-wrap">
+        {log.images?.map((src) => (
+          <Image
+            key={src}
+            onClick={() => {
+              trackEvent('preview-change-log-image', { title: log.title });
+            }}
+            src={src}
+            width={200}
+            preview={true}
+            fallback="data:image/png;base64,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"
+          />
+        ))}
+      </div>
+      <Divider />
+    </>
   );
 }
 
 export default function ChangeLog() {
+  const items = LOGS.map((log, index) => ({
+    key: index,
+    title: (
+      <Tag variant="filled" color="purple">
+        {formatDate(dayjs(log.date))}
+      </Tag>
+    ),
+    content: <LogItem log={log} />,
+  }));
   return (
-    <AutoReSizer>
-      {({ width }) => (
-        <div className="py-6">
-          <List
-            height={800}
-            itemCount={LOGS.length}
-            itemSize={() => (width > 1000 ? 425 : width > 600 ? 525 : 600)}
-            width="100%"
-          >
-            {({ index, style }) => <LogItem index={index} style={style} />}
-          </List>
-        </div>
-      )}
-    </AutoReSizer>
+    <div className="my-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+      <Timeline titleSpan="10%" items={items} mode="left" />
+    </div>
   );
-}
-
-// Re-export helper functions for backward compatibility
-export function getNewChangeLogsCount(): number {
-  return getNewChangeLogsCountHelper(LOGS);
-}
-
-export function setChangeLogViewDate() {
-  setChangeLogViewDateHelper(LOGS);
 }

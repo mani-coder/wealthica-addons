@@ -104,7 +104,7 @@ export function HealthCheckMetrics({ report, position }: Props) {
             title="Days Underwater"
             value={report.metrics.daysUnderwater}
             suffix=" days"
-            styles={{ content: { color: report.metrics.daysUnderwater > 365 ? '#ef4444' : '#10b981' } }}
+            styles={{ content: { color: report.metrics.daysUnderwater > 365 ? '#ef4444' : undefined } }}
             tooltip={METRIC_DESCRIPTIONS.daysUnderwater}
           />
         </div>

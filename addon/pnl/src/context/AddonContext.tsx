@@ -7,6 +7,7 @@ type AddonContextValue = {
   toDate: string;
   isPrivateMode: boolean;
   currency: string;
+  portfolioValue: number;
 };
 
 const AddonContext = createContext<AddonContextValue | undefined>(undefined);
@@ -18,6 +19,7 @@ export function AddonProvider({
   toDate,
   isPrivateMode,
   currency,
+  portfolioValue,
 }: {
   children: React.ReactNode;
   addon: any;
@@ -25,9 +27,10 @@ export function AddonProvider({
   toDate: string;
   isPrivateMode: boolean;
   currency: string;
+  portfolioValue: number;
 }) {
   return (
-    <AddonContext.Provider value={{ addon, fromDate, toDate, isPrivateMode, currency }}>
+    <AddonContext.Provider value={{ addon, fromDate, toDate, isPrivateMode, currency, portfolioValue }}>
       {children}
     </AddonContext.Provider>
   );

@@ -14,7 +14,7 @@ import {
 } from './api';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
-import ChangeLog, { setChangeLogViewDate } from './components/ChangeLog';
+import ChangeLog from './components/ChangeLog';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
@@ -447,6 +447,8 @@ export default function App() {
     console.debug('[DEBUG] Loaded State', { state, addOnOptions, isLoadingOnUpdate });
   }
 
+  const portfolioValue = state.portfolios.length > 0 ? state.portfolios[state.portfolios.length - 1].value : 0;
+
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#10b981', colorInfo: '#10b981' } }}>
       <AddonProvider
@@ -455,6 +457,7 @@ export default function App() {
         toDate={addOnOptions.toDate}
         isPrivateMode={addOnOptions.privateMode}
         currency={addOnOptions.currency}
+        portfolioValue={portfolioValue}
       >
         <CurrencyContextProvider currencyRef={currencyRef}>
           <BenchmarkContextProvider>
@@ -493,9 +496,6 @@ export default function App() {
                       defaultActiveKey={TabKeysEnum.PNL}
                       type="card"
                       onChange={(tab) => {
-                        if (tab === 'change-log') {
-                          setChangeLogViewDate();
-                        }
                         trackEvent('tab-change', { tab });
                       }}
                       size="large"

@@ -132,22 +132,24 @@ export class HealthCheckService {
   /**
    * Analyze a single holding
    */
-  async analyzeHolding(
+  analyzeHolding(
     position: Position,
     transactions: Transaction[],
     priceHistory: PriceHistory,
     benchmarkHistory: PriceHistory,
     totalPortfolioValue: number,
-  ): Promise<HoldingHealthReport> {
+  ): HoldingHealthReport {
     // Calculate all metrics
     const metrics = this.calculateMetrics(position, transactions, priceHistory, benchmarkHistory, totalPortfolioValue);
 
     // Calculate score
     const score = calculateHealthScore(metrics, this.config.weights);
 
-    // Determine flags
+    // Determine flags and strengths
     const flags = this.determineFlags(metrics);
     const flagDescriptions = this.generateFlagDescriptions(flags, metrics);
+    const strengths = this.determineStrengths(metrics);
+    const strengthDescriptions = this.generateStrengthDescriptions(strengths, metrics);
 
     // Generate recommendation
     const recommendation = generateRecommendation(score, flags, metrics);
@@ -166,6 +168,8 @@ export class HealthCheckService {
       severity,
       flags,
       flagDescriptions,
+      strengths,
+      strengthDescriptions,
       metrics,
       opportunityCostDescription,
       suggestedAction,
@@ -272,7 +276,90 @@ export class HealthCheckService {
       flags.push('SMALL_POSITION');
     }
 
+    if (metrics.portfolioWeight > thresholds.largePositionThreshold) {
+      flags.push('LARGE_POSITION');
+    }
+
     return flags;
+  }
+
+  /**
+   * Determine which strengths apply based on metrics and thresholds
+   */
+  private determineStrengths(metrics: HealthMetrics): import('../types/healthCheck').StrengthFlag[] {
+    const strengths: import('../types/healthCheck').StrengthFlag[] = [];
+    const { thresholds } = this.config;
+
+    if (metrics.return3Y > 0) {
+      strengths.push('POSITIVE_RETURN_3Y');
+    }
+
+    if (metrics.alpha3Y > thresholds.benchmarkOutperformance) {
+      strengths.push('OUTPERFORMED_BENCHMARK');
+    }
+
+    if (metrics.volatility < thresholds.volatilityLow) {
+      strengths.push('LOW_VOLATILITY');
+    }
+
+    if (metrics.sharpeRatio > thresholds.sharpeGood) {
+      strengths.push('POSITIVE_SHARPE');
+    }
+
+    if (metrics.dividendTrend === 'growing') {
+      strengths.push('GROWING_DIVIDENDS');
+    }
+
+    if (metrics.return1Y > 10) {
+      strengths.push('STRONG_MOMENTUM');
+    }
+
+    if (metrics.holdingPeriodDays > 730 && metrics.return3Y > 0) {
+      // Held for 2+ years with positive returns
+      strengths.push('LONG_TERM_HOLD');
+    }
+
+    return strengths;
+  }
+
+  /**
+   * Generate human-readable descriptions for each strength
+   */
+  private generateStrengthDescriptions(
+    strengths: import('../types/healthCheck').StrengthFlag[],
+    metrics: HealthMetrics,
+  ): string[] {
+    const descriptions: string[] = [];
+
+    for (const strength of strengths) {
+      switch (strength) {
+        case 'POSITIVE_RETURN_3Y':
+          descriptions.push(`Positive 3-year return of ${metrics.return3Y.toFixed(1)}%`);
+          break;
+        case 'OUTPERFORMED_BENCHMARK':
+          descriptions.push(`Outperformed ${this.config.benchmarkSymbol} by ${metrics.alpha3Y.toFixed(1)}%`);
+          break;
+        case 'LOW_VOLATILITY':
+          descriptions.push(`Low volatility (${(metrics.volatility * 100).toFixed(0)}%) - stable investment`);
+          break;
+        case 'POSITIVE_SHARPE':
+          descriptions.push(`Excellent risk-adjusted returns (Sharpe ratio: ${metrics.sharpeRatio.toFixed(2)})`);
+          break;
+        case 'GROWING_DIVIDENDS':
+          descriptions.push(`Growing dividends (${metrics.dividendGrowth3Y.toFixed(1)}% annual growth)`);
+          break;
+        case 'STRONG_MOMENTUM':
+          descriptions.push(`Strong recent performance (${metrics.return1Y.toFixed(1)}% in last year)`);
+          break;
+        case 'LONG_TERM_HOLD':
+          descriptions.push(
+            `Long-term hold (${Math.floor(metrics.holdingPeriodDays / 365)} years) with positive returns`,
+          );
+          break;
+      }
+    }
+
+    return descriptions;
   }
 
   /**
@@ -313,6 +400,11 @@ export class HealthCheckService {
           break;
         case 'SMALL_POSITION':
           descriptions.push(`Small position (${(metrics.portfolioWeight * 100).toFixed(2)}% of portfolio)`);
+          break;
+        case 'LARGE_POSITION':
+          descriptions.push(
+            `Large position (${(metrics.portfolioWeight * 100).toFixed(1)}% of portfolio) - concentration risk`,
+          );
           break;
       }
     }

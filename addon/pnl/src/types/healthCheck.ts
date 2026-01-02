@@ -22,7 +22,17 @@ export type HealthFlag =
   | 'HIGH_VOLATILITY' // High risk without commensurate return
   | 'DEATH_CROSS' // 50-day MA crossed below 200-day MA
   | 'CONSECUTIVE_DECLINE' // Multiple quarters of decline
-  | 'SMALL_POSITION'; // Position too small to matter (<1% portfolio)
+  | 'SMALL_POSITION' // Position too small to matter (<1% portfolio)
+  | 'LARGE_POSITION'; // Position concentration risk (>15% portfolio)
+
+export type StrengthFlag =
+  | 'POSITIVE_RETURN_3Y' // Made money over 3 years
+  | 'OUTPERFORMED_BENCHMARK' // Beat benchmark significantly
+  | 'LOW_VOLATILITY' // Stable, low-risk investment
+  | 'POSITIVE_SHARPE' // Good risk-adjusted returns
+  | 'GROWING_DIVIDENDS' // Increasing dividend payments
+  | 'STRONG_MOMENTUM' // Recent positive performance
+  | 'LONG_TERM_HOLD'; // Held for extended period with positive returns
 
 /**
  * Comprehensive health metrics for a single holding
@@ -82,6 +92,10 @@ export interface HoldingHealthReport {
   // Issues identified
   flags: HealthFlag[];
   flagDescriptions: string[]; // Human-readable explanations
+
+  // Strengths identified
+  strengths: StrengthFlag[];
+  strengthDescriptions: string[]; // Human-readable explanations
 
   // All metrics
   metrics: HealthMetrics;
@@ -143,10 +157,14 @@ export interface HealthCheckConfig {
   thresholds: {
     negativeReturnYears: number; // Default: 3 - flag if negative for X years
     benchmarkUnderperformance: number; // Default: -15 - flag if alpha < X%
+    benchmarkOutperformance: number; // Default: 5 - strength if alpha > X%
     underwaterDays: number; // Default: 365 - flag if underwater > X days
     opportunityCostMin: number; // Default: 500 - min $ to flag
     smallPositionThreshold: number; // Default: 0.01 - ignore if < 1% of portfolio
+    largePositionThreshold: number; // Default: 0.15 - flag if > 15% of portfolio
     volatilityMax: number; // Default: 0.4 - flag if annualized vol > 40%
+    volatilityLow: number; // Default: 0.15 - strength if vol < 15%
+    sharpeGood: number; // Default: 1.0 - strength if Sharpe > 1.0
   };
 
   // Exclusions
@@ -169,10 +187,14 @@ export const DEFAULT_HEALTH_CHECK_CONFIG: HealthCheckConfig = {
   thresholds: {
     negativeReturnYears: 3,
     benchmarkUnderperformance: -15,
+    benchmarkOutperformance: 5,
     underwaterDays: 365,
     opportunityCostMin: 500,
     smallPositionThreshold: 0.01,
+    largePositionThreshold: 0.15,
     volatilityMax: 0.4,
+    volatilityLow: 0.15,
+    sharpeGood: 1.0,
   },
   excludedSymbols: [],
 };
