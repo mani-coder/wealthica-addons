@@ -220,7 +220,7 @@ function StockTimeline(props: Props) {
 
   function getOptions(): Highcharts.Options {
     return {
-      rangeSelector: { selected: 1, enabled: true },
+      rangeSelector: { selected: 1, enabled: true, inputEnabled: true },
       navigator: { enabled: true },
       scrollbar: { enabled: false },
 

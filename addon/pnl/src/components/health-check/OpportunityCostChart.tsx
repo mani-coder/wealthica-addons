@@ -267,7 +267,7 @@ export function OpportunityCostChart({ transactions, stockHistory, benchmarkHist
 
     return {
       chart: { height: 600 },
-      rangeSelector: { enabled: true },
+      rangeSelector: { enabled: true, inputEnabled: true },
       navigator: { enabled: true },
       title: {
         text: `Opportunity Cost Analysis: ${stockHistory.symbol} vs ${benchmarkInfo.name}`,

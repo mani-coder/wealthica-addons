@@ -66,18 +66,9 @@ function ProfitLossPercentageTimeline(props: Props) {
       },
 
       rangeSelector: {
-        buttonTheme: {
-          style: {
-            display: 'none',
-          },
-        },
-        dropdown: 'always',
-        buttonPosition: {
-          align: 'right',
-        },
         selected: 1,
-        enabled: true as any,
-        inputEnabled: false,
+        enabled: true,
+        inputEnabled: true,
       },
 
       navigator: { enabled: true },

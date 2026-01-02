@@ -21,6 +21,7 @@ Highcharts.setOptions({
     getTimezoneOffset: (timestamp) => new Date(timestamp).getTimezoneOffset(),
   },
   rangeSelector: {
+    inputStyle: { color: '#10b981' },
     buttonTheme: {
       states: {
         select: {
@@ -50,7 +51,7 @@ export function Charts(props: Props) {
   };
 
   return !!options.series && !!options.series.length ? (
-    <ErrorBoundary message="Failed to load the chart!">
+    <ErrorBoundary title="Failed to load the chart!">
       <div className="w-full">
         <HighchartsReact
           highcharts={Highcharts}

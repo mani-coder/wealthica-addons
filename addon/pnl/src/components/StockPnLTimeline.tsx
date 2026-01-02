@@ -310,7 +310,7 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
         },
       },
 
-      rangeSelector: { selected: 1, enabled: true },
+      rangeSelector: { selected: 1, enabled: true, inputEnabled: true },
       navigator: { enabled: true },
       scrollbar: { enabled: false },
 
