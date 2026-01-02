@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { ConfigProvider, Empty, Spin, Tabs, Tag, Typography } from 'antd';
+import { ConfigProvider, Empty, Spin, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
@@ -16,6 +16,7 @@ import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog from './components/ChangeLog';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
+import TabLabel from './components/common/TabLabel';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
 import HoldingsCharts from './components/HoldingsCharts';
@@ -501,7 +502,7 @@ export default function App() {
                       size="large"
                       items={[
                         {
-                          label: 'P&L Charts',
+                          label: <TabLabel label="P&L Charts" />,
                           key: TabKeysEnum.PNL,
                           destroyOnHidden: true,
                           forceRender: true,
@@ -526,7 +527,7 @@ export default function App() {
                           ),
                         },
                         {
-                          label: 'Holdings',
+                          label: <TabLabel label="Holdings" />,
                           key: TabKeysEnum.HOLDINGS,
                           forceRender: true,
                           children: (
@@ -547,39 +548,25 @@ export default function App() {
                           ),
                         },
                         {
-                          label: 'Gainers/Losers',
+                          label: <TabLabel label="Gainers/Losers" />,
                           key: TabKeysEnum.GAINERS_LOSERS,
                           destroyOnHidden: true,
                           children: <TopGainersLosers positions={state.positions} accounts={state.accounts} />,
                         },
                         {
-                          label: (
-                            <span>
-                              Performance{' '}
-                              <Tag color="magenta" variant="filled" className="text-xs">
-                                NEW
-                              </Tag>
-                            </span>
-                          ),
+                          label: <TabLabel label="Performance" isNew />,
                           key: TabKeysEnum.PERFORMANCE,
                           destroyOnHidden: true,
                           children: <BenchmarkComparison portfolios={state.allPortfolios} />,
                         },
                         {
-                          label: (
-                            <span>
-                              Health Check{' '}
-                              <Tag color="magenta" variant="filled" className="text-xs">
-                                NEW
-                              </Tag>
-                            </span>
-                          ),
+                          label: <TabLabel label="Health Check" isNew />,
                           key: TabKeysEnum.HEALTH_CHECK,
                           destroyOnHidden: true,
                           children: <PortfolioHealthCheck positions={state.positions} />,
                         },
                         {
-                          label: 'Realized P&L',
+                          label: <TabLabel label="Realized P&L" />,
                           key: TabKeysEnum.REALIZED_PNL,
                           destroyOnHidden: true,
                           children: (
@@ -591,7 +578,7 @@ export default function App() {
                           ),
                         },
                         {
-                          label: 'Activities',
+                          label: <TabLabel label="Activities" />,
                           key: TabKeysEnum.ACTIVITIES,
                           destroyOnHidden: true,
                           children: (
@@ -605,19 +592,19 @@ export default function App() {
                           ),
                         },
                         {
-                          label: 'News',
+                          label: <TabLabel label="News" />,
                           key: TabKeysEnum.NEWS,
                           destroyOnHidden: true,
                           children: <News positions={state.positions} />,
                         },
                         {
-                          label: 'Events',
+                          label: <TabLabel label="Events" />,
                           key: TabKeysEnum.EVENTS,
                           destroyOnHidden: true,
                           children: <Events positions={state.positions} />,
                         },
                         {
-                          label: 'Change Log',
+                          label: <TabLabel label="Change Log" />,
                           key: TabKeysEnum.CHANGE_LOG,
                           destroyOnHidden: true,
                           children: <ChangeLog />,

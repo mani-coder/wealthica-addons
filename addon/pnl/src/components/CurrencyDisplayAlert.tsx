@@ -31,18 +31,19 @@ export default function CurrencyDisplayAlert({ currency }: { currency: string })
     setLocalCache(CURRENCY_DISPLAY_CACHE_KEY, JSON.stringify({ date: formatDate(dayjs(), DATE_FORMAT), currency }));
   }
 
+  function onClose() {
+    saveCurrencyDisplayInLocalCache();
+    trackEvent('close_currency_alert', { currency });
+  }
+
   return isDisplaying ? (
     <div className="flex w-full justify-center items-center my-2 mb-2">
       <Alert
-        className="w-full text-center"
+        className="w-full text-center rounded-lg"
         type="info"
         banner
-        closable
-        onClose={() => {
-          saveCurrencyDisplayInLocalCache();
-          trackEvent('close_currency_alert', { currency });
-        }}
-        message={
+        closable={{ onClose }}
+        title={
           <>
             All amounts are displayed in <b>{baseCurrencyDisplay}</b>, as per your currency preference.
           </>
