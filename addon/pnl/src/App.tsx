@@ -3,7 +3,6 @@ import { ConfigProvider, Empty, Tabs, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
-import { BarLoader } from './components/common/BarLoader';
 import {
   computeCashFlowByDate,
   parseAccountTransactionsResponse,
@@ -17,6 +16,7 @@ import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
 import ChangeLog from './components/ChangeLog';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
+import { BarLoader } from './components/common/BarLoader';
 import TabLabel from './components/common/TabLabel';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
 import { Events } from './components/Events';
@@ -486,7 +486,7 @@ export default function App() {
                         !! This is sample data !!
                       </p>
                     )}
-                    {true ? (
+                    {isLoadingOnUpdate ? (
                       <BarLoader className="my-3" />
                     ) : (
                       <CurrencyDisplayAlert currency={currencyRef.current.baseCurrency} />
