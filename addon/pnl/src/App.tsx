@@ -1,6 +1,6 @@
 import { Addon } from '@wealthica/wealthica.js/index';
 import { ConfigProvider, Empty, Tabs, Typography } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
 import {
@@ -14,7 +14,6 @@ import {
 } from './api';
 import BuyMeACoffee from './components/BuyMeACoffee';
 import CashTable from './components/CashTable';
-import ChangeLog from './components/ChangeLog';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import { BarLoader } from './components/common/BarLoader';
 import TabLabel from './components/common/TabLabel';
@@ -31,8 +30,12 @@ import ProfitLossTimeline from './components/ProfitLossTimeline';
 import BenchmarkComparison from './components/performance/BenchmarkComparison';
 import RealizedPnL from './components/realized-pnl/RealizedPnL';
 import { TopGainersLosers } from './components/TopGainersLosers';
-import TradingActivities from './components/TradingActivities';
 import YoYPnLChart from './components/YoYPnLChart';
+
+// Lazy load less frequently used components
+const TradingActivities = lazy(() => import('./components/TradingActivities'));
+const ChangeLog = lazy(() => import('./components/ChangeLog'));
+
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';
 import { AddonProvider } from './context/AddonContext';
 import { BenchmarkContextProvider } from './context/BenchmarkContext';
@@ -581,13 +584,15 @@ export default function App() {
                           key: TabKeysEnum.ACTIVITIES,
                           destroyOnHidden: true,
                           children: (
-                            <TradingActivities
-                              fromDate={addOnOptions.fromDate}
-                              transactions={state.securityTransactions.filter((t) =>
-                                ['buy', 'sell'].includes(t.originalType),
-                              )}
-                              positions={state.positions}
-                            />
+                            <Suspense fallback={<BarLoader />}>
+                              <TradingActivities
+                                fromDate={addOnOptions.fromDate}
+                                transactions={state.securityTransactions.filter((t) =>
+                                  ['buy', 'sell'].includes(t.originalType),
+                                )}
+                                positions={state.positions}
+                              />
+                            </Suspense>
                           ),
                         },
                         {
@@ -606,7 +611,11 @@ export default function App() {
                           label: <TabLabel label="Change Log" />,
                           key: TabKeysEnum.CHANGE_LOG,
                           destroyOnHidden: true,
-                          children: <ChangeLog />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <ChangeLog />
+                            </Suspense>
+                          ),
                         },
                       ]}
                     />
