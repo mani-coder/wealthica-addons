@@ -129,7 +129,7 @@ function YoYPnLChart(props: Props) {
     // Calculate the time range between earliest and latest portfolio dates
     const earliestPortfolioDate = props.portfolios.length > 0 ? dayjs(props.portfolios[0].date) : dayjs(lastDate);
     const dataRangeMonths = dayjs(lastDate).diff(earliestPortfolioDate, 'months', true);
-    const showShortPeriods = dataRangeMonths < 12;
+    const showShortPeriods = dataRangeMonths < 13;
 
     const portfolioKeys = new Set();
     const portfolioValues: {
