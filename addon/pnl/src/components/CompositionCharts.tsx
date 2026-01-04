@@ -391,7 +391,7 @@ export default function CompositionCharts(props: Props) {
         tracker="holdings-composition-group"
       />
 
-      <div className="flex mt-6 w-full justify-center items-center">
+      <div className="flex my-3 w-full justify-center items-center">
         <Switch
           checked={showHoldings}
           onChange={(checked) => {
@@ -401,9 +401,7 @@ export default function CompositionCharts(props: Props) {
         />
 
         <div className="px-2 mb-2" />
-        <Typography.Text strong style={{ fontSize: 16 }}>
-          Show Holdings (Donut Chart)
-        </Typography.Text>
+        <Typography.Text strong>Show Holdings (Donut Chart)</Typography.Text>
       </div>
     </Collapsible>
   );

@@ -14,8 +14,14 @@ export type Severity = 'critical' | 'warning' | 'info' | 'healthy';
 export type DividendTrend = 'growing' | 'flat' | 'declining' | 'suspended' | 'none';
 
 export type HealthFlag =
+  | 'NEGATIVE_RETURN_1Y'
   | 'NEGATIVE_RETURN_3Y' // Lost money over 3 years
-  | 'UNDERPERFORMED_BENCHMARK' // Lagged S&P 500 / TSX significantly
+  | 'NEGATIVE_RETURN_5Y' // Lost money over 5 years
+  | 'NEGATIVE_RETURN_SINCE_INCEPTION' // Lost money since inception
+  | 'UNDERPERFORMED_BENCHMARK_1Y' // Lagged S&P 500 / TSX significantly
+  | 'UNDERPERFORMED_BENCHMARK_3Y' // Lagged S&P 500 / TSX significantly
+  | 'UNDERPERFORMED_BENCHMARK_5Y' // Lagged S&P 500 / TSX significantly
+  | 'UNDERPERFORMED_BENCHMARK_SINCE_INCEPTION' // Lagged S&P 500 / TSX significantly
   | 'HIGH_OPPORTUNITY_COST' // Would have made $X more in index fund
   | 'EXTENDED_UNDERWATER' // Below cost basis for > 1 year
   | 'DECLINING_DIVIDENDS' // Dividend cuts or suspensions
@@ -41,12 +47,20 @@ export interface HealthMetrics {
   // Return metrics
   return1Y: number; // 1-year return %
   return3Y: number; // 3-year return %
+  return5Y: number; // 5-year return %
   returnSinceInception: number; // Return since first purchase %
   xirr: number; // Extended Internal Rate of Return (annualized) %
 
   // Benchmark comparison
+  benchmarkReturn1Y: number; // Benchmark return over same period %
   benchmarkReturn3Y: number; // Benchmark return over same period %
+  benchmarkReturn5Y: number; // Benchmark return over same period %
+  benchmarkReturnSinceInception: number; // Benchmark return since inception %
+
+  alpha1Y: number; // return1Y - benchmarkReturn1Y
   alpha3Y: number; // return3Y - benchmarkReturn3Y
+  alpha5Y: number; // return5Y - benchmarkReturn5Y
+  alphaSinceInception: number; // returnSinceInception - benchmarkReturnSinceInception
 
   // Opportunity cost
   opportunityCost: number; // $ amount lost vs investing in benchmark
@@ -57,7 +71,6 @@ export interface HealthMetrics {
 
   // Underwater analysis
   daysUnderwater: number; // Days below cost basis (since first purchase)
-  percentUnderwater: number; // How far below cost basis %
   holdingPeriodDays: number; // Days since first purchase
 
   // Risk metrics
@@ -207,6 +220,13 @@ export const SEVERITY_COLORS = {
   warning: '#F97316', // Orange-500
   info: '#EAB308', // Yellow-500
   healthy: '#22C55E', // Green-500
+};
+
+export const RECOMMENDATION_COLORS = {
+  SELL: 'bg-red-50 border border-red-200 text-red-700', // Red-500
+  REVIEW: 'bg-orange-50 border border-orange-200 text-orange-700', // Orange-500
+  ACCUMULATE: 'bg-emerald-50 border border-emerald-200 text-emerald-700',
+  HOLD: 'bg-blue-50 border border-blue-200 text-blue-700',
 };
 
 /**

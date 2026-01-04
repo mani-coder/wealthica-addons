@@ -7,6 +7,7 @@
 
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { DATE_FORMAT } from '@/constants';
 import type { Currencies } from '../context/CurrencyContext';
 import type { Position, Transaction } from '../types';
 import {
@@ -18,9 +19,9 @@ import {
   type HoldingHealthReport,
   type PortfolioHealthSummary,
 } from '../types/healthCheck';
-import { formatMoney, sumOf } from '../utils/common';
+import { formatMoney, isTradingDay } from '../utils/common';
 import { calculateHealthScore, generateRecommendation, scoreToSeverity } from '../utils/healthScoring';
-import { calculateOpenTransactions } from '../utils/transactionUtils';
+import { calculateOpenTransactions, type OpenTransaction } from '../utils/transactionUtils';
 
 /**
  * Price point in historical data
@@ -33,10 +34,10 @@ export interface PricePoint {
 /**
  * Historical price data for a symbol
  */
-export interface PriceHistory {
+export type PriceHistory = {
   symbol: string;
   prices: PricePoint[];
-}
+};
 
 /**
  * Main service class for portfolio health analysis
@@ -75,12 +76,14 @@ export class HealthCheckService {
       }
 
       const positionTransactions = transactions.filter((t) => t.symbol === position.security.symbol);
+      const openTransactions = calculateOpenTransactions(positionTransactions, this.currencies);
       const priceHistory = priceHistories.get(position.security.symbol);
 
       if (priceHistory && priceHistory.prices.length > 0) {
         const report = await this.analyzeHolding(
           position,
           positionTransactions,
+          openTransactions,
           priceHistory,
           benchmarkHistory,
           totalPortfolioValue,
@@ -135,12 +138,20 @@ export class HealthCheckService {
   analyzeHolding(
     position: Position,
     transactions: Transaction[],
+    openTransactions: OpenTransaction[],
     priceHistory: PriceHistory,
     benchmarkHistory: PriceHistory,
     totalPortfolioValue: number,
   ): HoldingHealthReport {
     // Calculate all metrics
-    const metrics = this.calculateMetrics(position, transactions, priceHistory, benchmarkHistory, totalPortfolioValue);
+    const metrics = this.calculateMetrics(
+      position,
+      transactions,
+      openTransactions,
+      priceHistory,
+      benchmarkHistory,
+      totalPortfolioValue,
+    );
 
     // Calculate score
     const score = calculateHealthScore(metrics, this.config.weights);
@@ -182,53 +193,93 @@ export class HealthCheckService {
   private calculateMetrics(
     position: Position,
     transactions: Transaction[],
+    openTransactions: OpenTransaction[],
     priceHistory: PriceHistory,
     benchmarkHistory: PriceHistory,
     totalPortfolioValue: number,
   ): HealthMetrics {
-    // Calculate returns
-    const return1Y = this.calculateReturn(priceHistory, 252); // ~252 trading days in a year
-    const return3Y = this.calculateReturn(priceHistory, 756); // ~3 years
-    const returnSinceInception = this.calculateTotalReturn(transactions, position);
-    const xirr = this.calculateXIRR(position);
-
-    // Benchmark comparison
-    const benchmarkReturn3Y = this.calculateReturn(benchmarkHistory, 756);
-    const alpha3Y = return3Y - benchmarkReturn3Y;
-
-    // Opportunity cost
-    const opportunityCost = this.calculateOpportunityCost(transactions, position, benchmarkHistory);
-
-    // Drawdowns
-    const maxDrawdown = this.calculateMaxDrawdown(priceHistory);
-    const currentDrawdown = this.calculateCurrentDrawdown(priceHistory);
-
-    // Underwater analysis
-    const daysUnderwater = this.calculateDaysUnderwater(transactions, priceHistory, position);
-    const percentUnderwater = this.calculatePercentUnderwater(transactions, position);
-    const holdingPeriodDays = this.calculateHoldingPeriodDays(transactions);
-
-    // Risk metrics
-    const volatility = this.calculateVolatility(priceHistory);
-    const sharpeRatio = this.calculateSharpeRatio(priceHistory);
+    const oneYearAgo = dayjs().subtract(1, 'year').startOf('day');
+    const threeYearsAgo = dayjs().subtract(3, 'years').startOf('day');
+    const fiveYearsAgo = dayjs().subtract(5, 'years').startOf('day');
 
     // Dividend metrics
     const dividendYield = this.calculateDividendYield(transactions, position);
     const dividendGrowth3Y = this.calculateDividendGrowth(transactions);
     const dividendTrend = this.determineDividendTrend(transactions);
 
-    return {
+    const holdingStartDate = openTransactions[0].date;
+
+    // Calculate total returns (price appreciation + dividends)
+    const return1Y = this.calculatePriceReturn(priceHistory, oneYearAgo, holdingStartDate, dividendYield);
+    const return3Y = this.calculatePriceReturn(priceHistory, threeYearsAgo, holdingStartDate, dividendYield * 3);
+    const return5Y = this.calculatePriceReturn(priceHistory, fiveYearsAgo, holdingStartDate, dividendYield * 5);
+    const returnSinceInception =
+      (position.gain_percent || 0) * 100 + (dividendYield * dayjs().diff(holdingStartDate, 'days')) / 365;
+
+    console.log('Mani', {
+      dividendYield,
       return1Y,
       return3Y,
+      return5Y,
+      returnSinceInception,
+    });
+
+    const xirr = this.calculateXIRR(position);
+
+    // Benchmark comparison (benchmarks don't have dividend transactions, so use price-only returns)
+    const benchmarkReturn1Y = this.calculatePriceReturn(benchmarkHistory, oneYearAgo, holdingStartDate);
+    const benchmarkReturn3Y = this.calculatePriceReturn(benchmarkHistory, threeYearsAgo, holdingStartDate);
+    const benchmarkReturn5Y = this.calculatePriceReturn(benchmarkHistory, fiveYearsAgo, holdingStartDate);
+    const benchmarkReturnSinceInception = this.calculatePriceReturn(
+      benchmarkHistory,
+      holdingStartDate,
+      holdingStartDate,
+    );
+
+    const alpha1Y = return1Y - benchmarkReturn1Y;
+    const alpha3Y = return3Y - benchmarkReturn3Y;
+    const alpha5Y = return5Y - benchmarkReturn5Y;
+    const alphaSinceInception = returnSinceInception - benchmarkReturnSinceInception;
+
+    // Opportunity cost
+    const opportunityCost = this.calculateOpportunityCost(openTransactions, position, benchmarkHistory);
+
+    // Drawdowns
+    const maxDrawdown = this.calculateMaxDrawdown(priceHistory);
+    const currentDrawdown = this.calculateCurrentDrawdown(priceHistory);
+
+    // Underwater analysis
+    const daysUnderwater = this.calculateDaysUnderwater(openTransactions, priceHistory);
+    const holdingPeriodDays = this.calculateHoldingPeriodDays(openTransactions);
+
+    // Risk metrics
+    const volatility = this.calculateVolatility(priceHistory);
+    const sharpeRatio = this.calculateSharpeRatio(priceHistory);
+
+    return {
+      // Return metrics
+      return1Y,
+      return3Y,
+      return5Y,
       returnSinceInception,
       xirr,
+
+      // Benchmark metrics
+      benchmarkReturn1Y,
       benchmarkReturn3Y,
+      benchmarkReturn5Y,
+      benchmarkReturnSinceInception,
+
+      // Alpha metrics
+      alpha1Y,
       alpha3Y,
+      alpha5Y,
+      alphaSinceInception,
+
       opportunityCost,
       maxDrawdown,
       currentDrawdown,
       daysUnderwater,
-      percentUnderwater,
       holdingPeriodDays,
       volatility,
       sharpeRatio,
@@ -248,30 +299,61 @@ export class HealthCheckService {
     const flags: HealthFlag[] = [];
     const { thresholds } = this.config;
 
+    // Negative returns across different time periods
+    if (metrics.return1Y < 0) {
+      flags.push('NEGATIVE_RETURN_1Y');
+    }
+
     if (metrics.return3Y < 0) {
       flags.push('NEGATIVE_RETURN_3Y');
     }
 
-    if (metrics.alpha3Y < thresholds.benchmarkUnderperformance) {
-      flags.push('UNDERPERFORMED_BENCHMARK');
+    if (metrics.return5Y < 0) {
+      flags.push('NEGATIVE_RETURN_5Y');
     }
 
+    if (metrics.returnSinceInception < 0) {
+      flags.push('NEGATIVE_RETURN_SINCE_INCEPTION');
+    }
+
+    // Benchmark underperformance
+    if (metrics.alpha1Y < thresholds.benchmarkUnderperformance) {
+      flags.push('UNDERPERFORMED_BENCHMARK_1Y');
+    }
+
+    if (metrics.alpha3Y < thresholds.benchmarkUnderperformance) {
+      flags.push('UNDERPERFORMED_BENCHMARK_3Y');
+    }
+
+    if (metrics.alpha5Y < thresholds.benchmarkUnderperformance) {
+      flags.push('UNDERPERFORMED_BENCHMARK_5Y');
+    }
+
+    if (metrics.alphaSinceInception < thresholds.benchmarkUnderperformance) {
+      flags.push('UNDERPERFORMED_BENCHMARK_SINCE_INCEPTION');
+    }
+
+    // Opportunity cost
     if (metrics.opportunityCost > thresholds.opportunityCostMin) {
       flags.push('HIGH_OPPORTUNITY_COST');
     }
 
+    // Underwater position
     if (metrics.daysUnderwater > thresholds.underwaterDays) {
       flags.push('EXTENDED_UNDERWATER');
     }
 
+    // Dividend issues
     if (metrics.dividendTrend === 'declining' || metrics.dividendTrend === 'suspended') {
       flags.push('DECLINING_DIVIDENDS');
     }
 
+    // Volatility and risk
     if (metrics.volatility > thresholds.volatilityMax && metrics.sharpeRatio < 0.5) {
       flags.push('HIGH_VOLATILITY');
     }
 
+    // Position sizing
     if (metrics.portfolioWeight < thresholds.smallPositionThreshold) {
       flags.push('SMALL_POSITION');
     }
@@ -370,12 +452,36 @@ export class HealthCheckService {
 
     for (const flag of flags) {
       switch (flag) {
+        case 'NEGATIVE_RETURN_1Y':
+          descriptions.push(`Negative 1-year return of ${metrics.return1Y.toFixed(1)}%`);
+          break;
         case 'NEGATIVE_RETURN_3Y':
           descriptions.push(`Negative 3-year return of ${metrics.return3Y.toFixed(1)}%`);
           break;
-        case 'UNDERPERFORMED_BENCHMARK':
+        case 'NEGATIVE_RETURN_5Y':
+          descriptions.push(`Negative 5-year return of ${metrics.return5Y.toFixed(1)}%`);
+          break;
+        case 'NEGATIVE_RETURN_SINCE_INCEPTION':
+          descriptions.push(`Negative since holding started return of ${metrics.returnSinceInception.toFixed(1)}%`);
+          break;
+        case 'UNDERPERFORMED_BENCHMARK_1Y':
           descriptions.push(
-            `Underperformed ${this.config.benchmarkSymbol} by ${Math.abs(metrics.alpha3Y).toFixed(1)}%`,
+            `Underperformed ${this.config.benchmarkSymbol} by ${Math.abs(metrics.alpha1Y).toFixed(1)}% in last year`,
+          );
+          break;
+        case 'UNDERPERFORMED_BENCHMARK_3Y':
+          descriptions.push(
+            `Underperformed ${this.config.benchmarkSymbol} by ${Math.abs(metrics.alpha3Y).toFixed(1)}% in last 3 years`,
+          );
+          break;
+        case 'UNDERPERFORMED_BENCHMARK_5Y':
+          descriptions.push(
+            `Underperformed ${this.config.benchmarkSymbol} by ${Math.abs(metrics.alpha5Y).toFixed(1)}% in last 5 years`,
+          );
+          break;
+        case 'UNDERPERFORMED_BENCHMARK_SINCE_INCEPTION':
+          descriptions.push(
+            `Underperformed ${this.config.benchmarkSymbol} by ${Math.abs(metrics.alphaSinceInception).toFixed(1)}% since holding start`,
           );
           break;
         case 'HIGH_OPPORTUNITY_COST':
@@ -426,30 +532,150 @@ export class HealthCheckService {
    * Generate specific action suggestion based on analysis
    */
   private generateSuggestedAction(recommendation: string, flags: HealthFlag[]): string {
+    // Helper to check for multiple related flags
+    const hasNegativeReturns = flags.some((f) =>
+      ['NEGATIVE_RETURN_1Y', 'NEGATIVE_RETURN_3Y', 'NEGATIVE_RETURN_5Y', 'NEGATIVE_RETURN_SINCE_INCEPTION'].includes(f),
+    );
+    const hasLongTermNegativeReturns = flags.some((f) =>
+      ['NEGATIVE_RETURN_3Y', 'NEGATIVE_RETURN_5Y', 'NEGATIVE_RETURN_SINCE_INCEPTION'].includes(f),
+    );
+    const hasUnderperformance = flags.some((f) =>
+      [
+        'UNDERPERFORMED_BENCHMARK_1Y',
+        'UNDERPERFORMED_BENCHMARK_3Y',
+        'UNDERPERFORMED_BENCHMARK_5Y',
+        'UNDERPERFORMED_BENCHMARK_SINCE_INCEPTION',
+      ].includes(f),
+    );
+    const hasLongTermUnderperformance = flags.some((f) =>
+      [
+        'UNDERPERFORMED_BENCHMARK_3Y',
+        'UNDERPERFORMED_BENCHMARK_5Y',
+        'UNDERPERFORMED_BENCHMARK_SINCE_INCEPTION',
+      ].includes(f),
+    );
+
     switch (recommendation) {
       case 'SELL':
-        if (flags.includes('NEGATIVE_RETURN_3Y') && flags.includes('EXTENDED_UNDERWATER')) {
-          return 'Consider selling to harvest tax loss and reallocate to better performers';
+        // Tax loss harvesting opportunity
+        if (hasLongTermNegativeReturns && flags.includes('EXTENDED_UNDERWATER')) {
+          return 'Consider selling to harvest tax losses and reallocate to better performers. The position has been underwater for an extended period.';
         }
-        if (flags.includes('HIGH_OPPORTUNITY_COST')) {
-          return 'Consider selling and investing proceeds in a broad index fund to capture market returns';
+
+        // Significant opportunity cost
+        if (flags.includes('HIGH_OPPORTUNITY_COST') && hasLongTermUnderperformance) {
+          return 'Sell and invest proceeds in a broad index fund. You would have significantly more capital had you chosen the benchmark.';
         }
-        return 'This holding has multiple red flags. Consider exiting the position.';
+
+        // Dividend stock that's failing
+        if (flags.includes('DECLINING_DIVIDENDS') && hasNegativeReturns) {
+          return 'Exit the position. Dividend cuts combined with negative returns suggest fundamental deterioration.';
+        }
+
+        // High volatility with poor returns
+        if (flags.includes('HIGH_VOLATILITY') && hasNegativeReturns) {
+          return 'Sell to reduce portfolio risk. High volatility without positive returns is not a good risk/reward trade-off.';
+        }
+
+        // Extended underwater period
+        if (flags.includes('EXTENDED_UNDERWATER') && flags.includes('NEGATIVE_RETURN_SINCE_INCEPTION')) {
+          return 'Consider exiting. The position has consistently failed to recover and deliver returns.';
+        }
+
+        // General sell recommendation with multiple issues
+        if (flags.length >= 4) {
+          return 'This holding has multiple critical issues. Strongly consider exiting the position and reallocating to quality investments.';
+        }
+
+        return 'This holding has significant red flags. Consider exiting the position.';
 
       case 'REVIEW':
+        // Position sizing issues
+        if (flags.includes('LARGE_POSITION')) {
+          if (hasUnderperformance) {
+            return 'Reduce position size to manage concentration risk. This large position is underperforming and exposes your portfolio to unnecessary risk.';
+          }
+          return 'Consider trimming to reduce concentration risk. No single position should dominate your portfolio.';
+        }
+
+        if (flags.includes('SMALL_POSITION')) {
+          if (hasUnderperformance) {
+            return 'Exit this small underperformer. It adds complexity without meaningful portfolio impact.';
+          }
+          return 'Consider consolidating into larger positions or selling. Small positions add complexity without meaningful portfolio impact.';
+        }
+
+        // Dividend concerns
         if (flags.includes('DECLINING_DIVIDENDS')) {
-          return 'Review the company fundamentals - dividend cuts often signal deeper issues';
+          if (!hasNegativeReturns) {
+            return 'Review company fundamentals immediately. Dividend cuts often precede deeper issues, but the stock price may not reflect this yet.';
+          }
+          return 'Deep dive into company financials. Dividend cuts combined with price weakness suggest serious business challenges.';
         }
-        if (flags.includes('UNDERPERFORMED_BENCHMARK')) {
-          return 'Evaluate if your thesis still holds or if this capital could work harder elsewhere';
+
+        // Volatility concerns
+        if (flags.includes('HIGH_VOLATILITY')) {
+          return 'Evaluate if the volatility matches your risk tolerance. Consider reducing position size or adding stop-losses.';
         }
-        return 'This holding deserves a closer look. Review your original investment thesis.';
+
+        // Underperformance without losses
+        if (hasLongTermUnderperformance && !hasNegativeReturns) {
+          return 'Reevaluate your investment thesis. While not losing money, you are missing out on better returns available in the market.';
+        }
+
+        // Extended underwater but recovering
+        if (flags.includes('EXTENDED_UNDERWATER') && !flags.includes('NEGATIVE_RETURN_1Y')) {
+          return 'Monitor closely. While showing recent improvement, the position has been underwater for an extended period.';
+        }
+
+        // Short-term underperformance
+        if (flags.includes('UNDERPERFORMED_BENCHMARK_1Y') && !hasLongTermUnderperformance) {
+          return 'Watch this position. Recent underperformance may be temporary, but set a timeframe to reassess.';
+        }
+
+        // Recent negative returns
+        if (flags.includes('NEGATIVE_RETURN_1Y') && !hasLongTermNegativeReturns) {
+          return 'Review your thesis. Recent weakness may be a buying opportunity or the start of a longer decline.';
+        }
+
+        // Opportunity cost without other major issues
+        if (flags.includes('HIGH_OPPORTUNITY_COST') && flags.length === 1) {
+          return 'Consider if your conviction justifies the opportunity cost. Passive index investing might be a better choice.';
+        }
+
+        // General review recommendation
+        return 'This holding deserves closer attention. Review your original investment thesis and whether it still holds.';
 
       case 'ACCUMULATE':
-        return 'Strong performer. Consider adding to this position on dips.';
+        // Strong performer but concentrated
+        if (flags.includes('LARGE_POSITION')) {
+          return 'Excellent performer, but already a large position. Consider rebalancing to maintain diversification.';
+        }
+
+        // Strong performer - standard advice
+        return 'Strong performer with solid fundamentals. Consider adding to this position on market dips.';
+
+      case 'HOLD':
+        // Large position that's performing okay
+        if (flags.includes('LARGE_POSITION')) {
+          return 'Maintain current position but avoid adding more to limit concentration risk.';
+        }
+
+        // Small position that's performing okay
+        if (flags.includes('SMALL_POSITION')) {
+          return 'Position is performing adequately. Consider whether to consolidate or grow it to a more meaningful size.';
+        }
+
+        // High volatility but stable returns
+        if (flags.includes('HIGH_VOLATILITY')) {
+          return 'Monitor volatility and consider hedging strategies if it affects your risk tolerance.';
+        }
+
+        // Default hold advice
+        return 'Position is performing adequately. Continue to monitor and maintain current allocation.';
 
       default:
-        return 'No immediate action needed. Continue to monitor.';
+        return 'No immediate action needed. Continue to monitor performance periodically.';
     }
   }
 
@@ -502,29 +728,27 @@ export class HealthCheckService {
   // ============================================
 
   /**
-   * Calculate return over specified number of trading days
+   * Calculate price-only return (capital appreciation) over a period
    */
-  private calculateReturn(priceHistory: PriceHistory, days: number): number {
+  private calculatePriceReturn(
+    priceHistory: PriceHistory,
+    startDate: Dayjs,
+    holdingStartDate?: Dayjs,
+    dividendYield?: number,
+  ): number {
     if (!priceHistory.prices || priceHistory.prices.length < 2) return 0;
+    if (holdingStartDate && dayjs(startDate).isBefore(holdingStartDate, 'day')) return 0;
 
     const sortedPrices = [...priceHistory.prices].sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
 
     const endPrice = sortedPrices[sortedPrices.length - 1].close;
-    const startIndex = Math.max(0, sortedPrices.length - days - 1);
+    const startIndex = sortedPrices.findIndex((p) => dayjs(p.date).isSameOrAfter(startDate, 'day'));
+    if (startIndex === -1) return 0;
     const startPrice = sortedPrices[startIndex].close;
 
     if (!startPrice || startPrice === 0) return 0;
 
-    return ((endPrice - startPrice) / startPrice) * 100;
-  }
-
-  /**
-   * Calculate total return since first purchase including realized gains
-   */
-  private calculateTotalReturn(_transactions: Transaction[], position: Position): number {
-    // Use the gain_percent from the position if available
-    // transactions parameter kept for future use when calculating including realized gains
-    return position.gain_percent || 0;
+    return ((endPrice - startPrice) / startPrice) * 100 + (dividendYield || 0);
   }
 
   /**
@@ -546,21 +770,14 @@ export class HealthCheckService {
    * that are still open (not sold).
    */
   private calculateOpportunityCost(
-    transactions: Transaction[],
+    openTransactions: OpenTransaction[],
     position: Position,
     benchmarkHistory: PriceHistory,
   ): number {
-    // Calculate open transactions with currency conversion
-    // If currencies are available, amounts will be converted to base currency
-    const openTransactions = calculateOpenTransactions(transactions, this.currencies);
-
     if (openTransactions.length === 0) return 0;
 
     let benchmarkValue = 0;
-    let stockValue = 0;
-
-    // Get current stock price
-    const currentStockPrice = position.market_value / position.quantity;
+    const stockValue = position.market_value;
 
     // Get current benchmark price
     const currentBenchmarkPrice =
@@ -576,9 +793,6 @@ export class HealthCheckService {
         const benchmarkShares = openTx.amount / benchmarkPrice;
         benchmarkValue += benchmarkShares * currentBenchmarkPrice;
       }
-
-      // Calculate actual stock value using actual shares (accounts for splits)
-      stockValue += openTx.shares * currentStockPrice;
     }
 
     // Opportunity cost only exists when benchmark outperformed
@@ -603,19 +817,20 @@ export class HealthCheckService {
   }
 
   /**
-   * Find the maximum peak-to-trough decline
+   * Find the maximum peak-to-trough decline (Max Drawdown)
    */
   private calculateMaxDrawdown(priceHistory: PriceHistory): number {
     if (!priceHistory.prices || priceHistory.prices.length < 2) return 0;
 
-    let maxDrawdown = 0;
     let peak = priceHistory.prices[0].close;
+    let maxDrawdown = 0;
 
-    for (const point of priceHistory.prices) {
-      if (point.close > peak) {
-        peak = point.close;
+    for (const price of priceHistory.prices) {
+      if (price.close > peak) {
+        peak = price.close;
       }
-      const drawdown = ((point.close - peak) / peak) * 100;
+
+      const drawdown = ((price.close - peak) / peak) * 100;
       maxDrawdown = Math.min(maxDrawdown, drawdown);
     }
 
@@ -636,45 +851,73 @@ export class HealthCheckService {
   }
 
   /**
-   * Count days where price was below average cost basis, only since first open purchase
+   * Calculates the number of trading days during the current open holding period
+   * where the position’s market value was below its cumulative invested cost.
    *
-   * Days underwater means: days where you held the position AND the market price was below your cost basis.
-   * If the position is currently profitable (market value > cost basis), returns 0.
+   * How it works:
+   * - Walks forward day by day from the earliest open transaction date
+   *   to the latest available price date.
+   * - On each day, applies any open transaction for that date
+   *   (adds to total invested amount and share count).
+   * - For days with a market close price, compares:
+   *       (close price × shares held) vs cumulative invested amount.
+   * - Counts the day as "underwater" when market value < invested amount.
+   *
+   * Notes / assumptions:
+   * - There is at most one open transaction per calendar day.
+   * - Open transactions represent buys contributing to the current open position.
+   * - Cost basis is time-varying and reflects cumulative invested amount up to that day.
+   * - Only days with available price data are counted (trading days).
+   * - Days before the first open transaction are ignored.
+   *
+   * @returns Number of trading days the position was underwater.
    */
-  private calculateDaysUnderwater(transactions: Transaction[], priceHistory: PriceHistory, position: Position): number {
-    const costBasis = sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity;
-    if (costBasis === 0) return 0;
+  private calculateDaysUnderwater(openTransactions: OpenTransaction[], priceHistory: PriceHistory): number {
+    if (!openTransactions?.length || !priceHistory.prices?.length) return 0;
 
-    // Get first purchase date from open transactions
-    const openTransactions = calculateOpenTransactions(transactions, this.currencies);
-    if (openTransactions.length === 0) return 0;
+    const openTransactionByDate = openTransactions.reduce(
+      (acc, t) => {
+        acc[t.date.format(DATE_FORMAT)] = t; // one per day
+        return acc;
+      },
+      {} as Record<string, OpenTransaction>,
+    );
 
-    const firstBuyDate = openTransactions.sort((a, b) => a.date.valueOf() - b.date.valueOf())[0].date;
+    let currentDate = openTransactions[0].date;
+    const endDate = dayjs(priceHistory.prices[priceHistory.prices.length - 1].date);
 
-    // Count trading days since first open purchase (excluding weekends/holidays)
-    // Price history only contains trading days, so we count entries in price history
+    const priceHistoryByDate = priceHistory.prices.reduce(
+      (acc, p) => {
+        acc[dayjs(p.date).format(DATE_FORMAT)] = p.close;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    let currentBuyValue = 0; // $
+    let currentShares = 0; // shares
     let daysUnderwater = 0;
-    for (const point of priceHistory.prices) {
-      const pointDate = dayjs(point.date);
-      if (pointDate.isSameOrAfter(firstBuyDate, 'day') && point.close < costBasis) {
-        daysUnderwater++;
+
+    while (currentDate.isSameOrBefore(endDate, 'day')) {
+      const key = currentDate.format(DATE_FORMAT);
+
+      const tx = openTransactionByDate[key];
+      if (tx) {
+        currentBuyValue += tx.amount;
+        currentShares += tx.shares;
       }
+
+      if (isTradingDay(currentDate)) {
+        const close = priceHistoryByDate[key];
+        if (close && currentShares > 0 && close * currentShares < currentBuyValue) {
+          daysUnderwater++;
+        }
+      }
+
+      currentDate = currentDate.add(1, 'day');
     }
 
     return daysUnderwater;
-  }
-
-  /**
-   * Calculate percentage below cost basis
-   */
-  private calculatePercentUnderwater(_transactions: Transaction[], position: Position): number {
-    const costBasis = position.book_value; // Use book_value directly from position
-    if (costBasis === 0) return 0;
-
-    const currentValue = position.market_value;
-    if (currentValue >= costBasis) return 0;
-
-    return ((costBasis - currentValue) / costBasis) * 100;
   }
 
   /**
@@ -709,7 +952,9 @@ export class HealthCheckService {
    * (AnnualizedReturn - RiskFreeRate) / Volatility
    */
   private calculateSharpeRatio(priceHistory: PriceHistory, riskFreeRate: number = 0.04): number {
-    const annualizedReturn = this.calculateReturn(priceHistory, 252) / 100;
+    // Use price-only return for Sharpe ratio to match volatility calculation
+    // (volatility is based on price changes only)
+    const annualizedReturn = this.calculatePriceReturn(priceHistory, dayjs().subtract(1, 'year')) / 100;
     const volatility = this.calculateVolatility(priceHistory);
 
     if (volatility === 0) return 0;
@@ -729,10 +974,10 @@ export class HealthCheckService {
     const recentDividends = dividendTxs.filter((t) => dayjs(t.date).isAfter(oneYearAgo));
 
     const annualDividends = recentDividends.reduce((sum, t) => sum + t.amount, 0);
-    const currentPrice = position.market_value / position.quantity;
+    const currentPrice = position.security.last_price;
+    if (!currentPrice) return 0;
 
-    if (currentPrice === 0) return 0;
-    return (annualDividends / currentPrice) * 100;
+    return (annualDividends / currentPrice / position.quantity) * 100;
   }
 
   /**
@@ -797,15 +1042,9 @@ export class HealthCheckService {
   /**
    * Calculate number of days since first open purchase
    */
-  private calculateHoldingPeriodDays(transactions: Transaction[]): number {
-    const openTransactions = calculateOpenTransactions(transactions, this.currencies);
+  private calculateHoldingPeriodDays(openTransactions: OpenTransaction[]): number {
     if (openTransactions.length === 0) return 0;
 
-    // Get the earliest buy date from open transactions
-    const sortedOpenTxs = openTransactions.sort((a, b) => a.date.valueOf() - b.date.valueOf());
-    const firstBuyDate = sortedOpenTxs[0].date;
-    const today = dayjs();
-
-    return today.diff(firstBuyDate, 'day');
+    return openTransactions[openTransactions.length - 1].date.diff(openTransactions[0].date, 'day');
   }
 }

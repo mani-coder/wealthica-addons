@@ -174,8 +174,15 @@ export function PortfolioHealthCheck({ positions }: Props) {
           metrics: {
             return1Y: gainPercent,
             return3Y: gainPercent,
+            return5Y: gainPercent,
             returnSinceInception: gainPercent,
             xirr: position.xirr,
+            benchmarkReturn1Y: benchmarkReturn,
+            benchmarkReturn5Y: benchmarkReturn,
+            benchmarkReturnSinceInception: benchmarkReturn,
+            alpha1Y: gainPercent - benchmarkReturn,
+            alpha5Y: gainPercent - benchmarkReturn,
+            alphaSinceInception: gainPercent - benchmarkReturn,
             benchmarkReturn3Y: benchmarkReturn,
             alpha3Y: gainPercent - benchmarkReturn,
             opportunityCost:
@@ -183,7 +190,6 @@ export function PortfolioHealthCheck({ positions }: Props) {
             maxDrawdown: Math.abs(Math.min(0, gainPercent)),
             currentDrawdown: Math.min(0, gainPercent),
             daysUnderwater: gainPercent < 0 ? 365 : 0,
-            percentUnderwater: Math.abs(Math.min(0, gainPercent)),
             holdingPeriodDays: 365 * 3, // Simplified: assume 3 year holding period
             volatility: 0.25,
             sharpeRatio: gainPercent > 0 ? 0.8 : -0.2,

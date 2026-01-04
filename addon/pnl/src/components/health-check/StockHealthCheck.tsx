@@ -9,7 +9,9 @@ import { Alert, Card, Spin, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '@/analytics';
-import { getSymbol } from '@/utils/common';
+import { cn } from '@/utils/cn';
+import { formatDate, getSymbol, sumOf } from '@/utils/common';
+import { calculateOpenTransactions } from '@/utils/transactionUtils';
 import { DATE_FORMAT } from '../../constants';
 import { useAddonContext } from '../../context/AddonContext';
 import { useBenchmark } from '../../context/BenchmarkContext';
@@ -18,7 +20,7 @@ import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecur
 import { HealthCheckService, type PriceHistory, type PricePoint } from '../../services/healthCheckService';
 import type { Position } from '../../types';
 import type { HoldingHealthReport } from '../../types/healthCheck';
-import { SEVERITY_COLORS } from '../../types/healthCheck';
+import { RECOMMENDATION_COLORS, SEVERITY_COLORS } from '../../types/healthCheck';
 import { BenchmarkSelector } from '../common/BenchmarkSelector';
 import { HealthCheckMetrics } from './HealthCheckMetrics';
 import { OpportunityCostChart } from './OpportunityCostChart';
@@ -37,7 +39,7 @@ function toPricePoints(prices: SecurityPriceData[]): PricePoint[] {
 
 export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false }) => {
   const { toDate, portfolioValue } = useAddonContext();
-  const { currencies } = useCurrency();
+  const { currencies, getValue: convertCurrency } = useCurrency();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
   const { selectedBenchmark, fetchBenchmarkHistory } = useBenchmark();
   const symbol = getSymbol(position.security);
@@ -52,6 +54,15 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     return position.transactions?.length ? position.transactions[0].date : dayjs();
   }, [position.transactions]);
 
+  const openTransactions = useMemo(() => {
+    const _openTransactions = calculateOpenTransactions(position.transactions, currencies);
+    console.debug(
+      `Open transactions for ${getSymbol(position.security)}, openShares: ${sumOf(..._openTransactions.map((t) => t.shares))}`,
+      _openTransactions.map((t) => ({ ...t, date: formatDate(t.date) })),
+    );
+    return _openTransactions;
+  }, [position.transactions, currencies]);
+
   useEffect(() => {
     trackEvent('stock-health-check', { benchmark: selectedBenchmark });
   }, [symbol, selectedBenchmark]);
@@ -60,7 +71,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
    * Fetch historical price data for a security
    */
   const fetchPriceHistory = useCallback(
-    async (securityId: string, symbol: string): Promise<PriceHistory | null> => {
+    async (securityId: string, symbol: string, currency: string): Promise<PriceHistory | null> => {
       try {
         console.debug(
           '[DEBUG] fetching price history for',
@@ -70,7 +81,11 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
           toDate,
         );
         const data = await fetchSecurityHistory(securityId, positionStartDate, dayjs(toDate, DATE_FORMAT));
-        return { symbol, prices: toPricePoints(data) };
+        const prices: PricePoint[] = data.map((point) => ({
+          date: point.timestamp,
+          close: convertCurrency(currency, point.closePrice, point.timestamp),
+        }));
+        return { symbol, prices };
       } catch (error) {
         console.error(`Failed to fetch price history for ${symbol}:`, error);
         return null;
@@ -90,7 +105,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       // Fetch benchmark data
       const [benchmarkPrices, fetchedStockHistory] = await Promise.all([
         fetchBenchmarkHistory(positionStartDate, dayjs(toDate, DATE_FORMAT)),
-        fetchPriceHistory(position.security.id, symbol),
+        fetchPriceHistory(position.security.id, symbol, position.security.currency),
       ]);
 
       if (!fetchedStockHistory || fetchedStockHistory.prices.length === 0) {
@@ -113,6 +128,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       const holdingReport = service.analyzeHolding(
         position,
         position.transactions || [],
+        openTransactions,
         fetchedStockHistory,
         fetchedBenchmarkHistory,
         portfolioValue, // Use actual total portfolio value from context
@@ -135,6 +151,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     fetchBenchmarkHistory,
     currencies,
     portfolioValue,
+    openTransactions,
   ]);
 
   useEffect(() => {
@@ -204,11 +221,19 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       {/* Opportunity Cost Comparison Chart */}
       {stockHistory && benchmarkHistory && position.transactions && (
         <OpportunityCostChart
-          transactions={position.transactions}
+          openTransactions={openTransactions}
           stockHistory={stockHistory}
           benchmarkHistory={benchmarkHistory}
           stockCurrency={position.security.currency}
         />
+      )}
+
+      {report.suggestedAction && (
+        <div className={cn('px-4 py-1', RECOMMENDATION_COLORS[report.recommendation])}>
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">Insights:</h3>
+          <p className="text-sm">{report.suggestedAction}</p>
+          <p className="text-sm">{report.opportunityCostDescription}</p>
+        </div>
       )}
 
       {/* Issues and Strengths */}

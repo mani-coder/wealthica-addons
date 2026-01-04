@@ -9,21 +9,19 @@
  * 2. Benchmark P/L: What you would have if invested in benchmark on same dates
  */
 
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import type * as Highcharts from 'highcharts';
 import { useMemo } from 'react';
 import { BENCHMARK_SERIES_OPTIONS, PORTFOLIO_SERIES_OPTIONS, TYPE_TO_COLOR } from '@/constants';
-import { formatCurrency, formatDate, sumOf } from '@/utils/common';
+import { formatCurrency, formatDate, isTradingDay } from '@/utils/common';
 import { useAddonContext } from '../../context/AddonContext';
 import { useBenchmark } from '../../context/BenchmarkContext';
-import useCurrency from '../../hooks/useCurrency';
 import type { PriceHistory } from '../../services/healthCheckService';
-import type { Transaction } from '../../types';
-import { calculateOpenTransactions } from '../../utils/transactionUtils';
+import type { OpenTransaction } from '../../utils/transactionUtils';
 import { Charts } from '../Charts';
 
 interface Props {
-  transactions: Transaction[];
+  openTransactions: OpenTransaction[];
   stockHistory: PriceHistory;
   benchmarkHistory: PriceHistory;
   stockCurrency: string; // Currency of the stock (e.g., "CAD", "USD")
@@ -37,9 +35,8 @@ interface TimelinePoint {
   benchmarkPnl: number;
 }
 
-export function OpportunityCostChart({ transactions, stockHistory, benchmarkHistory, stockCurrency }: Props) {
+export function OpportunityCostChart({ openTransactions, stockHistory, benchmarkHistory }: Props) {
   const { isPrivateMode } = useAddonContext();
-  const { currencies } = useCurrency();
   const { benchmarkInfo } = useBenchmark();
 
   /**
@@ -133,18 +130,6 @@ export function OpportunityCostChart({ transactions, stockHistory, benchmarkHist
   }
 
   /**
-   * Memoize open transactions separately with currency conversion
-   */
-  const openTransactions = useMemo(() => {
-    const _openTransactions = calculateOpenTransactions(transactions, currencies);
-    console.debug(
-      `Open transactions for ${stockHistory.symbol}, openShares: ${sumOf(..._openTransactions.map((t) => t.shares))}`,
-      _openTransactions.map((t) => ({ ...t, date: formatDate(t.date) })),
-    );
-    return _openTransactions;
-  }, [transactions, currencies, stockHistory.symbol]);
-
-  /**
    * Build timeline data comparing stock vs benchmark performance
    * OPTIMIZED: Pre-calculate transaction prices once, not for every timeline date
    */
@@ -153,69 +138,74 @@ export function OpportunityCostChart({ transactions, stockHistory, benchmarkHist
 
     // PRE-CALCULATE: Get prices at transaction dates ONCE (not for every timeline date!)
     interface TransactionShares {
-      txDate: Date;
+      txDate: Dayjs;
       amount: number;
       stockShares: number;
       benchmarkShares: number;
     }
 
     // Find the earliest open transaction date
-    const earliestDate = openTransactions[0].date.toDate();
-    const txShares: TransactionShares[] = openTransactions.map((openTx) => {
-      const txDate = openTx.date.toDate();
-      const benchmarkPriceAtTx = getPriceOnDate(benchmarkPriceData.priceMap, txDate);
+    const earliestDate = openTransactions[0].date;
+    const lastDate = openTransactions[openTransactions.length - 1].date;
+    const txSharesByDate = openTransactions.reduce(
+      (hash, openTx) => {
+        const txDate = openTx.date;
+        const benchmarkPriceAtTx = getPriceOnDate(benchmarkPriceData.priceMap, txDate.toDate());
 
-      return {
-        txDate,
-        amount: openTx.amount,
-        // Use the actual shares from OpenTransaction (accounts for splits and partial sells)
-        stockShares: openTx.shares,
-        // Calculate benchmark shares based on the cost basis
-        benchmarkShares: benchmarkPriceAtTx > 0 ? openTx.amount / benchmarkPriceAtTx : 0,
-      };
-    });
-
-    // Get all dates from stock price history, starting from earliest transaction
-    const allDates = stockPriceData.dates.filter((date) => date >= earliestDate);
-
-    if (allDates.length === 0) return [];
+        hash[formatDate(openTx.date)] = {
+          txDate,
+          amount: openTx.amount,
+          // Use the actual shares from OpenTransaction (accounts for splits and partial sells)
+          stockShares: openTx.shares,
+          // Calculate benchmark shares based on the cost basis
+          benchmarkShares: benchmarkPriceAtTx > 0 ? openTx.amount / benchmarkPriceAtTx : 0,
+        };
+        return hash;
+      },
+      {} as { [K: string]: TransactionShares },
+    );
 
     // Build timeline with pre-calculated shares
     const timeline: TimelinePoint[] = [];
 
-    for (const currentDate of allDates) {
-      let stockValue = 0;
-      let benchmarkValue = 0;
-      let totalInvested = 0;
+    let currentShares = 0;
+    let currentBenchmarkShares = 0;
+    let totalInvested = 0;
+    let currentDate = dayjs(earliestDate);
+    while (currentDate.isSameOrBefore(lastDate)) {
+      const txShares = txSharesByDate[formatDate(currentDate)];
+      if (txShares) {
+        totalInvested += txShares.amount;
+        currentShares += txShares.stockShares;
+        currentBenchmarkShares += txShares.benchmarkShares;
+      }
 
       // Get current prices ONCE per date (not per transaction!) - O(1) hash map lookup
-      const stockPriceAtDate = getPriceOnDate(stockPriceData.priceMap, currentDate);
-      const benchmarkPriceAtDate = getPriceOnDate(benchmarkPriceData.priceMap, currentDate);
+      const _currentDate = currentDate.toDate();
 
-      // Convert stock price to USD if needed
-      const stockPriceInUSD = currencies.getValue(stockCurrency, stockPriceAtDate, dayjs(currentDate));
+      if (isTradingDay(currentDate)) {
+        const stockPriceAtDate = getPriceOnDate(stockPriceData.priceMap, _currentDate);
+        const benchmarkPriceAtDate = getPriceOnDate(benchmarkPriceData.priceMap, _currentDate);
 
-      // For each transaction, use pre-calculated shares
-      for (const tx of txShares) {
-        if (tx.txDate <= currentDate) {
-          totalInvested += tx.amount;
-          stockValue += tx.stockShares * stockPriceInUSD;
-          benchmarkValue += tx.benchmarkShares * benchmarkPriceAtDate;
+        if (stockPriceAtDate > 0 && benchmarkPriceAtDate > 0) {
+          const stockValue = currentShares * stockPriceAtDate;
+          const benchmarkValue = currentBenchmarkShares * benchmarkPriceAtDate;
+
+          if (totalInvested > 0) {
+            const stockPnl = ((stockValue - totalInvested) / totalInvested) * 100;
+            const benchmarkPnl = ((benchmarkValue - totalInvested) / totalInvested) * 100;
+
+            timeline.push({
+              date: _currentDate,
+              stockValue,
+              benchmarkValue,
+              stockPnl,
+              benchmarkPnl,
+            });
+          }
         }
       }
-
-      if (totalInvested > 0) {
-        const stockPnl = ((stockValue - totalInvested) / totalInvested) * 100;
-        const benchmarkPnl = ((benchmarkValue - totalInvested) / totalInvested) * 100;
-
-        timeline.push({
-          date: currentDate,
-          stockValue,
-          benchmarkValue,
-          stockPnl,
-          benchmarkPnl,
-        });
-      }
+      currentDate = currentDate.add(1, 'day');
     }
 
     return timeline;
@@ -296,7 +286,7 @@ export function OpportunityCostChart({ transactions, stockHistory, benchmarkHist
           for (const point of points) {
             const pnl = point.y?.toFixed(2) || '0';
             // Use the correct value based on the series
-            const isStockSeries = point.series.options.id === 'stockSeries';
+            const isStockSeries = point.series.options.id === PORTFOLIO_SERIES_OPTIONS.id;
             const value = isStockSeries ? (point.point as any).stockValue : (point.point as any).benchmarkValue;
             const valueFormatted = isPrivateMode
               ? '-'
