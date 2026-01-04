@@ -1,5 +1,5 @@
 import { Addon } from '@wealthica/wealthica.js/index';
-import { ConfigProvider, Empty, Tabs, Typography } from 'antd';
+import { ConfigProvider, Tabs, Typography } from 'antd';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import xirr from 'xirr';
 import { initTracking, trackEvent } from './analytics';
@@ -13,27 +13,24 @@ import {
   parseSecurityTransactionsResponse,
 } from './api';
 import BuyMeACoffee from './components/BuyMeACoffee';
-import CashTable from './components/CashTable';
 import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import { BarLoader } from './components/common/BarLoader';
 import TabLabel from './components/common/TabLabel';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
-import { Events } from './components/Events';
-import HoldingsCharts from './components/HoldingsCharts';
-import HoldingsTable from './components/HoldingsTable';
-import { PortfolioHealthCheck } from './components/health-check/PortfolioHealthCheck';
-import News from './components/News';
 import PnLStatistics from './components/PnLStatistics';
-import PortfolioVisualizer from './components/PortfolioVisualizer';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
-import BenchmarkComparison from './components/performance/BenchmarkComparison';
-import RealizedPnL from './components/realized-pnl/RealizedPnL';
-import { TopGainersLosers } from './components/TopGainersLosers';
 import YoYPnLChart from './components/YoYPnLChart';
 
-// Lazy load less frequently used components
+// Lazy load all tabs except the home tab (P&L Charts)
+const Holdings = lazy(() => import('./components/Holdings'));
+const TopGainersLosers = lazy(() => import('./components/TopGainersLosers'));
+const BenchmarkComparison = lazy(() => import('./components/performance/BenchmarkComparison'));
+const PortfolioHealthCheck = lazy(() => import('./components/health-check/PortfolioHealthCheck'));
+const RealizedPnL = lazy(() => import('./components/realized-pnl/RealizedPnL'));
 const TradingActivities = lazy(() => import('./components/TradingActivities'));
+const News = lazy(() => import('./components/News'));
+const Events = lazy(() => import('./components/Events'));
 const ChangeLog = lazy(() => import('./components/ChangeLog'));
 
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';
@@ -531,52 +528,53 @@ export default function App() {
                         {
                           label: <TabLabel label="Holdings" />,
                           key: TabKeysEnum.HOLDINGS,
-                          forceRender: true,
                           children: (
-                            <>
-                              {state.positions.length ? (
-                                <HoldingsCharts positions={state.positions} accounts={state.accounts} />
-                              ) : (
-                                <Empty description="No Holdings" />
-                              )}
-                              <CashTable accounts={state.accounts} />
-                              {!!state.positions.length && (
-                                <>
-                                  <PortfolioVisualizer positions={state.positions} />
-                                  <HoldingsTable positions={state.positions} />
-                                </>
-                              )}
-                            </>
+                            <Suspense fallback={<BarLoader />}>
+                              <Holdings positions={state.positions} accounts={state.accounts} />
+                            </Suspense>
                           ),
                         },
                         {
                           label: <TabLabel label="Gainers/Losers" />,
                           key: TabKeysEnum.GAINERS_LOSERS,
-                          destroyOnHidden: true,
-                          children: <TopGainersLosers positions={state.positions} accounts={state.accounts} />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <TopGainersLosers positions={state.positions} accounts={state.accounts} />
+                            </Suspense>
+                          ),
                         },
                         {
                           label: <TabLabel label="Performance" isNew />,
                           key: TabKeysEnum.PERFORMANCE,
                           destroyOnHidden: true,
-                          children: <BenchmarkComparison portfolios={state.allPortfolios} />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <BenchmarkComparison portfolios={state.allPortfolios} />
+                            </Suspense>
+                          ),
                         },
                         {
                           label: <TabLabel label="Health Check" isNew />,
                           key: TabKeysEnum.HEALTH_CHECK,
                           destroyOnHidden: true,
-                          children: <PortfolioHealthCheck positions={state.positions} />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <PortfolioHealthCheck positions={state.positions} />
+                            </Suspense>
+                          ),
                         },
                         {
                           label: <TabLabel label="Realized P&L" />,
                           key: TabKeysEnum.REALIZED_PNL,
                           destroyOnHidden: true,
                           children: (
-                            <RealizedPnL
-                              transactions={state.securityTransactions}
-                              accountTransactions={state.accountTransactions}
-                              accounts={state.accounts}
-                            />
+                            <Suspense fallback={<BarLoader />}>
+                              <RealizedPnL
+                                transactions={state.securityTransactions}
+                                accountTransactions={state.accountTransactions}
+                                accounts={state.accounts}
+                              />
+                            </Suspense>
                           ),
                         },
                         {
@@ -599,16 +597,24 @@ export default function App() {
                           label: <TabLabel label="News" />,
                           key: TabKeysEnum.NEWS,
                           destroyOnHidden: true,
-                          children: <News positions={state.positions} />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <News positions={state.positions} />
+                            </Suspense>
+                          ),
                         },
                         {
                           label: <TabLabel label="Events" />,
                           key: TabKeysEnum.EVENTS,
                           destroyOnHidden: true,
-                          children: <Events positions={state.positions} />,
+                          children: (
+                            <Suspense fallback={<BarLoader />}>
+                              <Events positions={state.positions} />
+                            </Suspense>
+                          ),
                         },
                         {
-                          label: <TabLabel label="Change Log" />,
+                          label: <TabLabel label="Change Log" isNew />,
                           key: TabKeysEnum.CHANGE_LOG,
                           destroyOnHidden: true,
                           children: (

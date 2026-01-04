@@ -11,7 +11,7 @@ import Charts from './Charts';
 import { StockHealthCheck } from './health-check/StockHealthCheck';
 import StockPnLTimeline from './StockPnLTimeline';
 
-export function TopGainersLosers(props: { positions: Position[]; accounts: Account[] }) {
+export default function TopGainersLosers(props: { positions: Position[]; accounts: Account[] }) {
   const [sortByValue, setSortByValue] = useState(false);
   const [pnlSymbol, setPnlSymbol] = useState<string>();
   const { isPrivateMode } = useAddonContext();

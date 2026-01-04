@@ -55,7 +55,7 @@ function EventTypes({ types, onChange }: { types: EventType[]; onChange: (types:
   );
 }
 
-export function Events({ positions }: { positions: Position[] }) {
+export default function Events({ positions }: { positions: Position[] }) {
   const [events, setEvents] = useState<{ dividends: Dividend[]; earnings: Earning[] }>();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Dayjs>(dayjs().startOf('month'));

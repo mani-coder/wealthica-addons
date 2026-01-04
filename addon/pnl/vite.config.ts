@@ -21,7 +21,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           antd: ['antd', '@ant-design/icons'],
           charts: ['highcharts', 'highcharts-react-official'],
-        }
+        },
       },
     },
   },

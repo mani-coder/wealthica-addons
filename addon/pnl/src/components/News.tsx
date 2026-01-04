@@ -2,7 +2,7 @@ import CaretDownOutlined from '@ant-design/icons/CaretDownOutlined';
 import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined';
 import { Empty, Radio, Spin, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { trackEvent } from '../analytics';
 import type { Position } from '../types';
@@ -58,6 +58,7 @@ function News({ positions }: { positions: Position[] }) {
   const [loading, setLoading] = useState(false);
   const [symbol, setSymbol] = useState<string>('All');
   const [sentiment, setSentiment] = useState<'positive' | 'negative' | 'all'>('all');
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const symbols = useMemo(() => {
     return ['All'].concat(
@@ -71,7 +72,16 @@ function News({ positions }: { positions: Position[] }) {
     );
   }, [positions]);
 
-  function fetchNews(symbols: string[]) {
+  const nasdaqSymbols = useMemo(() => {
+    return positions
+      .filter((position) => {
+        const symbol = position.security.symbol || position.security.name;
+        return !(symbol.includes('-') || position.security.type === 'crypto');
+      })
+      .map((position) => getNasdaqTicker(position.security));
+  }, [positions]);
+
+  const fetchNews = useCallback((symbols: string[]) => {
     const _symbols = symbols.join(',');
     const url = buildCorsFreeUrl(`https://portfolio.nasdaq.com/api/portfolio/getPortfolioNews/?tickers=${_symbols}`);
     setLoading(true);
@@ -122,27 +132,22 @@ function News({ positions }: { positions: Position[] }) {
             },
             symbols.length === 1 ? { [getSymbolFromNasdaqTicker(symbols[0])]: [] } : {},
           );
-          setNews({ ...news, ..._news });
+          setNews((prevNews) => ({ ...prevNews, ..._news }));
+          setHasLoaded(true);
         }
       })
       .catch((error) => console.info('Failed to load news articles.', error))
       .finally(() => setLoading(false));
-  }
+  }, []);
 
   useEffect(() => {
-    const _symbols = positions
-      .filter((position) => {
-        const symbol = position.security.symbol || position.security.name;
-        return !(symbol.includes('-') || position.security.type === 'crypto');
-      })
-      .map((position) => getNasdaqTicker(position.security));
-    if (!_symbols.length) {
+    if (!nasdaqSymbols.length || hasLoaded) {
       return;
     }
-
     setSymbol('All');
-    setTimeout(() => fetchNews(_symbols), 100);
-  }, [positions, fetchNews]);
+    fetchNews(nasdaqSymbols);
+    trackEvent('news-load-all');
+  }, [nasdaqSymbols, fetchNews, hasLoaded]);
 
   const newsContainerRef = useRef<HTMLDivElement>();
 
@@ -220,8 +225,8 @@ function News({ positions }: { positions: Position[] }) {
 
         {selectedNews.length ? (
           <div ref={newsContainerRef as any} className="w-3/4 h-[70vh] overflow-scroll">
-            {selectedNews.map((_news) => (
-              <NewsItem key={_news.url} news={_news} />
+            {selectedNews.map((_news, index) => (
+              <NewsItem key={`${_news.url}-${index}`} news={_news} />
             ))}
           </div>
         ) : (

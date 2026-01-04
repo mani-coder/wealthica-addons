@@ -10,7 +10,7 @@ import { formatCurrency, formatMoney, getSymbol } from '../utils/common';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 import CompositionCharts from './CompositionCharts';
-import { StockHealthCheck } from './health-check';
+import { StockHealthCheck } from './health-check/StockHealthCheck';
 import { StockSelector } from './StockSelector';
 import StockTimeline from './StockTimeline';
 

@@ -26,7 +26,7 @@ interface Props {
   positions: Position[];
 }
 
-export function PortfolioHealthCheck({ positions }: Props) {
+export default function PortfolioHealthCheck({ positions }: Props) {
   const { fromDate, toDate } = useAddonContext();
   const { selectedBenchmark, benchmarkInfo, fetchBenchmarkHistory } = useBenchmark();
 
