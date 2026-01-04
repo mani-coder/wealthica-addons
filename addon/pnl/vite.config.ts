@@ -17,37 +17,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'vendor';
-          }
-
-          // Ant Design icons - separate chunk
-          if (id.includes('node_modules/@ant-design/icons')) {
-            return 'antd-icons';
-          }
-
-          // Ant Design core - separate from icons
-          if (id.includes('node_modules/antd')) {
-            return 'antd';
-          }
-
-          // Day.js - used by antd and throughout the app
-          if (id.includes('node_modules/dayjs')) {
-            return 'dayjs';
-          }
-
-          // Charting libraries
-          if (id.includes('node_modules/highcharts')) {
-            return 'charts';
-          }
-
-          // Other large dependencies
-          if (id.includes('node_modules')) {
-            return 'vendor-misc';
-          }
-        },
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          antd: ['antd', '@ant-design/icons'],
+          charts: ['highcharts', 'highcharts-react-official'],
+        }
       },
     },
   },

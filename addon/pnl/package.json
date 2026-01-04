@@ -24,6 +24,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && mkdir -p ../../public/mani-coder/wealthica-portfolio-addon/ && rm -rf ../../public/mani-coder/wealthica-portfolio-addon/static; cp -vR build/* ../../public/mani-coder/wealthica-portfolio-addon/",
+    "start": "vite preview",
     "preview": "vite preview",
     "deploy": "npm run build && firebase deploy --only hosting:mani-coder",
     "format": "biome format --write .",
