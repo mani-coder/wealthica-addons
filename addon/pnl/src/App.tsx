@@ -596,7 +596,6 @@ export default function App() {
                         {
                           label: <TabLabel label="News" />,
                           key: TabKeysEnum.NEWS,
-                          destroyOnHidden: true,
                           children: (
                             <Suspense fallback={<BarLoader />}>
                               <News positions={state.positions} />
@@ -606,7 +605,6 @@ export default function App() {
                         {
                           label: <TabLabel label="Events" />,
                           key: TabKeysEnum.EVENTS,
-                          destroyOnHidden: true,
                           children: (
                             <Suspense fallback={<BarLoader />}>
                               <Events positions={state.positions} />
