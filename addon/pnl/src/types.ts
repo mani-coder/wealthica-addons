@@ -86,6 +86,8 @@ export type AccountTransaction = {
   description: string;
 };
 
+export type SecurityType = 'equity' | 'etf' | 'crypto' | 'money_market' | 'mutual_fund' | 'unknown';
+
 export type Position = {
   class: string;
   security: Security;
@@ -99,6 +101,8 @@ export type Position = {
   investments: Investment[];
   transactions: Transaction[];
   xirr: number;
+  sector?: string; // Optional sector data fetched from API
+  type?: SecurityType; // Optional security type (equity, etf, crypto, etc.)
 };
 
 export type Account = {

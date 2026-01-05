@@ -1,12 +1,14 @@
 import { Switch, Typography } from 'antd';
 import * as Highcharts from 'highcharts';
 import { useCallback, useMemo, useState } from 'react';
+import { isFund } from '@/utils/securityHelpers';
 import { trackEvent } from '../analytics';
 import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
+import { useSectorEnrichment } from '../hooks/useSectorEnrichment';
 import type { Account, Position } from '../types';
 import { getOptions, POSITION_TOOLTIP } from '../utils/chartHelpers';
-import { formatCurrency, formatMoney, getSymbol, sumOf } from '../utils/common';
+import { formatCurrency, formatMoney, getSymbol, getYahooSymbol, sumOf } from '../utils/common';
 import { type GroupType, getGroupKey } from '../utils/compositionHelpers';
 import { startCase } from '../utils/lodash-replacements';
 import { Charts } from './Charts';
@@ -21,53 +23,194 @@ type Props = {
 const COLORS = Highcharts.getOptions().colors;
 
 export default function CompositionCharts(props: Props) {
-  const [showHoldings, setShowHoldings] = useState(true);
+  const [showHoldings, setShowHoldings] = useState(false);
   const { isPrivateMode } = useAddonContext();
   const { getValue, baseCurrencyDisplay } = useCurrency();
   const [compositionGroup, setCompositionGroup] = useState<GroupType>('currency');
+
+  // Use sector enrichment hook - only fetch data when viewing sector composition
+  const { accountsWithSectors: enrichedAccounts, fundSectorWeightings } = useSectorEnrichment(
+    props.accounts,
+    compositionGroup === 'sector',
+  );
+
+  // Use enriched accounts only when viewing sector composition, otherwise use original accounts
+  const accountsWithSectors = compositionGroup === 'sector' ? enrichedAccounts : props.accounts;
 
   const getColor = useCallback((index: number) => (COLORS ? COLORS[index % COLORS?.length] : undefined), []);
 
   const getAccountsCompositionHoldingsDrilldown = useCallback(
     (group: GroupType, drilldown: boolean): Highcharts.SeriesPieOptions | Highcharts.DrilldownOptions => {
-      const accountsByName = props.accounts.reduce(
+      // Use accountsWithSectors when grouping by sector
+      const accounts = group === 'sector' ? accountsWithSectors : props.accounts;
+
+      const accountsByName = accounts.reduce(
         (hash, account) => {
-          const name = getGroupKey(group, account);
-          let mergedAccount = hash[name];
-          if (!mergedAccount) {
-            mergedAccount = { name, value: 0, positions: {}, accounts: [] };
-            hash[name] = mergedAccount;
-          }
-          mergedAccount.value += sumOf(
-            ...account.positions.map((position) => getValue(position.currency, position.market_value)),
-          );
+          // For sector grouping, distribute ETFs across sectors based on weightings
+          if (group === 'sector') {
+            account.positions.forEach((position) => {
+              const value = getValue(position.currency, position.market_value);
+              const gainAmount = getValue(position.currency, position.gain_amount);
 
-          account.positions.forEach((position) => {
-            const symbol = getSymbol(position.security);
-            const existingPosition = mergedAccount.positions[symbol];
-            if (!existingPosition) {
-              mergedAccount.positions[symbol] = {
-                ...position,
-                market_value: getValue(position.currency, position.market_value),
-                gain_amount: getValue(position.currency, position.gain_amount),
-              };
-            } else {
-              const value = existingPosition.market_value + getValue(position.currency, position.market_value);
-              const gain_amount = existingPosition.gain_amount + getValue(position.currency, position.gain_amount);
+              // Handle crypto positions first
+              if (position.type === 'crypto') {
+                const name = 'Crypto';
+                let mergedAccount = hash[name];
+                if (!mergedAccount) {
+                  mergedAccount = { name, value: 0, positions: {}, accounts: [] };
+                  hash[name] = mergedAccount;
+                }
+                mergedAccount.value += value;
 
-              mergedAccount.positions[symbol] = {
-                ...existingPosition,
-                book_value: existingPosition.book_value + position.book_value,
-                market_value: value,
-                quantity: existingPosition.quantity + position.quantity,
-                gain_currency_amount: existingPosition.gain_currency_amount + position.gain_currency_amount,
-                gain_amount,
-                gain_percent: gain_amount / (value - gain_amount),
-              };
+                const symbol = getSymbol(position.security);
+                const existingPosition = mergedAccount.positions[symbol];
+                if (!existingPosition) {
+                  mergedAccount.positions[symbol] = {
+                    ...position,
+                    market_value: value,
+                    gain_amount: gainAmount,
+                  };
+                } else {
+                  const newValue = existingPosition.market_value + value;
+                  const newGainAmount = existingPosition.gain_amount + gainAmount;
+
+                  mergedAccount.positions[symbol] = {
+                    ...existingPosition,
+                    book_value: existingPosition.book_value + position.book_value,
+                    market_value: newValue,
+                    quantity: existingPosition.quantity + position.quantity,
+                    gain_currency_amount: existingPosition.gain_currency_amount + position.gain_currency_amount,
+                    gain_amount: newGainAmount,
+                    gain_percent: newGainAmount / (newValue - newGainAmount),
+                  };
+                }
+
+                if (!mergedAccount.accounts.includes(account)) {
+                  mergedAccount.accounts.push(account);
+                }
+                return;
+              }
+
+              const yahooSymbol = getYahooSymbol(position.security);
+              const fundWeighting = fundSectorWeightings.get(yahooSymbol);
+
+              if (isFund(position) && fundWeighting && Object.keys(fundWeighting).length > 0) {
+                // Distribute fund (ETF/mutual fund) across sectors based on weightings
+                Object.entries(fundWeighting).forEach(([sectorName, weight]) => {
+                  const sectorValue = value * weight;
+                  const sectorGainAmount = gainAmount * weight;
+
+                  let mergedAccount = hash[sectorName];
+                  if (!mergedAccount) {
+                    mergedAccount = { name: sectorName, value: 0, positions: {}, accounts: [] };
+                    hash[sectorName] = mergedAccount;
+                  }
+                  mergedAccount.value += sectorValue;
+
+                  const symbol = getSymbol(position.security);
+                  const existingPosition = mergedAccount.positions[symbol];
+                  if (!existingPosition) {
+                    mergedAccount.positions[symbol] = {
+                      ...position,
+                      market_value: sectorValue,
+                      gain_amount: sectorGainAmount,
+                    };
+                  } else {
+                    const newValue = existingPosition.market_value + sectorValue;
+                    const newGainAmount = existingPosition.gain_amount + sectorGainAmount;
+
+                    mergedAccount.positions[symbol] = {
+                      ...existingPosition,
+                      book_value: existingPosition.book_value + position.book_value * weight,
+                      market_value: newValue,
+                      quantity: existingPosition.quantity + position.quantity * weight,
+                      gain_currency_amount:
+                        existingPosition.gain_currency_amount + position.gain_currency_amount * weight,
+                      gain_amount: newGainAmount,
+                      gain_percent: newGainAmount / (newValue - newGainAmount),
+                    };
+                  }
+
+                  if (!mergedAccount.accounts.includes(account)) {
+                    mergedAccount.accounts.push(account);
+                  }
+                });
+              } else {
+                // Regular stock - use direct sector assignment
+                const name = getGroupKey(group, account, position);
+                let mergedAccount = hash[name];
+                if (!mergedAccount) {
+                  mergedAccount = { name, value: 0, positions: {}, accounts: [] };
+                  hash[name] = mergedAccount;
+                }
+                mergedAccount.value += value;
+
+                const symbol = getSymbol(position.security);
+                const existingPosition = mergedAccount.positions[symbol];
+                if (!existingPosition) {
+                  mergedAccount.positions[symbol] = {
+                    ...position,
+                    market_value: value,
+                    gain_amount: gainAmount,
+                  };
+                } else {
+                  const newValue = existingPosition.market_value + value;
+                  const newGainAmount = existingPosition.gain_amount + gainAmount;
+
+                  mergedAccount.positions[symbol] = {
+                    ...existingPosition,
+                    book_value: existingPosition.book_value + position.book_value,
+                    market_value: newValue,
+                    quantity: existingPosition.quantity + position.quantity,
+                    gain_currency_amount: existingPosition.gain_currency_amount + position.gain_currency_amount,
+                    gain_amount: newGainAmount,
+                    gain_percent: newGainAmount / (newValue - newGainAmount),
+                  };
+                }
+
+                if (!mergedAccount.accounts.includes(account)) {
+                  mergedAccount.accounts.push(account);
+                }
+              }
+            });
+          } else {
+            const name = getGroupKey(group, account);
+            let mergedAccount = hash[name];
+            if (!mergedAccount) {
+              mergedAccount = { name, value: 0, positions: {}, accounts: [] };
+              hash[name] = mergedAccount;
             }
-          });
+            mergedAccount.value += sumOf(
+              ...account.positions.map((position) => getValue(position.currency, position.market_value)),
+            );
 
-          mergedAccount.accounts.push(account);
+            account.positions.forEach((position) => {
+              const symbol = getSymbol(position.security);
+              const existingPosition = mergedAccount.positions[symbol];
+              if (!existingPosition) {
+                mergedAccount.positions[symbol] = {
+                  ...position,
+                  market_value: getValue(position.currency, position.market_value),
+                  gain_amount: getValue(position.currency, position.gain_amount),
+                };
+              } else {
+                const value = existingPosition.market_value + getValue(position.currency, position.market_value);
+                const gain_amount = existingPosition.gain_amount + getValue(position.currency, position.gain_amount);
+
+                mergedAccount.positions[symbol] = {
+                  ...existingPosition,
+                  book_value: existingPosition.book_value + position.book_value,
+                  market_value: value,
+                  quantity: existingPosition.quantity + position.quantity,
+                  gain_currency_amount: existingPosition.gain_currency_amount + position.gain_currency_amount,
+                  gain_amount,
+                  gain_percent: gain_amount / (value - gain_amount),
+                };
+              }
+            });
+
+            mergedAccount.accounts.push(account);
+          }
 
           return hash;
         },
@@ -186,40 +329,141 @@ export default function CompositionCharts(props: Props) {
             tooltip: POSITION_TOOLTIP,
           };
     },
-    [baseCurrencyDisplay, getColor, props.accounts, isPrivateMode, showHoldings, getValue],
+    [
+      baseCurrencyDisplay,
+      getColor,
+      props.accounts,
+      isPrivateMode,
+      showHoldings,
+      getValue,
+      accountsWithSectors,
+      fundSectorWeightings,
+    ],
   );
 
   const getAccountsCompositionSeries = useCallback(
     (group: GroupType): Highcharts.SeriesPieOptions[] => {
-      const totalValue = props.accounts.reduce((value, account) => value + account.value, 0);
+      // Use accountsWithSectors when grouping by sector
+      const accounts = group === 'sector' ? accountsWithSectors : props.accounts;
+      const totalValue = accounts.reduce((value, account) => value + account.value, 0);
+
       const data = Object.values(
-        props.accounts.reduce(
+        accounts.reduce(
           (hash, account) => {
-            const name = getGroupKey(group, account);
-            let mergedAccount = hash[name];
-            if (!mergedAccount) {
-              mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
-              hash[name] = mergedAccount;
-            }
-            mergedAccount.value += sumOf(
-              ...account.positions.map((position) => getValue(position.currency, position.market_value)),
-            );
-            mergedAccount.gainAmount += sumOf(
-              ...account.positions.map((position) => getValue(position.currency, position.gain_amount)),
-            );
+            // For sector grouping, distribute ETFs across sectors based on weightings
+            if (group === 'sector') {
+              account.positions.forEach((position) => {
+                const value = getValue(position.currency, position.market_value);
+                const gainAmount = getValue(position.currency, position.gain_amount);
 
-            const _name = account.name;
-            let _account = mergedAccount.accounts[_name];
-            if (!_account) {
-              _account = { name: _name, currencyValues: {}, value: 0 };
-              mergedAccount.accounts[_name] = _account;
-            }
-            const cash = account.cash ? Number(account.cash.toFixed(2)) : 0;
+                // Handle crypto positions first
+                if (position.type === 'crypto') {
+                  const name = 'Crypto';
+                  let mergedAccount = hash[name];
+                  if (!mergedAccount) {
+                    mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
+                    hash[name] = mergedAccount;
+                  }
+                  mergedAccount.value += value;
+                  mergedAccount.gainAmount += gainAmount;
 
-            if (!_account.currencyValues[account.currency]) {
-              _account.currencyValues[account.currency] = 0;
+                  const _name = account.name;
+                  let _account = mergedAccount.accounts[_name];
+                  if (!_account) {
+                    _account = { name: _name, currencyValues: {}, value: 0 };
+                    mergedAccount.accounts[_name] = _account;
+                  }
+                  const cash = account.cash ? Number(account.cash.toFixed(2)) : 0;
+
+                  if (!_account.currencyValues[account.currency]) {
+                    _account.currencyValues[account.currency] = 0;
+                  }
+                  _account.currencyValues[account.currency] += cash;
+                  return;
+                }
+
+                const yahooSymbol = getYahooSymbol(position.security);
+                const fundWeighting = fundSectorWeightings.get(yahooSymbol);
+
+                if (isFund(position) && fundWeighting && Object.keys(fundWeighting).length > 0) {
+                  // Distribute fund (ETF/mutual fund) across sectors based on weightings
+                  Object.entries(fundWeighting).forEach(([sectorName, weight]) => {
+                    const sectorValue = value * weight;
+                    const sectorGainAmount = gainAmount * weight;
+
+                    let mergedAccount = hash[sectorName];
+                    if (!mergedAccount) {
+                      mergedAccount = { name: sectorName, value: 0, gainAmount: 0, accounts: {} };
+                      hash[sectorName] = mergedAccount;
+                    }
+                    mergedAccount.value += sectorValue;
+                    mergedAccount.gainAmount += sectorGainAmount;
+
+                    const _name = account.name;
+                    let _account = mergedAccount.accounts[_name];
+                    if (!_account) {
+                      _account = { name: _name, currencyValues: {}, value: 0 };
+                      mergedAccount.accounts[_name] = _account;
+                    }
+                    const cash = account.cash ? Number((account.cash * weight).toFixed(2)) : 0;
+
+                    if (!_account.currencyValues[account.currency]) {
+                      _account.currencyValues[account.currency] = 0;
+                    }
+                    _account.currencyValues[account.currency] += cash;
+                  });
+                } else {
+                  // Regular stock - use direct sector assignment
+                  const name = getGroupKey(group, account, position);
+                  let mergedAccount = hash[name];
+                  if (!mergedAccount) {
+                    mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
+                    hash[name] = mergedAccount;
+                  }
+                  mergedAccount.value += value;
+                  mergedAccount.gainAmount += gainAmount;
+
+                  const _name = account.name;
+                  let _account = mergedAccount.accounts[_name];
+                  if (!_account) {
+                    _account = { name: _name, currencyValues: {}, value: 0 };
+                    mergedAccount.accounts[_name] = _account;
+                  }
+                  const cash = account.cash ? Number(account.cash.toFixed(2)) : 0;
+
+                  if (!_account.currencyValues[account.currency]) {
+                    _account.currencyValues[account.currency] = 0;
+                  }
+                  _account.currencyValues[account.currency] += cash;
+                }
+              });
+            } else {
+              const name = getGroupKey(group, account);
+              let mergedAccount = hash[name];
+              if (!mergedAccount) {
+                mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
+                hash[name] = mergedAccount;
+              }
+              mergedAccount.value += sumOf(
+                ...account.positions.map((position) => getValue(position.currency, position.market_value)),
+              );
+              mergedAccount.gainAmount += sumOf(
+                ...account.positions.map((position) => getValue(position.currency, position.gain_amount)),
+              );
+
+              const _name = account.name;
+              let _account = mergedAccount.accounts[_name];
+              if (!_account) {
+                _account = { name: _name, currencyValues: {}, value: 0 };
+                mergedAccount.accounts[_name] = _account;
+              }
+              const cash = account.cash ? Number(account.cash.toFixed(2)) : 0;
+
+              if (!_account.currencyValues[account.currency]) {
+                _account.currencyValues[account.currency] = 0;
+              }
+              _account.currencyValues[account.currency] += cash;
             }
-            _account.currencyValues[account.currency] += cash;
 
             return hash;
           },
@@ -296,11 +540,17 @@ export default function CompositionCharts(props: Props) {
           },
           style: showHoldings
             ? {
+                color: '#065f46',
+                fontSize: '12px',
+                fontWeight: '800',
+                textOutline: '2px #ffffff',
+                textDecoration: 'underline',
+              }
+            : {
                 color: '#10b981',
                 fontSize: '12px',
-                fontWeight: '600',
-              }
-            : {},
+                fontWeight: '700',
+              },
           distance: showHoldings ? 150 : 50,
         },
         tooltip: {
@@ -351,6 +601,8 @@ export default function CompositionCharts(props: Props) {
       getValue,
       getColor,
       baseCurrencyDisplay,
+      accountsWithSectors,
+      fundSectorWeightings,
     ],
   );
 
@@ -384,6 +636,7 @@ export default function CompositionCharts(props: Props) {
 
   return (
     <Collapsible title="Holdings Composition">
+      <div className="p-2" />
       <Charts key={compositionGroup} options={compositionGroupOptions} />
       <CompositionGroup
         changeGroup={setCompositionGroup}

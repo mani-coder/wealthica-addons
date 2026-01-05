@@ -26,6 +26,7 @@ export default function CompositionGroup({ group = 'currency', changeGroup, trac
           { label: 'Account Type', value: 'type' },
           { label: 'Institution', value: 'institution' },
           { label: 'Account', value: 'accounts' },
+          { label: 'Sector', value: 'sector' },
         ]}
       />
     </div>

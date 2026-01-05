@@ -11,6 +11,7 @@ import Charts from './Charts';
 import Collapsible from './Collapsible';
 import CompositionCharts from './CompositionCharts';
 import { StockHealthCheck } from './health-check/StockHealthCheck';
+import SectorAllocation from './SectorAllocation';
 import { StockSelector } from './StockSelector';
 import StockTimeline from './StockTimeline';
 
@@ -189,6 +190,8 @@ export default function HoldingsCharts(props: Props) {
       </Collapsible>
 
       <CompositionCharts positions={props.positions} accounts={props.accounts} />
+
+      <SectorAllocation accounts={props.accounts} />
     </div>
   );
 }

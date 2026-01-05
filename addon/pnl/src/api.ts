@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 import { DATE_FORMAT } from './constants';
 import type { Currencies } from './context/CurrencyContext';
 import type { Account, AccountTransaction, CashFlow, Position, Transaction } from './types';
-import { getDate, getSymbol, normalizeAccountType } from './utils/common';
+import { getDate, getSymbol, getYahooSymbol, normalizeAccountType } from './utils/common';
 
 //
 // We can properly move the securities from one account to another by marking the description or notes
@@ -200,7 +200,7 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
         id: transaction.id,
         account: transaction.investment,
         symbol: transaction.security ? getSymbol(transaction.security) : transaction.symbol,
-        ticker: transaction.security ? getSymbol(transaction.security, true) : transaction.symbol,
+        ticker: transaction.security ? getYahooSymbol(transaction.security) : transaction.symbol,
         price:
           currencyAmount && transaction.quantity
             ? Number(Math.abs(currencyAmount / transaction.quantity).toFixed(3))

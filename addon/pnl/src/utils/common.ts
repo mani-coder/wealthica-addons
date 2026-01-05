@@ -68,6 +68,29 @@ export const getSymbol = (security: Security, ticker?: boolean): string => {
   return `${security.symbol || security.name}${security.currency === 'cad' && security.type !== 'crypto' ? '.TO' : ''}`;
 };
 
+const SYMBOL_TO_YAHOO_TICKER: Record<string, string> = {
+  'BRK.B': 'BRK-B',
+};
+
+export const getYahooSymbol = (security: Security): string => {
+  const baseSymbol = security.symbol || security.name;
+  const currency = security.currency?.toLowerCase();
+
+  if (SYMBOL_TO_YAHOO_TICKER[baseSymbol]) {
+    return SYMBOL_TO_YAHOO_TICKER[baseSymbol];
+  }
+
+  if (currency === 'cad' && security.type !== 'crypto') {
+    return `${baseSymbol}.TO`;
+  }
+  if (currency === 'jpy') {
+    return `${baseSymbol}.T`;
+  }
+
+  // USD or any other currency - use as is
+  return baseSymbol;
+};
+
 export const getNasdaqTicker = (security: Security): string =>
   security.currency === 'cad' ? `TSE:${security.symbol}` : security.symbol;
 
@@ -218,4 +241,16 @@ export function getNextWeekday(date: any) {
   const day = referenceDate.day();
   const diff = day === 6 ? 2 : day === 0 ? 1 : 0;
   return (diff ? referenceDate.add(diff, 'days') : referenceDate).format(DATE_FORMAT);
+}
+
+/**
+ * Chunk array into smaller arrays of specified size
+ * Useful for batch processing API requests
+ */
+export function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
 }

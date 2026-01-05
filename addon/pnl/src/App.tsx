@@ -41,6 +41,7 @@ import dayjs from './dayjs';
 import type { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { formatMoney, getSymbol } from './utils/common';
 import { debounce } from './utils/lodash-replacements';
+import { enrichPositionsWithType } from './utils/positionEnricher';
 import { computeBookValue, computeXIRR } from './utils/xirr';
 
 type State = {
@@ -204,7 +205,7 @@ export default function App() {
     computePortfolios(positions, portfolioByDate, transactions, accounts, currencyCache);
   }
 
-  function computePortfolios(
+  async function computePortfolios(
     positions: Position[],
     portfolioByDate: any,
     transactions: any,
@@ -220,6 +221,9 @@ export default function App() {
     });
 
     currencyRef.current.setCurrencyCache(_currencyCache);
+
+    // Enrich positions with security type from Yahoo Finance API
+    await enrichPositionsWithType(positions);
 
     // Security transactions & XIRR computation
     const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyRef.current);

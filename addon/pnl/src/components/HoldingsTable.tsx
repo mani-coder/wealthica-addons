@@ -4,7 +4,7 @@ import React from 'react';
 import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import type { Position } from '../types';
-import { formatMoney, getSymbol } from '../utils/common';
+import { formatMoney, getSymbol, getYahooSymbol } from '../utils/common';
 import Collapsible from './Collapsible';
 
 type Props = {
@@ -26,7 +26,7 @@ function HoldingsTable(props: Props) {
         render: (_text, position) => (
           <Typography.Link
             rel="noreferrer noopener"
-            href={`https://finance.yahoo.com/quote/${getSymbol(position.security, true)}`}
+            href={`https://finance.yahoo.com/quote/${getYahooSymbol(position.security)}`}
             target="_blank"
           >
             {getSymbol(position.security)}
