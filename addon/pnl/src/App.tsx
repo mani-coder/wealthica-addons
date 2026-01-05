@@ -503,7 +503,6 @@ export default function App() {
                         {
                           label: <TabLabel label="P&L Charts" />,
                           key: TabKeysEnum.PNL,
-                          destroyOnHidden: true,
                           forceRender: true,
                           children: (
                             <>
@@ -566,7 +565,6 @@ export default function App() {
                         {
                           label: <TabLabel label="Realized P&L" />,
                           key: TabKeysEnum.REALIZED_PNL,
-                          destroyOnHidden: true,
                           children: (
                             <Suspense fallback={<BarLoader />}>
                               <RealizedPnL
