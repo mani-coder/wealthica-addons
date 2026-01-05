@@ -225,6 +225,9 @@ export default function App() {
     // Enrich positions with security type from Yahoo Finance API
     await enrichPositionsWithType(positions);
 
+    // Also enrich positions within each account
+    await enrichPositionsWithType(accounts.flatMap((account) => account.positions));
+
     // Security transactions & XIRR computation
     const securityTransactions = parseSecurityTransactionsResponse(transactions, currencyRef.current);
     const securityTransactionsBySymbol = securityTransactions.reduce((hash: { [key: string]: any }, transaction) => {

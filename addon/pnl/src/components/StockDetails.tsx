@@ -55,7 +55,7 @@ export default function StockDetails(props: Props) {
   return (
     <div className="flex flex-col space-y-1">
       <LabelValue label="Symbol" value={getSymbol(position.security)} />
-
+      <LabelValue label="Type" value={position.type?.toLocaleUpperCase() || 'Unknown'} />
       <LabelValue
         label="Book Value"
         value={`${baseCurrencyDisplay} ${isPrivateMode ? '-' : formatMoney(position.book_value)}`}
