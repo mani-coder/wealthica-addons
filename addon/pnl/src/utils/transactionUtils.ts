@@ -22,7 +22,10 @@ export interface OpenTransaction {
 }
 
 function isTransferTransaction(tx: Transaction): boolean {
-  return tx.originalType === 'transfer' && !!(tx.description.toLowerCase().includes('transfer') || tx.note?.includes('Accounts Transfer'));
+  return (
+    tx.originalType === 'transfer' &&
+    !!(tx.description.toLowerCase().includes('transfer') || tx.note?.includes('Accounts Transfer'))
+  );
 }
 
 /**
@@ -45,7 +48,9 @@ export function calculateOpenTransactions(transactions: Transaction[], currencie
   const openTransactions: OpenTransaction[] = [];
   for (const tx of sortedTxs) {
     if (isTransferTransaction(tx)) {
-      const hasTransferInOutTransaction = transferTransactions.some((t) => t.shares === -tx.shares && t.date.isSame(tx.date));
+      const hasTransferInOutTransaction = transferTransactions.some(
+        (t) => t.shares === -tx.shares && t.date.isSame(tx.date),
+      );
       // If there is a negating transfer transaction, skip the current transaction
       if (hasTransferInOutTransaction) {
         continue;

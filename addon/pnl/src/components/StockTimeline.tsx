@@ -5,7 +5,7 @@ import { trackEvent } from '../analytics';
 import { TYPE_TO_COLOR } from '../constants';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { formatCurrency, formatMoney } from '../utils/common';
+import { formatCurrency, formatMoney, getYahooSymbol } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -48,7 +48,11 @@ function StockTimeline(props: Props) {
       ) ?? dayjs();
 
     try {
-      const data = await fetchSecurityHistory(props.position.security.id, startDate, dayjs());
+      const data = await fetchSecurityHistory(
+        { securityId: props.position.security.id, yahooSymbol: getYahooSymbol(props.position.security) },
+        startDate,
+        dayjs(),
+      );
       setSecurityTimeline(data);
     } catch (error) {
       console.error('Failed to load stock prices:', error);

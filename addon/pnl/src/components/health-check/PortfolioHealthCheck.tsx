@@ -203,7 +203,7 @@ export default function PortfolioHealthCheck({ positions }: Props) {
           opportunityCostDescription:
             gainPercent < benchmarkReturn
               ? `If invested in ${benchmarkSymbol} instead, you would have $${Math.round((position.market_value * (benchmarkReturn - gainPercent)) / 100).toLocaleString()} more`
-              : `Outperformed ${benchmarkSymbol} - no opportunity cost`,
+              : `Outperformed ${benchmarkSymbol} - no lost opportunity cost`,
           suggestedAction: getSuggestedAction(recommendation as any),
         };
       })

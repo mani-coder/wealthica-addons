@@ -85,14 +85,14 @@ function BenchmarkComparison(props: Props) {
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
 
   const fetchCustomSecurityData = useCallback(
-    async (securityId: string, fromDate: Dayjs, toDate: Dayjs) => {
+    async (security: SecuritySearchResult, fromDate: Dayjs, toDate: Dayjs) => {
       try {
-        console.debug('Fetching custom security data for', securityId);
+        console.debug('Fetching custom security data for', security.symbol);
 
         // Use the shared fetchSecurityHistory callback
-        return await fetchSecurityHistory(securityId, fromDate, toDate);
+        return await fetchSecurityHistory({ securityId: security._id, yahooSymbol: security.symbol }, fromDate, toDate);
       } catch (error) {
-        console.error(`Failed to fetch custom security data for ${securityId}:`, error);
+        console.error(`Failed to fetch custom security data for ${security.symbol}:`, error);
         return [];
       }
     },
@@ -137,7 +137,7 @@ function BenchmarkComparison(props: Props) {
         let data: SecurityPriceData[];
         if (customSecurity) {
           // Fetch custom security data (no currency conversion)
-          data = await fetchCustomSecurityData(customSecurity._id, _fromDate, _toDate);
+          data = await fetchCustomSecurityData(customSecurity, _fromDate, _toDate);
         } else {
           // Fetch benchmark data with automatic currency conversion
           data = await fetchBenchmarkHistory(_fromDate, _toDate);

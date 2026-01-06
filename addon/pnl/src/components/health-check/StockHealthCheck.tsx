@@ -78,7 +78,11 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
           positionStartDate.format(DATE_FORMAT),
           toDate,
         );
-        const data = await fetchSecurityHistory(securityId, positionStartDate, dayjs(toDate, DATE_FORMAT));
+        const data = await fetchSecurityHistory(
+          { securityId, yahooSymbol: symbol },
+          positionStartDate,
+          dayjs(toDate, DATE_FORMAT),
+        );
         const prices: PricePoint[] = data.map((point) => ({
           date: point.timestamp,
           close: convertCurrency(currency, point.closePrice, point.timestamp),
@@ -237,8 +241,9 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       {/* Issues and Strengths */}
       {(report.flagDescriptions.length > 0 || report.strengthDescriptions.length > 0) && (
         <div
-          className={`grid grid-cols-1 ${report.flagDescriptions.length > 0 && report.strengthDescriptions.length > 0 ? 'md:grid-cols-2' : ''
-            }`}
+          className={`grid grid-cols-1 ${
+            report.flagDescriptions.length > 0 && report.strengthDescriptions.length > 0 ? 'md:grid-cols-2' : ''
+          }`}
         >
           {/* Issues Found */}
           {report.flagDescriptions.length > 0 && (

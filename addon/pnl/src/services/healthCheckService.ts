@@ -515,7 +515,7 @@ export class HealthCheckService {
    */
   private formatOpportunityCost(cost: number, benchmark: string): string {
     if (cost <= 0) {
-      return `Outperformed ${benchmark} - no opportunity cost`;
+      return `Outperformed ${benchmark} - no lost opportunity cost`;
     }
     return `If invested in ${benchmark} instead, you would have $${formatMoney(cost)} more today`;
   }

@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import { useCallback } from 'react';
-import { DATE_FORMAT } from '../constants';
+import { DATE_FORMAT, USE_FINANCE_API_FOR_SECURITY_HISTORY } from '../constants';
 import { useAddon } from '../context/AddonContext';
 import dayjs from '../dayjs';
 import { buildCorsFreeUrl, getDate, getPreviousTradingDay, isTradingDay } from '../utils/common';
@@ -14,7 +14,7 @@ export type SecurityPriceData = {
  * Parse security price response from Wealthica API
  * Shared utility function used by both hooks and direct API calls
  */
-function parseSecurityPriceResponse(response: any, maxChangePercentage: number = 50): SecurityPriceData[] {
+function parseWealthicaSecurityPriceResponse(response: any, maxChangePercentage: number = 50): SecurityPriceData[] {
   let date = getDate(response.to);
   const data: SecurityPriceData[] = [];
   let prevPrice: number | undefined;
@@ -50,6 +50,34 @@ function parseSecurityPriceResponse(response: any, maxChangePercentage: number =
   return data.sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
 }
 
+async function fetchSecurityHistoryFromFinanceApi(
+  yahooSymbol: string,
+  fromDate: Dayjs,
+  toDate: Dayjs,
+): Promise<SecurityPriceData[]> {
+  // curl 'https://finance-api.mani-coder.dev/api/historical?symbol=NVDA&period1=2024-01-01&period2=2026-01-05&interval=1d'
+  const url = `https://finance-api.mani-coder.dev/api/historical?symbol=${encodeURIComponent(yahooSymbol)}&period1=${fromDate.format(DATE_FORMAT)}&period2=${toDate.format(DATE_FORMAT)}&interval=1d`;
+  // [
+  // {
+  //   "date": "2024-01-02T14:30:00.000Z",
+  //   "high": 49.29499816894531,
+  //   "volume": 411254000,
+  //   "open": 49.24399948120117,
+  //   "low": 47.595001220703125,
+  //   "close": 48.167999267578125,
+  //   "adjClose": 48.141178131103516
+  // }]
+  const response = await fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      return data.map((item: any) => ({
+        timestamp: dayjs(item.date),
+        closePrice: item.close,
+      }));
+    });
+  return response;
+}
+
 export type UseSecurityHistoryOptions = {
   /**
    * Maximum allowed price change percentage to filter out anomalous data
@@ -72,6 +100,11 @@ function getCacheKey(securityId: string, fromDate: Dayjs, toDate: Dayjs): string
   return `${securityId}:${fromDate.format(DATE_FORMAT)}:${toDate.format(DATE_FORMAT)}`;
 }
 
+type Symbol = {
+  securityId: string;
+  yahooSymbol: string;
+};
+
 /**
  * Custom hook for fetching security price history data
  * Returns a function that fetches and parses security price data from Wealthica API
@@ -82,40 +115,52 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
   const { maxChangePercentage = 50 } = options;
 
   const fetchSecurityHistory = useCallback(
-    async (securityId: string, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
+    async (symbol: Symbol, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
       const adjustedToDate = isTradingDay(toDate) ? toDate : getPreviousTradingDay(toDate);
 
       // Check cache first (using adjusted dates)
-      const cacheKey = getCacheKey(securityId, fromDate, adjustedToDate);
+      const cacheKey = getCacheKey(symbol.securityId, fromDate, adjustedToDate);
       const cached = securityHistoryCache.get(cacheKey);
       if (cached) {
         return cached;
       }
 
-      const endpoint = `securities/${securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
-        DATE_FORMAT,
-      )}`;
+      console.debug('Fetching security history for', {
+        symbol: symbol.yahooSymbol,
+        fromDate: fromDate.format(DATE_FORMAT),
+        toDate: adjustedToDate.format(DATE_FORMAT),
+        securityId: symbol.securityId,
+        useFinanceApi: USE_FINANCE_API_FOR_SECURITY_HISTORY,
+      });
 
-      let response: any;
+      if (!USE_FINANCE_API_FOR_SECURITY_HISTORY) {
+        const endpoint = `securities/${symbol.securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
+          DATE_FORMAT,
+        )}`;
+        let response: any;
+        if (addon) {
+          response = await addon.request({ query: {}, method: 'GET', endpoint });
+        } else {
+          const url = buildCorsFreeUrl(`https://app.wealthica.com/api/${endpoint}`);
+          const fetchResponse = await fetch(url, {
+            cache: 'force-cache',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          response = await fetchResponse.json();
+        }
 
-      if (addon) {
-        response = await addon.request({ query: {}, method: 'GET', endpoint });
+        // Parse the response using shared parsing logic
+        const data = parseWealthicaSecurityPriceResponse(response, maxChangePercentage);
+
+        // Store in cache
+        securityHistoryCache.set(cacheKey, data);
       } else {
-        const url = buildCorsFreeUrl(`https://app.wealthica.com/api/${endpoint}`);
-        const fetchResponse = await fetch(url, {
-          cache: 'force-cache',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        response = await fetchResponse.json();
+        const data = await fetchSecurityHistoryFromFinanceApi(symbol.yahooSymbol, fromDate, adjustedToDate);
+        securityHistoryCache.set(cacheKey, data);
+        return data;
       }
 
-      // Parse the response using shared parsing logic
-      const data = parseSecurityPriceResponse(response, maxChangePercentage);
-
-      // Store in cache
-      securityHistoryCache.set(cacheKey, data);
-
-      return data;
+      return securityHistoryCache.get(cacheKey) || [];
     },
     [addon, maxChangePercentage],
   );

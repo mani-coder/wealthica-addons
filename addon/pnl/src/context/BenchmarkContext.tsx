@@ -59,7 +59,11 @@ export function BenchmarkContextProvider({ children }: BenchmarkContextProviderP
   const fetchBenchmarkHistory = useCallback(
     async (fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
       // Fetch price history in the benchmark's security ID
-      const priceHistory = await fetchSecurityHistory(benchmarkInfo.securityId, fromDate, toDate);
+      const priceHistory = await fetchSecurityHistory(
+        { securityId: benchmarkInfo.securityId, yahooSymbol: benchmarkInfo.symbol },
+        fromDate,
+        toDate,
+      );
 
       // Convert each price point to base currency using the currency context
       return priceHistory.map((point) => ({

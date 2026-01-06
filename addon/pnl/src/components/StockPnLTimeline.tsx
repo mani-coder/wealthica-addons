@@ -3,13 +3,14 @@
 import { Card, Empty, Spin } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
+import { calculateOpenTransactions, type OpenTransaction } from '@/utils/transactionUtils';
 import { trackEvent } from '../analytics';
 import { DATE_FORMAT, TYPE_TO_COLOR } from '../constants';
 import { useAddonContext } from '../context/AddonContext';
 import useCurrency from '../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../hooks/useSecurityHistory';
 import type { Account, Position, Transaction } from '../types';
-import { formatCurrency, formatMoney, getNextWeekday, max, min } from '../utils/common';
+import { formatCurrency, formatMoney, getYahooSymbol, isTradingDay, max, min } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
 
@@ -29,6 +30,7 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
   const [loading, setLoading] = useState(false);
   const [prices, setPrices] = useState<SecurityPriceData[]>([]);
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 100 });
+  const openTransactions = useMemo(() => calculateOpenTransactions(position.transactions), [position.transactions]);
 
   const accountById = useMemo(() => {
     return accounts.reduce(
@@ -46,133 +48,82 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
   }
 
   useEffect(() => {
-    if (symbol) {
-      const fetchData = async () => {
-        setLoading(true);
-        trackEvent('stock-pnl-timeline');
+    if (!position) return;
+    if (!openTransactions.length) return;
 
-        const startDate = position.transactions?.length ? position.transactions[0].date : dayjs();
-
-        try {
-          const data = await fetchSecurityHistory(position.security.id, startDate, dayjs());
+    const fetchData = async () => {
+      setLoading(true);
+      trackEvent('stock-pnl-timeline');
+      const startDate = openTransactions[0].date;
+      try {
+        await fetchSecurityHistory(
+          { securityId: position.security.id, yahooSymbol: getYahooSymbol(position.security) },
+          startDate,
+          dayjs(),
+        ).then((data) => {
           setPrices(data);
-        } catch (error) {
-          console.error('Failed to load stock prices:', error);
-          setPrices([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchData();
-    }
-  }, [symbol, position, fetchSecurityHistory]);
+        });
+      } catch (error) {
+        console.error('Failed to load stock prices:', error);
+        setPrices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [position, fetchSecurityHistory]);
 
   function getSeries(): any[] {
-    const book: {
-      [K: string]: { shares: number; price: number; date: string }[];
-    } = { all: [] };
+    if (!prices.length) return [];
+    if (!openTransactions.length) return [];
 
-    position.transactions
-      .filter((t) => ['buy', 'sell', 'split', 'reinvest'].includes(t.type))
-      .forEach((t) => {
-        if (t.type === 'split' && !t.splitRatio) {
-          return;
-        }
-
-        const date = getNextWeekday(t.date.clone());
-        let accountBook = book[t.account];
-        if (!accountBook) {
-          accountBook = [];
-          book[t.account] = accountBook;
-        }
-
-        const isBuy = ['buy', 'reinvest'].includes(t.type);
-        const isSplit = t.type === 'split';
-
-        const tPrice = t.type === 'reinvest' ? 0 : t.price;
-        const splitRatio = t.splitRatio || 1;
-        const lastBuySell = accountBook.pop() || { shares: 0, price: 0, date };
-        const newPositionShares = Number(
-          (!isSplit ? lastBuySell.shares + t.shares : Math.floor(lastBuySell.shares / splitRatio)).toFixed(10),
-        );
-
-        const newPosition = {
-          price:
-            isBuy && newPositionShares
-              ? (lastBuySell.price * lastBuySell.shares + tPrice * t.shares) / newPositionShares
-              : isSplit
-                ? lastBuySell.price * splitRatio
-                : newPositionShares
-                  ? lastBuySell.price
-                  : 0,
-          shares: newPositionShares,
-          date,
-        };
-        if (newPosition.date !== lastBuySell.date) {
-          accountBook.push(lastBuySell);
-        }
-        accountBook.push(newPosition);
-
-        // Update all book.
-        const allLastBuySell = book.all.pop() || { shares: 0, price: 0, date };
-        const shares = Number(
-          (isSplit
-            ? allLastBuySell.shares - lastBuySell.shares + newPosition.shares
-            : allLastBuySell.shares + t.shares
-          ).toFixed(10),
-        );
-        const price = shares
-          ? isSplit
-            ? (allLastBuySell.price * allLastBuySell.shares -
-                lastBuySell.shares * lastBuySell.price +
-                newPosition.shares * newPosition.price) /
-              shares
-            : (allLastBuySell.price * allLastBuySell.shares + (isBuy ? tPrice : lastBuySell.price) * t.shares) / shares
-          : 0;
-
-        const allEntry = { price, shares, date };
-
-        if (allEntry.date !== allLastBuySell.date) {
-          book.all.push(allLastBuySell);
-        }
-        book.all.push(allEntry);
-      });
-
-    const allBook = book.all.reduce(
-      (hash, entry) => {
-        hash[entry.date] = { shares: entry.shares, price: entry.price };
+    const openTransactionsByDate = openTransactions.reduce(
+      (hash, transaction) => {
+        hash[transaction.date.format(DATE_FORMAT)] = transaction;
         return hash;
       },
-      {} as { [K: string]: { shares: number; price: number } },
+      {} as { [K: string]: OpenTransaction },
     );
-    let data: any[] = [];
-    let _entry: any;
-    prices.forEach((price) => {
-      const entry = allBook[price.timestamp.format(DATE_FORMAT)];
-      _entry = entry ? entry : _entry;
-      if (_entry) {
-        if (_entry.shares === 0) {
-          // nullify the book on selling shares.
-          data = [];
-        } else {
-          const bookValue = _entry.price * _entry.shares;
-          const marketValue = price.closePrice * _entry.shares;
-          const pnlRatio = ((price.closePrice - _entry.price) / _entry.price) * 100;
-          data.push({
-            x: price.timestamp.valueOf(),
-            y: showValueChart ? marketValue - bookValue : pnlRatio,
-            d: price.timestamp.format(DATE_FORMAT),
-            pnlRatio,
-            pnlValue: isPrivateMode ? '-' : formatMoney(marketValue - bookValue),
-            currency: position.security.currency.toUpperCase(),
-            stockPrice: formatMoney(price.closePrice),
-            price: formatMoney(_entry.price),
-            shares: _entry.shares.toLocaleString('en-US'),
-          });
-        }
+    const priceMap = prices.reduce(
+      (hash, price) => {
+        hash[price.timestamp.format(DATE_FORMAT)] = price.closePrice;
+        return hash;
+      },
+      {} as { [K: string]: number },
+    );
+
+    let shares = 0;
+    let bookValue = 0;
+
+    let currentDate = openTransactions[0].date;
+    const lastDate = prices[prices.length - 1].timestamp;
+    const data: any[] = [];
+    while (currentDate.isSameOrBefore(lastDate)) {
+      const entry = openTransactionsByDate[currentDate.format(DATE_FORMAT)];
+      if (entry) {
+        shares += entry.shares;
+        bookValue += entry.amount;
       }
-    });
+      const price = priceMap[currentDate.format(DATE_FORMAT)];
+      if (isTradingDay(currentDate) && price) {
+        const marketValue = price * shares;
+        const pnlRatio = ((marketValue - bookValue) / marketValue) * 100;
+        data.push({
+          x: currentDate.valueOf(),
+          y: showValueChart ? marketValue - bookValue : pnlRatio,
+          d: currentDate.format(DATE_FORMAT),
+          pnlRatio,
+          pnlValue: isPrivateMode ? '-' : formatMoney(marketValue - bookValue),
+          currency: position.security.currency.toUpperCase(),
+          stockPrice: formatMoney(price),
+          price: formatMoney(bookValue / shares),
+          shares: shares.toLocaleString('en-US'),
+        });
+      }
+
+      // Move on to the next day
+      currentDate = currentDate.add(1, 'day');
+    }
 
     return [
       {
