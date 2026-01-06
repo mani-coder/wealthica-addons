@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import { useCallback } from 'react';
-import { DATE_FORMAT, USE_FINANCE_API_FOR_SECURITY_HISTORY } from '../constants';
+import { DATE_FORMAT, USE_WEALTHICA_API_FOR_SECURITY_HISTORY } from '../constants';
 import { useAddon } from '../context/AddonContext';
 import dayjs from '../dayjs';
 import { buildCorsFreeUrl, getDate, getPreviousTradingDay, isTradingDay } from '../utils/common';
@@ -130,10 +130,9 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
         fromDate: fromDate.format(DATE_FORMAT),
         toDate: adjustedToDate.format(DATE_FORMAT),
         securityId: symbol.securityId,
-        useFinanceApi: USE_FINANCE_API_FOR_SECURITY_HISTORY,
       });
 
-      if (!USE_FINANCE_API_FOR_SECURITY_HISTORY) {
+      if (USE_WEALTHICA_API_FOR_SECURITY_HISTORY) {
         const endpoint = `securities/${symbol.securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
           DATE_FORMAT,
         )}`;
