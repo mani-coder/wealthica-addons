@@ -166,7 +166,7 @@ export default function HoldingsCharts(props: Props) {
   );
 
   return (
-    <div className="zero-padding">
+    <>
       <Collapsible title="Holdings">
         <Charts options={columnChartOptions} />
 
@@ -192,6 +192,6 @@ export default function HoldingsCharts(props: Props) {
       <CompositionCharts positions={props.positions} accounts={props.accounts} />
 
       <SectorAllocation accounts={props.accounts} />
-    </div>
+    </>
   );
 }

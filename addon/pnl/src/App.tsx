@@ -30,7 +30,7 @@ const PortfolioHealthCheck = lazy(() => import('./components/health-check/Portfo
 const RealizedPnL = lazy(() => import('./components/realized-pnl/RealizedPnL'));
 const TradingActivities = lazy(() => import('./components/TradingActivities'));
 const News = lazy(() => import('./components/News'));
-const Events = lazy(() => import('./components/Events'));
+const Events = lazy(() => import('./components/events/Events'));
 const ChangeLog = lazy(() => import('./components/ChangeLog'));
 
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';

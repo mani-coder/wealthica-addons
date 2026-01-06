@@ -144,7 +144,7 @@ function HoldingsTable(props: Props) {
   }
 
   return (
-    <div className="zero-padding mb-2">
+    <div className="mb-2">
       <Collapsible title="Holdings Table" closed>
         <Table<Position>
           rowKey={(row) => getSymbol(row.security)}

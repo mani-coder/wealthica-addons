@@ -192,7 +192,7 @@ const RealizedPnLTable = React.memo(
     }
 
     return (
-      <div className="zero-padding mb-2">
+      <div className="mb-2">
         <Collapsible title="Realized P&L History" closed>
           <PrintableTable<ClosedPosition>
             printTitle={`Realized Gain/Loss For ${fromDate.format(DATE_DISPLAY_FORMAT)} - ${toDate.format(

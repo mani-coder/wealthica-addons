@@ -1,4 +1,4 @@
-import { DatePicker, Space, Table, type TableColumnsType, Typography } from 'antd';
+import { DatePicker, Table, type TableColumnsType, Typography } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useCallback, useMemo, useState } from 'react';
 import useCurrency from '../hooks/useCurrency';
@@ -174,11 +174,9 @@ export default function TradingActivities(props: Props) {
         bordered
         title={() => (
           <div className="flex justify-between">
-            <Typography.Title level={3}>Trading Activities</Typography.Title>
-            <Space direction="horizontal">
-              <Typography.Text strong type="secondary">
-                Filter activities
-              </Typography.Text>
+            <div className="text-2xl font-bold">Trading Activities</div>
+            <div className="flex flex-row items-center gap-2">
+              <div className="text-sm font-bold text-gray-500">Show activities from</div>
               <DatePicker
                 defaultValue={fromDate}
                 value={fromDate}
@@ -187,7 +185,7 @@ export default function TradingActivities(props: Props) {
                 onChange={(date) => setFromDate(date ?? dayjs(props.fromDate))}
                 presets={presets}
               />
-            </Space>
+            </div>
           </div>
         )}
         pagination={false}

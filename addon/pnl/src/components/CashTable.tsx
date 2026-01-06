@@ -89,7 +89,7 @@ function CashTable(props: Props) {
   }
 
   return (
-    <div className="zero-padding mb-2">
+    <div className="mb-2">
       <Collapsible title="Cash Table">
         <Table<Account>
           rowKey={(row) => `${row.id}:${row.institution}:${row.name}:${row.currency}`}

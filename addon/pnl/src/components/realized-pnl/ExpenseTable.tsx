@@ -73,7 +73,7 @@ const ExpenseTable = React.memo(
     }
 
     return (
-      <div className="zero-padding mb-2">
+      <div className="mb-2">
         <Collapsible title="Expenses History" closed>
           <PrintableTable<AccountTransaction>
             rowKey="id"

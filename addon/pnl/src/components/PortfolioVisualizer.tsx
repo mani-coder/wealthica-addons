@@ -67,7 +67,7 @@ function PortfolioVisualizer({ positions }: { positions: Position[] }) {
 
   return (
     <Collapsible title="Portoflio Visualizer Tools">
-      <div className="flex w-full mb-2">
+      <div className="flex w-full p-3">
         <Link href={getBacktestPortfolioAssetAllocationLink()} title="Backtest Portfolio Asset Allocation" />
         <Link href={factorRegression()} title="Factor Regression (US Stocks)" />
       </div>
