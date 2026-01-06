@@ -56,14 +56,14 @@ export const BENCHMARKS = {
   },
 
   // === CANADIAN EQUITY BENCHMARKS ===
-  XIC: {
+  'XIC.TO': {
     symbol: 'XIC.TO',
     name: 'S&P/TSX Composite',
     description: 'iShares Core S&P/TSX Capped Composite Index ETF - Tracks broad Canadian market (~239 holdings)',
     currency: 'CAD',
     securityId: '56daa905c3a79c03002c4dff',
   },
-  VCN: {
+  'VCN.TO': {
     symbol: 'VCN.TO',
     name: 'FTSE Canada All Cap',
     description:
@@ -71,7 +71,7 @@ export const BENCHMARKS = {
     currency: 'CAD',
     securityId: '574b7828109d820e001ae526',
   },
-  XIU: {
+  'XIU.TO': {
     symbol: 'XIU.TO',
     name: 'S&P/TSX 60',
     description: 'iShares S&P/TSX 60 Index ETF - Tracks 60 largest Canadian stocks',
