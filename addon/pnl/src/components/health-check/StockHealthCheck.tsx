@@ -50,10 +50,6 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
   const [stockHistory, setStockHistory] = useState<PriceHistory | null>(null);
   const [benchmarkHistory, setBenchmarkHistory] = useState<PriceHistory | null>(null);
 
-  const positionStartDate = useMemo(() => {
-    return position.transactions?.length ? position.transactions[0].date : dayjs();
-  }, [position.transactions]);
-
   const openTransactions = useMemo(() => {
     const _openTransactions = calculateOpenTransactions(position.transactions, currencies);
     console.debug(
@@ -62,6 +58,8 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     );
     return _openTransactions;
   }, [position.transactions, currencies]);
+
+  const positionStartDate = useMemo(() => openTransactions[0].date, [openTransactions]);
 
   useEffect(() => {
     trackEvent('stock-health-check', { benchmark: selectedBenchmark });
@@ -239,9 +237,8 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       {/* Issues and Strengths */}
       {(report.flagDescriptions.length > 0 || report.strengthDescriptions.length > 0) && (
         <div
-          className={`grid grid-cols-1 ${
-            report.flagDescriptions.length > 0 && report.strengthDescriptions.length > 0 ? 'md:grid-cols-2' : ''
-          }`}
+          className={`grid grid-cols-1 ${report.flagDescriptions.length > 0 && report.strengthDescriptions.length > 0 ? 'md:grid-cols-2' : ''
+            }`}
         >
           {/* Issues Found */}
           {report.flagDescriptions.length > 0 && (

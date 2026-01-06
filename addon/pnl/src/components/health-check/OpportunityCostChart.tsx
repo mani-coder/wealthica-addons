@@ -146,7 +146,6 @@ export function OpportunityCostChart({ openTransactions, stockHistory, benchmark
 
     // Find the earliest open transaction date
     const earliestDate = openTransactions[0].date;
-    const lastDate = openTransactions[openTransactions.length - 1].date;
     const txSharesByDate = openTransactions.reduce(
       (hash, openTx) => {
         const txDate = openTx.date;
@@ -172,6 +171,7 @@ export function OpportunityCostChart({ openTransactions, stockHistory, benchmark
     let currentBenchmarkShares = 0;
     let totalInvested = 0;
     let currentDate = dayjs(earliestDate);
+    const lastDate = benchmarkPriceData.dates[benchmarkPriceData.dates.length - 1];
     while (currentDate.isSameOrBefore(lastDate)) {
       const txShares = txSharesByDate[formatDate(currentDate)];
       if (txShares) {

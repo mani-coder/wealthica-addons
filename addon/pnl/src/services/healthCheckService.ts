@@ -216,14 +216,6 @@ export class HealthCheckService {
     const returnSinceInception =
       (position.gain_percent || 0) * 100 + (dividendYield * dayjs().diff(holdingStartDate, 'days')) / 365;
 
-    console.log('Mani', {
-      dividendYield,
-      return1Y,
-      return3Y,
-      return5Y,
-      returnSinceInception,
-    });
-
     const xirr = this.calculateXIRR(position);
 
     // Benchmark comparison (benchmarks don't have dividend transactions, so use price-only returns)

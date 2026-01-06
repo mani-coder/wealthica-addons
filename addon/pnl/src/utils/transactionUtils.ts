@@ -21,6 +21,10 @@ export interface OpenTransaction {
   _handledSplits: Set<string>;
 }
 
+function isTransferTransaction(tx: Transaction): boolean {
+  return tx.originalType === 'transfer' && !!(tx.description.toLowerCase().includes('transfer') || tx.note?.includes('Accounts Transfer'));
+}
+
 /**
  * Calculate open transactions - buy transactions that haven't been fully sold yet.
  * Uses FIFO (First In, First Out) matching for buys and sells.
@@ -37,14 +41,15 @@ export function calculateOpenTransactions(transactions: Transaction[], currencie
     .filter((t) => ['buy', 'sell', 'split', 'reinvest'].includes(t.type))
     .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 
+  const transferTransactions: Transaction[] = sortedTxs.filter((t) => isTransferTransaction(t));
   const openTransactions: OpenTransaction[] = [];
   for (const tx of sortedTxs) {
-    if (
-      tx.originalType === 'transfer' &&
-      (tx.description.toLowerCase().includes('transfer') || tx.note?.includes('Accounts Transfer'))
-    ) {
-      // console.debug('[DEBUG] Skipping transfer transaction', tx.shares, tx.date.format(DATE_FORMAT), tx.description, tx.originalType);
-      continue;
+    if (isTransferTransaction(tx)) {
+      const hasTransferInOutTransaction = transferTransactions.some((t) => t.shares === -tx.shares && t.date.isSame(tx.date));
+      // If there is a negating transfer transaction, skip the current transaction
+      if (hasTransferInOutTransaction) {
+        continue;
+      }
     }
 
     if (tx.type === 'buy' || tx.type === 'reinvest') {
