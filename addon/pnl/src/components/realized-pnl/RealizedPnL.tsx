@@ -162,11 +162,10 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
       if (!transaction.splitRatio) {
         return;
       }
-
-      const splitRatio = transaction.splitRatio || 1;
-      const shares = Math.floor(position.shares / splitRatio);
+      const splitRatio = transaction.splitRatio;
+      const shares = position.shares * splitRatio;
       position.shares = shares;
-      position.price = position.price * splitRatio;
+      position.price = position.price / splitRatio;
       position.transactions.push(transaction);
     }
 
@@ -181,7 +180,7 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
       .forEach((transaction) => {
         const key = `${transaction.date.format(DATE_FORMAT)}-${transaction.type}-${transaction.symbol}-${
           transaction.currency
-        }-${transaction.account}`;
+        }-${transaction.account}-${transaction.splitRatio}`;
         const existingTransaction = hash[key];
         if (existingTransaction) {
           const shares = existingTransaction.shares + transaction.shares;

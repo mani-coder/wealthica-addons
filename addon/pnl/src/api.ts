@@ -185,9 +185,19 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
 
       let splitRatio: number | undefined;
       if (transaction.type === 'split' && transaction.description?.includes('@')) {
-        const match = transaction.description.match(/@([0-9]+):([0-9]+)/);
-        if (match?.[1]) {
-          splitRatio = parseInt(match[2], 10) / parseInt(match[1], 10);
+        // Try to match format like "SPLIT @ X:Y" or "Reverse Split @ 8:9"
+        const ratioMatch = transaction.description.match(/@\s*([0-9]+):([0-9]+)/);
+        if (ratioMatch?.[1] && ratioMatch?.[2]) {
+          splitRatio = parseInt(ratioMatch[1], 10) / parseInt(ratioMatch[2], 10);
+        } else {
+          // Try to match format like "REVERSE SPLIT @ 0.88888889"
+          const decimalMatch = transaction.description.match(/@\s*([0-9.]+)/);
+          if (decimalMatch?.[1]) {
+            splitRatio = parseFloat(decimalMatch[1]);
+          }
+        }
+        if (splitRatio !== undefined) {
+          splitRatio = Number(splitRatio.toFixed(5));
         }
       }
 

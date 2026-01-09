@@ -108,7 +108,7 @@ export function calculateOpenTransactions(transactions: Transaction[], currencie
           continue;
         }
         openTx._handledSplits.add(splitKey);
-        openTx.shares = openTx.shares / splitRatio;
+        openTx.shares = openTx.shares * splitRatio;
       }
     }
   }
