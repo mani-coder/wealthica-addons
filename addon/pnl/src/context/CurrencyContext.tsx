@@ -23,14 +23,18 @@ function getCurrencyValue(
   date?: string | Dayjs,
 ) {
   const currency = from.toLowerCase();
-  if (currency === baseCurrency || !value) return value;
+
+  // Return 0 if value is NaN or 0
+  if (Number.isNaN(value) || !value) return 0;
+  if (currency === baseCurrency) return value;
 
   const _currencyCache = currencyCache[currency];
   let multiplier: number | undefined;
-  if (date) {
+  if (date && _currencyCache) {
     multiplier = _currencyCache[typeof date === 'string' ? date : date.format(DATE_FORMAT)];
   }
   multiplier = multiplier ?? latestCurrencies[currency] ?? 1;
+
   return value * multiplier;
 }
 
@@ -62,6 +66,8 @@ export class Currencies {
   }
 
   getValue(from: string, value: number, date?: string | Dayjs): number {
+    // Always check for NaN first, regardless of currency
+    if (Number.isNaN(value) || !value) return 0;
     if (from === this.baseCurrency) return value;
     return getCurrencyValue(this.baseCurrency, this.currencyCache, this.latestCurrencies, from, value, date);
   }

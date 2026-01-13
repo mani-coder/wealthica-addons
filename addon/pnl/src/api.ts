@@ -123,14 +123,17 @@ export const computeCashFlowByDate = (response: any, currencies: Currencies): { 
             income: 0,
           };
 
-      const amount = currencies.getValue(
-        getInvestmentCurrency(transaction.investment),
-        Number(transaction.currency_amount),
-        date,
-      );
+      let currencyAmountValue = Number(transaction.currency_amount);
+      if (Number.isNaN(currencyAmountValue) || currencyAmountValue === undefined) {
+        currencyAmountValue = 0;
+      }
+      const amount = currencies.getValue(getInvestmentCurrency(transaction.investment), currencyAmountValue, date);
+
+      // Replace NaN with 0 to prevent NaN propagation
+      const safeAmount = Number.isNaN(amount) ? 0 : amount;
 
       if (['deposit'].includes(type)) {
-        portfolioData.deposit += amount;
+        portfolioData.deposit += safeAmount;
       } else if (type === 'transfer') {
         if (
           isSecuritiesAccountsTransfer(transaction) ||
@@ -145,16 +148,16 @@ export const computeCashFlowByDate = (response: any, currencies: Currencies): { 
             //
             !transaction.symbol)
         ) {
-          portfolioData.deposit += amount;
+          portfolioData.deposit += safeAmount;
         }
       } else if (['fee', 'interest', 'tax', 'income', 'dividend', 'distribution'].includes(type)) {
-        if (amount > 0) {
-          portfolioData.income += amount;
+        if (safeAmount > 0) {
+          portfolioData.income += safeAmount;
         } else {
-          portfolioData.interest += Math.abs(amount);
+          portfolioData.interest += Math.abs(safeAmount);
         }
       } else if (type === 'withdrawal') {
-        portfolioData.withdrawal += Math.abs(amount);
+        portfolioData.withdrawal += Math.abs(safeAmount);
       } else {
         console.debug('Unhandled type', type);
       }
@@ -177,11 +180,11 @@ export const parseSecurityTransactionsResponse = (response: any, currencies: Cur
     .map((transaction: any) => {
       const date = getDate(transaction.date);
 
-      const amount = currencies.getValue(
-        getInvestmentCurrency(transaction.investment),
-        Number(transaction.currency_amount),
-        date,
-      );
+      let currencyAmountValue = Number(transaction.currency_amount);
+      if (Number.isNaN(currencyAmountValue) || currencyAmountValue === undefined) {
+        currencyAmountValue = 0;
+      }
+      const amount = currencies.getValue(getInvestmentCurrency(transaction.investment), currencyAmountValue, date);
 
       let splitRatio: number | undefined;
       if (transaction.type === 'split' && transaction.description?.includes('@')) {
@@ -251,11 +254,11 @@ export const parseAccountTransactionsResponse = (response: any, currencies: Curr
     )
     .map((transaction: any) => {
       const date = getDate(transaction.date);
-      const amount = currencies.getValue(
-        getInvestmentCurrency(transaction.investment),
-        Number(transaction.currency_amount),
-        date,
-      );
+      let currencyAmountValue = Number(transaction.currency_amount);
+      if (Number.isNaN(currencyAmountValue) || currencyAmountValue === undefined) {
+        currencyAmountValue = 0;
+      }
+      const amount = currencies.getValue(getInvestmentCurrency(transaction.investment), currencyAmountValue, date);
 
       return {
         id: transaction.id,
