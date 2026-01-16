@@ -86,7 +86,7 @@ export default function StockDetails(props: Props) {
           sumOf(...position.investments.map((investment) => investment.book_value)) / position.quantity,
         )} / ${formatMoney(position.security.last_price)}`}
       />
-      <LabelValue label="Shares" value={`${position.quantity}`} />
+      <LabelValue label="Shares" value={`${parseFloat(position.quantity.toFixed(5))}`} />
 
       <LabelValue
         label="Account"
@@ -100,7 +100,7 @@ export default function StockDetails(props: Props) {
             <LabelValue
               key={account.name}
               label={account.name}
-              value={`${account.quantity}@${formatMoney(account.price)}`}
+              value={`${parseFloat(account.quantity.toFixed(5))}@${formatMoney(account.price)}`}
             />
           ),
       )}
