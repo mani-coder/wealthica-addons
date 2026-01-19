@@ -8,11 +8,13 @@ import type { Account, Position, Transaction } from '../types';
 import { formatCurrency, formatMoney, getYahooSymbol } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
+import { CloseButton } from './common/CloseButton';
 
 type Props = {
   symbol: string;
   position: Position;
   accounts: Account[];
+  onClose?: () => void;
 };
 
 function StockTimeline(props: Props) {
@@ -272,7 +274,12 @@ function StockTimeline(props: Props) {
   }
 
   return (
-    <Card title={`${props.symbol} History`} variant="outlined" styles={{ body: { padding: 2 } }}>
+    <Card
+      title={`${props.symbol} History`}
+      variant="outlined"
+      styles={{ body: { padding: 2 } }}
+      extra={props.onClose && <CloseButton onClick={props.onClose} />}
+    >
       {loading ? (
         <div style={{ textAlign: 'center', margin: '12px' }}>
           <Spin size="large" />

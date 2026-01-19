@@ -22,6 +22,7 @@ import type { Position } from '../../types';
 import type { HoldingHealthReport } from '../../types/healthCheck';
 import { RECOMMENDATION_COLORS, SEVERITY_COLORS } from '../../types/healthCheck';
 import { BenchmarkSelector } from '../common/BenchmarkSelector';
+import { CloseButton } from '../common/CloseButton';
 import { HealthCheckMetrics } from './HealthCheckMetrics';
 import { OpportunityCostChart } from './OpportunityCostChart';
 
@@ -31,13 +32,14 @@ interface Props {
   position: Position;
   /** Show benchmark selector dropdown for quick benchmark switching (default: false) */
   showBenchmarkSelector?: boolean;
+  onClose?: () => void;
 }
 
 function toPricePoints(prices: SecurityPriceData[]): PricePoint[] {
   return prices.map((price) => ({ date: price.timestamp.toDate(), close: price.closePrice }));
 }
 
-export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false }) => {
+export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false, onClose }) => {
   const { toDate, portfolioValue } = useAddonContext();
   const { currencies, getValue: convertCurrency } = useCurrency();
   const { fetchSecurityHistory } = useSecurityHistory({ maxChangePercentage: 20 });
@@ -218,6 +220,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
           </div>
         </div>
       }
+      extra={onClose && <CloseButton onClick={onClose} />}
     >
       <div className="mt-3" />
       {/* Opportunity Cost Comparison Chart */}

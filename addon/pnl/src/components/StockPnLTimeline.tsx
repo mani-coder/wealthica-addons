@@ -13,18 +13,20 @@ import type { Account, Position, Transaction } from '../types';
 import { formatCurrency, formatMoney, getYahooSymbol, isTradingDay, max, min } from '../utils/common';
 import { startCase } from '../utils/lodash-replacements';
 import Charts from './Charts';
+import { CloseButton } from './common/CloseButton';
 
 type Props = {
   symbol: string;
   position: Position;
   showValueChart?: boolean;
   accounts: Account[];
+  onClose?: () => void;
 };
 
 const POINT_FORMAT =
   'P/L (%): <b>{point.pnlRatio:.2f}%</b> <br />P/L ($): <b>{point.pnlValue} {point.currency}</b><br /><br />Book: {point.shares}@{point.price}<br /><br />Stock Price: {point.stockPrice} {point.currency}<br />';
 
-function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props) {
+function StockPnLTimeline({ symbol, position, showValueChart, accounts, onClose }: Props) {
   const { isPrivateMode } = useAddonContext();
   const { baseCurrencyDisplay } = useCurrency();
   const [loading, setLoading] = useState(false);
@@ -331,6 +333,7 @@ function StockPnLTimeline({ symbol, position, showValueChart, accounts }: Props)
       title={`P/L (${showValueChart ? '$' : '%'}) Timeline: ${symbol}`}
       variant="outlined"
       styles={{ body: { paddingTop: 4 } }}
+      extra={onClose && <CloseButton onClick={onClose} />}
     >
       {loading ? (
         <div className="flex justify-center items-center" style={{ height: 300 }}>

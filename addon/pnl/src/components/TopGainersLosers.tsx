@@ -205,8 +205,9 @@ export default function TopGainersLosers(props: { positions: Position[]; account
           position={position}
           showValueChart={sortByValue}
           accounts={props.accounts}
+          onClose={() => setPnlSymbol(undefined)}
         />
-        <StockHealthCheck position={position} showBenchmarkSelector />
+        <StockHealthCheck position={position} showBenchmarkSelector onClose={() => setPnlSymbol(undefined)} />
       </div>
     );
   };
