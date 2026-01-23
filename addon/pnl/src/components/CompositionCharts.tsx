@@ -14,6 +14,7 @@ import { startCase } from '../utils/lodash-replacements';
 import { Charts } from './Charts';
 import Collapsible from './Collapsible';
 import CompositionGroup from './CompositionGroup';
+import CompositionTable from './CompositionTable';
 
 type Props = {
   positions: Position[];
@@ -634,15 +635,116 @@ export default function CompositionCharts(props: Props) {
     });
   }, [getCompositionGroupSeriesOptions, compositionGroup, showHoldings, isPrivateMode]);
 
+  const tableData = useMemo(() => {
+    const accounts = compositionGroup === 'sector' ? accountsWithSectors : props.accounts;
+    const totalValue = accounts.reduce((value, account) => value + account.value, 0);
+
+    const data = Object.values(
+      accounts.reduce(
+        (hash, account) => {
+          if (compositionGroup === 'sector') {
+            account.positions.forEach((position) => {
+              const value = getValue(position.currency, position.market_value);
+
+              // Handle crypto positions first
+              if (position.type === 'crypto') {
+                const name = 'Crypto';
+                let mergedAccount = hash[name];
+                if (!mergedAccount) {
+                  mergedAccount = { name, value: 0 };
+                  hash[name] = mergedAccount;
+                }
+                mergedAccount.value += value;
+                return;
+              }
+
+              const yahooSymbol = getYahooSymbol(position.security);
+              const fundWeighting = fundSectorWeightings.get(yahooSymbol);
+
+              if (isFund(position) && fundWeighting && Object.keys(fundWeighting).length > 0) {
+                // Distribute fund across sectors
+                Object.entries(fundWeighting).forEach(([sectorName, weight]) => {
+                  const sectorValue = value * weight;
+
+                  let mergedAccount = hash[sectorName];
+                  if (!mergedAccount) {
+                    mergedAccount = { name: sectorName, value: 0 };
+                    hash[sectorName] = mergedAccount;
+                  }
+                  mergedAccount.value += sectorValue;
+                });
+              } else {
+                // Regular stock
+                const name = getGroupKey(compositionGroup, account, position);
+                let mergedAccount = hash[name];
+                if (!mergedAccount) {
+                  mergedAccount = { name, value: 0 };
+                  hash[name] = mergedAccount;
+                }
+                mergedAccount.value += value;
+              }
+            });
+          } else {
+            const name = getGroupKey(compositionGroup, account);
+            let mergedAccount = hash[name];
+            if (!mergedAccount) {
+              mergedAccount = { name, value: 0 };
+              hash[name] = mergedAccount;
+            }
+            mergedAccount.value += sumOf(
+              ...account.positions.map((position) => getValue(position.currency, position.market_value)),
+            );
+          }
+
+          return hash;
+        },
+        {} as { [K: string]: { name: string; value: number } },
+      ),
+    );
+
+    return data
+      .filter((item) => item.value)
+      .sort((a, b) => b.value - a.value)
+      .map((item, index) => {
+        const color = getColor(index);
+        return {
+          name: item.name,
+          value: item.value,
+          percentage: (item.value / totalValue) * 100,
+          color: typeof color === 'string' ? color : undefined,
+        };
+      });
+  }, [compositionGroup, props.accounts, accountsWithSectors, getValue, fundSectorWeightings, getColor]);
+
+  const totalValue = useMemo(() => {
+    const accounts = compositionGroup === 'sector' ? accountsWithSectors : props.accounts;
+    return accounts.reduce((value, account) => value + account.value, 0);
+  }, [compositionGroup, accountsWithSectors, props.accounts]);
+
   return (
     <Collapsible title="Holdings Composition">
       <div className="p-2" />
-      <Charts key={compositionGroup} options={compositionGroupOptions} />
-      <CompositionGroup
-        changeGroup={setCompositionGroup}
-        group={compositionGroup}
-        tracker="holdings-composition-group"
-      />
+      <div className="flex flex-wrap gap-6 mx-4 sm:justify-between justify-center items-end">
+        <div className="flex-1">
+          <Charts key={compositionGroup} options={compositionGroupOptions} />
+        </div>
+        <div className="flex-0">
+          <CompositionTable
+            data={tableData}
+            baseCurrency={baseCurrencyDisplay}
+            totalValue={totalValue}
+            groupType={compositionGroup}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <CompositionGroup
+          changeGroup={setCompositionGroup}
+          group={compositionGroup}
+          tracker="holdings-composition-group"
+        />
+      </div>
 
       <div className="flex my-3 w-full justify-center items-center">
         <Switch

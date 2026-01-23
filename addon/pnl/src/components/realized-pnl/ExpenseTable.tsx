@@ -40,6 +40,16 @@ const ExpenseTable = React.memo(
           dataIndex: 'account',
           render: (account) => (accountById[account] ? accountById[account].name : 'N/A'),
           width: 200,
+          filters: Array.from(
+            new Set(transactions.map((t) => (accountById[t.account] ? accountById[t.account].name : 'N/A'))),
+          )
+            .map((value) => ({
+              text: value,
+              value,
+            }))
+            .sort((a, b) => a.value.localeCompare(b.value)),
+          onFilter: (value, transaction) =>
+            (accountById[transaction.account]?.name || 'N/A').indexOf(value as any) === 0,
         },
         {
           key: 'type',

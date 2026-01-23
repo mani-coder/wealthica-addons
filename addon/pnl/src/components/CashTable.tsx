@@ -56,7 +56,7 @@ function CashTable(props: Props) {
         dataIndex: 'currency',
         render: (currency: string) => currency.toUpperCase(),
         sorter: (a, b) => a.currency.localeCompare(b.currency),
-        width: 120,
+        width: 150,
         filters: currencies,
         onFilter: (value, account) => !!account.currency && account.currency.indexOf(value as any) === 0,
       },
