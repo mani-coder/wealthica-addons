@@ -17,6 +17,7 @@ import CurrencyDisplayAlert from './components/CurrencyDisplayAlert';
 import { BarLoader } from './components/common/BarLoader';
 import TabLabel from './components/common/TabLabel';
 import DepositVsPortfolioValueTimeline from './components/DepositsVsPortfolioValueTimeline';
+import MaintenanceResult from './components/MaintenanceResult';
 import PnLStatistics from './components/PnLStatistics';
 import ProfitLossPercentageTimeline from './components/ProfitLossPercentageTimeline';
 import ProfitLossTimeline from './components/ProfitLossTimeline';
@@ -29,8 +30,6 @@ const BenchmarkComparison = lazy(() => import('./components/performance/Benchmar
 const PortfolioHealthCheck = lazy(() => import('./components/health-check/PortfolioHealthCheck'));
 const RealizedPnL = lazy(() => import('./components/realized-pnl/RealizedPnL'));
 const TradingActivities = lazy(() => import('./components/TradingActivities'));
-const News = lazy(() => import('./components/News'));
-const Events = lazy(() => import('./components/events/Events'));
 const ChangeLog = lazy(() => import('./components/ChangeLog'));
 
 import { DATE_FORMAT, DEFAULT_BASE_CURRENCY, TabKeysEnum, TRANSACTIONS_FROM_DATE } from './constants';
@@ -601,20 +600,12 @@ export default function App() {
                         {
                           label: <TabLabel label="News" />,
                           key: TabKeysEnum.NEWS,
-                          children: (
-                            <Suspense fallback={<BarLoader />}>
-                              <News positions={state.positions} />
-                            </Suspense>
-                          ),
+                          children: <MaintenanceResult />,
                         },
                         {
                           label: <TabLabel label="Events" />,
                           key: TabKeysEnum.EVENTS,
-                          children: (
-                            <Suspense fallback={<BarLoader />}>
-                              <Events positions={state.positions} />
-                            </Suspense>
-                          ),
+                          children: <MaintenanceResult />,
                         },
                         {
                           label: <TabLabel label="Change Log" isNew />,
