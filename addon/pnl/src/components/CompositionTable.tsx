@@ -53,7 +53,7 @@ export default function CompositionTable({ data, baseCurrency, totalValue, group
         dataIndex: 'percentage',
         key: 'percentage',
         align: 'right',
-        render: (percentage: number) => `${percentage.toFixed(2)}%`,
+        render: (percentage: number) => `${Math.round(percentage)}%`,
       },
     ],
     [baseCurrency, isPrivateMode, groupTitle],

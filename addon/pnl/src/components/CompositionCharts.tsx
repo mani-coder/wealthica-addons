@@ -445,9 +445,8 @@ export default function CompositionCharts(props: Props) {
                 mergedAccount = { name, value: 0, gainAmount: 0, accounts: {} };
                 hash[name] = mergedAccount;
               }
-              mergedAccount.value += sumOf(
-                ...account.positions.map((position) => getValue(position.currency, position.market_value)),
-              );
+              // Use account.value which already includes positions + cash
+              mergedAccount.value += account.value;
               mergedAccount.gainAmount += sumOf(
                 ...account.positions.map((position) => getValue(position.currency, position.gain_amount)),
               );
@@ -691,9 +690,8 @@ export default function CompositionCharts(props: Props) {
               mergedAccount = { name, value: 0 };
               hash[name] = mergedAccount;
             }
-            mergedAccount.value += sumOf(
-              ...account.positions.map((position) => getValue(position.currency, position.market_value)),
-            );
+            // Use account.value which already includes positions + cash
+            mergedAccount.value += account.value;
           }
 
           return hash;

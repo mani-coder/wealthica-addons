@@ -18,6 +18,7 @@ import Collapsible from '../Collapsible';
 import CompositionGroup from '../CompositionGroup';
 import ExpenseTable from './ExpenseTable';
 import IncomeTable, { type IncomeTransaction } from './IncomeTable';
+import RealizedPnLCompositionTable from './RealizedPnLCompositionTable';
 import RealizedPnLTable from './RealizedPnLTable';
 import type { ClosedPosition } from './utils';
 
@@ -580,6 +581,59 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
     return getOptions({ series: getClosedPnLByAccountSeries(closedPositions, closedPnL, compositionGroup) });
   }, [closedPositions, closedPnL, compositionGroup, getOptions, getClosedPnLByAccountSeries]);
 
+  const compositionTableData = useMemo(() => {
+    const groups = {} as {
+      [K: string]: { name: string; pnl: number; income: number; expense: number };
+    };
+
+    // Always aggregate P&L by group (regardless of selection)
+    closedPositions.forEach((position) => {
+      const name = getGroupKey(compositionGroup, position.account);
+      if (!groups[name]) {
+        groups[name] = { name, pnl: 0, income: 0, expense: 0 };
+      }
+      groups[name].pnl += position.pnl;
+    });
+
+    // Always aggregate expenses by group (regardless of selection)
+    expenseTransactions.forEach((t) => {
+      const name = getGroupKey(compositionGroup, accountById[t.account]);
+      if (!groups[name]) {
+        groups[name] = { name, pnl: 0, income: 0, expense: 0 };
+      }
+      groups[name].expense += t.amount;
+    });
+
+    // Always aggregate income by group (regardless of selection)
+    incomeTransactions.forEach((t) => {
+      const name = getGroupKey(compositionGroup, accountById[t.account]);
+      if (!groups[name]) {
+        groups[name] = { name, pnl: 0, income: 0, expense: 0 };
+      }
+      groups[name].income += t.amount;
+    });
+
+    // Calculate total for each group and sort by total (descending)
+    return Object.values(groups)
+      .map((group) => ({
+        ...group,
+        total: group.pnl + group.income - group.expense,
+      }))
+      .sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
+  }, [closedPositions, expenseTransactions, incomeTransactions, accountById, compositionGroup]);
+
+  const compositionTotals = useMemo(() => {
+    return compositionTableData.reduce(
+      (acc, item) => ({
+        pnl: acc.pnl + item.pnl,
+        income: acc.income + item.income,
+        expense: acc.expense + item.expense,
+        total: acc.total + item.total,
+      }),
+      { pnl: 0, income: 0, expense: 0, total: 0 },
+    );
+  }, [compositionTableData]);
+
   const typesOptions = useMemo(() => {
     const options: { disabled?: boolean; label: string | React.ReactNode; value: TransactionType }[] = [];
 
@@ -636,7 +690,7 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
   const show = closedPositions.length > 0 || incomeTransactions.length > 0 || expenseTransactions.length > 0;
   return show ? (
     <>
-      <div className="flex mt-4 mb-6 justify-center mb-2">
+      <div className="flex mt-4 mb-6 justify-center">
         <Statistic
           value={isPrivateMode ? '--' : closedPnL}
           precision={2}
@@ -646,7 +700,7 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
         />
       </div>
 
-      <div className="flex mb-6 mt-4 w-full justify-center items-center mb-2">
+      <div className="flex mb-6 mt-4 w-full justify-center items-center">
         <Checkbox.Group
           options={typesOptions}
           value={types}
@@ -690,8 +744,26 @@ export default function RealizedPnL({ accounts, ...props }: Props) {
       </div>
 
       <Collapsible title="Realized P&L Composition">
-        <Charts key={timeline} options={accountSeriesOptions} />{' '}
-        <CompositionGroup changeGroup={setCompositionGroup} group={compositionGroup} tracker="realized-pnl-group" />
+        <div className="flex flex-col gap-4 p-2 pb-4">
+          <div className="flex flex-col gap-6 mx-4 justify-center items-center">
+            <Charts key={timeline} options={accountSeriesOptions} />
+            <CompositionGroup
+              changeGroup={setCompositionGroup}
+              group={compositionGroup}
+              tracker="realized-pnl-group"
+              excludedGroups={['sector']}
+            />
+            <RealizedPnLCompositionTable
+              data={compositionTableData}
+              baseCurrency={baseCurrencyDisplay}
+              totalPnL={compositionTotals.pnl}
+              totalIncome={compositionTotals.income}
+              totalExpense={compositionTotals.expense}
+              totalValue={compositionTotals.total}
+              groupType={compositionGroup}
+            />
+          </div>
+        </div>
       </Collapsible>
 
       {closedPositions.length > 0 && (
