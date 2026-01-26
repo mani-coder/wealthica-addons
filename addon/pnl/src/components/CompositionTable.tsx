@@ -9,7 +9,7 @@ import { startCase } from '../utils/lodash-replacements';
 type CompositionDataItem = {
   name: string;
   value: number;
-  percentage: number;
+  accountId?: string;
   color?: string;
 };
 
@@ -28,16 +28,19 @@ export default function CompositionTable({ data, baseCurrency, totalValue, group
     return startCase(groupType);
   }, [groupType]);
 
-  const columns: ColumnsType<CompositionDataItem> = useMemo(
-    () => [
+  const columns: ColumnsType<CompositionDataItem> = useMemo(() => {
+    return [
       {
         title: groupTitle,
         dataIndex: 'name',
         key: 'name',
         render: (name: string, record: CompositionDataItem) => (
-          <div className="flex items-center">
-            {record.color && <div className="w-3 h-3 rounded-sm mr-2" style={{ backgroundColor: record.color }} />}
+          <div className="flex items-center gap-2">
+            {record.color && <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: record.color }} />}
             <span>{name}</span>
+            {groupType === 'accounts' && record.accountId && (
+              <span className="text-xs text-gray-500">#{record.accountId}</span>
+            )}
           </div>
         ),
       },
@@ -48,16 +51,8 @@ export default function CompositionTable({ data, baseCurrency, totalValue, group
         align: 'right',
         render: (value: number) => (isPrivateMode ? '-' : `${baseCurrency} ${formatMoney(value)}`),
       },
-      {
-        title: 'Allocation',
-        dataIndex: 'percentage',
-        key: 'percentage',
-        align: 'right',
-        render: (percentage: number) => `${Math.round(percentage)}%`,
-      },
-    ],
-    [baseCurrency, isPrivateMode, groupTitle],
-  );
+    ];
+  }, [baseCurrency, isPrivateMode, groupTitle, groupType]);
 
   const dataWithTotal = useMemo(() => {
     return [
@@ -65,7 +60,6 @@ export default function CompositionTable({ data, baseCurrency, totalValue, group
       {
         name: 'Total',
         value: totalValue,
-        percentage: 100,
       },
     ];
   }, [data, totalValue]);

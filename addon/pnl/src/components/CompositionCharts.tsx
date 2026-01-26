@@ -636,7 +636,6 @@ export default function CompositionCharts(props: Props) {
 
   const tableData = useMemo(() => {
     const accounts = compositionGroup === 'sector' ? accountsWithSectors : props.accounts;
-    const totalValue = accounts.reduce((value, account) => value + account.value, 0);
 
     const data = Object.values(
       accounts.reduce(
@@ -687,7 +686,11 @@ export default function CompositionCharts(props: Props) {
             const name = getGroupKey(compositionGroup, account);
             let mergedAccount = hash[name];
             if (!mergedAccount) {
-              mergedAccount = { name, value: 0 };
+              mergedAccount = {
+                name,
+                value: 0,
+                accountId: compositionGroup === 'accounts' ? account.id.split(':')[0] : undefined,
+              };
               hash[name] = mergedAccount;
             }
             // Use account.value which already includes positions + cash
@@ -696,7 +699,7 @@ export default function CompositionCharts(props: Props) {
 
           return hash;
         },
-        {} as { [K: string]: { name: string; value: number } },
+        {} as { [K: string]: { name: string; value: number; accountId?: string } },
       ),
     );
 
@@ -708,7 +711,7 @@ export default function CompositionCharts(props: Props) {
         return {
           name: item.name,
           value: item.value,
-          percentage: (item.value / totalValue) * 100,
+          accountId: item.accountId,
           color: typeof color === 'string' ? color : undefined,
         };
       });
@@ -726,14 +729,16 @@ export default function CompositionCharts(props: Props) {
         <div className="flex-1">
           <Charts key={compositionGroup} options={compositionGroupOptions} />
         </div>
-        <div className="flex-0">
-          <CompositionTable
-            data={tableData}
-            baseCurrency={baseCurrencyDisplay}
-            totalValue={totalValue}
-            groupType={compositionGroup}
-          />
-        </div>
+        {compositionGroup !== 'sector' && (
+          <div className="flex-0">
+            <CompositionTable
+              data={tableData}
+              baseCurrency={baseCurrencyDisplay}
+              totalValue={totalValue}
+              groupType={compositionGroup}
+            />
+          </div>
+        )}
       </div>
 
       <div className="mt-4">
