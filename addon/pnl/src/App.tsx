@@ -598,11 +598,6 @@ export default function App() {
                           ),
                         },
                         {
-                          label: <TabLabel label="News" />,
-                          key: TabKeysEnum.NEWS,
-                          children: <MaintenanceResult />,
-                        },
-                        {
                           label: <TabLabel label="Events" />,
                           key: TabKeysEnum.EVENTS,
                           children: <MaintenanceResult />,
