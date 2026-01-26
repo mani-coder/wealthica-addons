@@ -45,11 +45,11 @@ export default function CompositionTable({ data, baseCurrency, totalValue, group
         ),
       },
       {
-        title: 'Value',
+        title: `Value (${baseCurrency})`,
         dataIndex: 'value',
         key: 'value',
         align: 'right',
-        render: (value: number) => (isPrivateMode ? '-' : `${baseCurrency} ${formatMoney(value)}`),
+        render: (value: number) => (isPrivateMode ? '-' : formatMoney(value)),
       },
     ];
   }, [baseCurrency, isPrivateMode, groupTitle, groupType]);
