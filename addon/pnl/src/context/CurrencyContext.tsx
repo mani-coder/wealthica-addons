@@ -31,9 +31,22 @@ function getCurrencyValue(
   const _currencyCache = currencyCache[currency];
   let multiplier: number | undefined;
   if (date && _currencyCache) {
-    multiplier = _currencyCache[typeof date === 'string' ? date : date.format(DATE_FORMAT)];
+    const dateKey = typeof date === 'string' ? date : date.format(DATE_FORMAT);
+    multiplier = _currencyCache[dateKey];
+
+    if (multiplier === undefined) {
+      const availableDates = Object.keys(_currencyCache).sort();
+      const previousDate = [...availableDates].reverse().find((availableDate) => availableDate <= dateKey);
+      const fallbackDate = previousDate ?? availableDates[0];
+      multiplier = fallbackDate ? _currencyCache[fallbackDate] : undefined;
+    }
   }
-  multiplier = multiplier ?? latestCurrencies[currency] ?? 1;
+  multiplier = multiplier ?? (date ? undefined : latestCurrencies[currency]);
+
+  if (multiplier === undefined || !Number.isFinite(multiplier)) {
+    const requestedDate = date ? ` for ${typeof date === 'string' ? date : date.format(DATE_FORMAT)}` : '';
+    throw new Error(`Missing ${currency.toUpperCase()}/${baseCurrency.toUpperCase()} FX rate${requestedDate}`);
+  }
 
   return value * multiplier;
 }
@@ -53,12 +66,16 @@ export class Currencies {
   }
 
   setCurrencyCache(currencyCache: CurrencyCache) {
-    this.currencyCache = currencyCache;
-    this.latestCurrencies = Object.keys(currencyCache).reduce(
+    this.currencyCache = currencyCache ?? {};
+    this.latestCurrencies = Object.keys(this.currencyCache).reduce(
       (hash, currency) => {
-        const _currencyCache = currencyCache[currency];
+        const _currencyCache = this.currencyCache[currency];
+        if (!_currencyCache) return hash;
         const latestDate = Object.keys(_currencyCache).sort((a, b) => b.localeCompare(a))[0];
-        hash[currency] = _currencyCache[latestDate] ?? 1;
+        const latestRate = latestDate ? _currencyCache[latestDate] : undefined;
+        if (latestRate !== undefined && Number.isFinite(latestRate)) {
+          hash[currency] = latestRate;
+        }
         return hash;
       },
       { [this.baseCurrency]: 1 } as { [K: string]: number },
@@ -68,7 +85,7 @@ export class Currencies {
   getValue(from: string, value: number, date?: string | Dayjs): number {
     // Always check for NaN first, regardless of currency
     if (Number.isNaN(value) || !value) return 0;
-    if (from === this.baseCurrency) return value;
+    if (from.toLowerCase() === this.baseCurrency) return value;
     return getCurrencyValue(this.baseCurrency, this.currencyCache, this.latestCurrencies, from, value, date);
   }
 }

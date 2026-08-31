@@ -36,7 +36,10 @@ interface Props {
 }
 
 function toPricePoints(prices: SecurityPriceData[]): PricePoint[] {
-  return prices.map((price) => ({ date: price.timestamp.toDate(), close: price.closePrice }));
+  return prices.map((price) => ({
+    date: price.timestamp.toDate(),
+    close: price.adjustedClosePrice ?? price.closePrice,
+  }));
 }
 
 export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector = false, onClose }) => {

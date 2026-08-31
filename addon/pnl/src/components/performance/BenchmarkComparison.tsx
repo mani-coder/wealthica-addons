@@ -6,6 +6,7 @@ import { trackEvent } from '../../analytics';
 import { BENCHMARK_SERIES_OPTIONS, DATE_FORMAT, PORTFOLIO_SERIES_OPTIONS } from '../../constants';
 import { useAddon, useAddonContext } from '../../context/AddonContext';
 import { useBenchmark } from '../../context/BenchmarkContext';
+import useCurrency from '../../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecurityHistory';
 import type { Portfolio } from '../../types';
 import {
@@ -36,6 +37,7 @@ function BenchmarkComparison(props: Props) {
   const addon = useAddon();
   const { fromDate, toDate, isPrivateMode } = useAddonContext();
   const { setSelectedBenchmark, benchmarkInfo, fetchBenchmarkHistory } = useBenchmark();
+  const { getValue: convertCurrency } = useCurrency();
 
   const [customSecurity, setCustomSecurity] = useState<SecuritySearchResult | null>(null);
   const [benchmarkData, setBenchmarkData] = useState<SecurityPriceData[]>([]);
@@ -89,42 +91,80 @@ function BenchmarkComparison(props: Props) {
       try {
         console.debug('Fetching custom security data for', security.symbol);
 
-        // Use the shared fetchSecurityHistory callback
-        return await fetchSecurityHistory({ securityId: security._id, yahooSymbol: security.symbol }, fromDate, toDate);
+        // Custom securities must use the same historical base-currency conversion as built-in benchmarks.
+        const priceHistory = await fetchSecurityHistory(
+          { securityId: security._id, yahooSymbol: security.symbol },
+          fromDate,
+          toDate,
+        );
+        return priceHistory.map((point) => ({
+          ...point,
+          closePrice: convertCurrency(security.currency, point.closePrice, point.timestamp),
+          adjustedClosePrice:
+            point.adjustedClosePrice === undefined
+              ? undefined
+              : convertCurrency(security.currency, point.adjustedClosePrice, point.timestamp),
+        }));
       } catch (error) {
         console.error(`Failed to fetch custom security data for ${security.symbol}:`, error);
         return [];
       }
     },
-    [fetchSecurityHistory],
+    [convertCurrency, fetchSecurityHistory],
   );
 
-  // Normalize portfolio data to percentage returns (accounting for deposits/withdrawals)
-  const portfolioReturns = useMemo(() => {
-    return normalizePortfolioToPercentageReturns(props.portfolios);
-  }, [props.portfolios]);
+  const effectiveEndDate = useMemo(() => {
+    const requestedEndDate = dayjs(toDate, DATE_FORMAT);
+    const lastBenchmarkPoint = [...benchmarkData]
+      .filter((point) => point.timestamp.isSameOrBefore(requestedEndDate, 'day'))
+      .sort((a, b) => b.timestamp.valueOf() - a.timestamp.valueOf())[0];
+    return lastBenchmarkPoint?.timestamp.format(DATE_FORMAT) ?? toDate;
+  }, [benchmarkData, toDate]);
 
-  // Normalize benchmark data to percentage returns
+  const comparisonPortfolios = useMemo(
+    () => props.portfolios.filter((portfolio) => portfolio.date >= fromDate && portfolio.date <= effectiveEndDate),
+    [effectiveEndDate, fromDate, props.portfolios],
+  );
+
+  const benchmarkDataFormatted = useMemo(
+    () =>
+      benchmarkData.map((point) => ({
+        date: point.timestamp.format(DATE_FORMAT),
+        value: point.adjustedClosePrice ?? point.closePrice,
+      })),
+    [benchmarkData],
+  );
+
+  // Normalize portfolio data using time-weighted returns and the same end date as the benchmark.
+  const portfolioReturns = useMemo(() => {
+    return normalizePortfolioToPercentageReturns(comparisonPortfolios);
+  }, [comparisonPortfolios]);
+
+  // Normalize benchmark adjusted-close data using the prior market close when the start is a non-trading day.
   const benchmarkReturns = useMemo(() => {
-    // Convert SecurityPriceData to BenchmarkData format for normalization
-    const benchmarkDataFormatted = benchmarkData.map((point) => ({
-      date: point.timestamp.format(DATE_FORMAT),
-      value: point.closePrice,
-    }));
-    return normalizeToPercentageReturns(benchmarkDataFormatted);
-  }, [benchmarkData]);
+    return normalizeToPercentageReturns(benchmarkDataFormatted, fromDate).filter(
+      (point) => point.date <= effectiveEndDate,
+    );
+  }, [benchmarkDataFormatted, effectiveEndDate, fromDate]);
+
+  const benchmarkReturnBasis = useMemo(
+    () => (benchmarkData.every((point) => point.returnBasis === 'total') ? 'total return' : 'price return'),
+    [benchmarkData],
+  );
+
+  /*
+   * Convert SecurityPriceData to BenchmarkData format for period calculations.
+   * The prior-close observation is retained so the first period return has a valid baseline.
+   */
+  const periodBenchmarkData = useMemo(() => {
+    return benchmarkDataFormatted.filter((point) => point.date <= effectiveEndDate);
+  }, [benchmarkDataFormatted, effectiveEndDate]);
 
   // Calculate yearly returns with monthly breakdowns for nested table view
   const periodReturns = useMemo(() => {
-    if (props.portfolios.length === 0 || benchmarkData.length === 0) return [];
-
-    // Convert SecurityPriceData to BenchmarkData format for calculation
-    const benchmarkDataFormatted = benchmarkData.map((point) => ({
-      date: point.timestamp.format(DATE_FORMAT),
-      value: point.closePrice,
-    }));
-    return calculateYearlyReturnsWithMonthlyBreakdown(props.portfolios, benchmarkDataFormatted);
-  }, [props.portfolios, benchmarkData]);
+    if (comparisonPortfolios.length === 0 || periodBenchmarkData.length === 0) return [];
+    return calculateYearlyReturnsWithMonthlyBreakdown(comparisonPortfolios, periodBenchmarkData, fromDate);
+  }, [comparisonPortfolios, fromDate, periodBenchmarkData]);
 
   // Fetch benchmark data when selection changes
   useEffect(() => {
@@ -135,12 +175,12 @@ function BenchmarkComparison(props: Props) {
         const _toDate = dayjs(toDate, DATE_FORMAT);
 
         let data: SecurityPriceData[];
+        const historyFromDate = _fromDate.subtract(7, 'days');
         if (customSecurity) {
-          // Fetch custom security data (no currency conversion)
-          data = await fetchCustomSecurityData(customSecurity, _fromDate, _toDate);
+          data = await fetchCustomSecurityData(customSecurity, historyFromDate, _toDate);
         } else {
           // Fetch benchmark data with automatic currency conversion
-          data = await fetchBenchmarkHistory(_fromDate, _toDate);
+          data = await fetchBenchmarkHistory(historyFromDate, _toDate);
         }
         setBenchmarkData(data);
       } catch (error) {
@@ -329,15 +369,23 @@ function BenchmarkComparison(props: Props) {
 
   const formattedFromDate = dayjs(fromDate, DATE_FORMAT).format('MMM D, YYYY');
   const formattedToDate = dayjs(toDate, DATE_FORMAT).format('MMM D, YYYY');
+  const formattedEffectiveEndDate = dayjs(effectiveEndDate, DATE_FORMAT).format('MMM D, YYYY');
 
   return (
     <div className="w-full">
       <Card
         title="Performance Benchmark Comparison"
         extra={
-          <Typography.Text className="text-gray-600 text-sm">
-            {formattedFromDate} to {formattedToDate}
-          </Typography.Text>
+          <div className="text-right">
+            <Typography.Text className="text-gray-600 text-sm block">
+              {formattedFromDate} to {formattedToDate}
+            </Typography.Text>
+            {effectiveEndDate !== toDate && (
+              <Typography.Text className="text-gray-500 text-xs">
+                Market data through {formattedEffectiveEndDate}
+              </Typography.Text>
+            )}
+          </div>
         }
         styles={{ body: { padding: 0 } }}
       >
@@ -379,8 +427,9 @@ function BenchmarkComparison(props: Props) {
             <Metrics
               portfolioReturns={portfolioReturns}
               benchmarkReturns={benchmarkReturns}
-              portfolios={props.portfolios}
+              portfolios={comparisonPortfolios}
               benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
+              benchmarkReturnBasis={benchmarkReturnBasis}
             />
 
             {benchmarkReturns.length > 0 ? (

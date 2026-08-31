@@ -15,6 +15,15 @@ export type Portfolio = {
   date: string;
   value: number; // combined portfolio value on a given day
   deposits: number; // total deposits until this day.
+  externalFlow?: number; // net external cash flow for the day: deposits positive, withdrawals negative
+  dailyReturn?: number | null; // decimal time-weighted return for the day
+  cumulativeReturn?: number; // decimal cumulative time-weighted return through this day
+};
+
+export type ReturnPoint = {
+  date: string;
+  dailyReturn: number | null;
+  cumulativeReturn: number;
 };
 
 export type Security = {
@@ -75,6 +84,7 @@ export type CashFlow = {
   withdrawal: number;
   interest: number;
   income: number;
+  externalFlow: number;
 };
 
 export type AccountTransaction = {

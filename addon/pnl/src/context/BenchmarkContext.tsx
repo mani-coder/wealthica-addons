@@ -69,6 +69,11 @@ export function BenchmarkContextProvider({ children }: BenchmarkContextProviderP
       return priceHistory.map((point) => ({
         timestamp: point.timestamp,
         closePrice: convertCurrency(benchmarkInfo.currency, point.closePrice, point.timestamp),
+        adjustedClosePrice:
+          point.adjustedClosePrice === undefined
+            ? undefined
+            : convertCurrency(benchmarkInfo.currency, point.adjustedClosePrice, point.timestamp),
+        returnBasis: point.returnBasis,
       }));
     },
     [benchmarkInfo, convertCurrency, fetchSecurityHistory],

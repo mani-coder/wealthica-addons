@@ -1,6 +1,12 @@
 import dayjs from 'dayjs';
 import { DATE_FORMAT } from '../constants';
-import { isTradingDay } from './common';
+import type { Portfolio } from '../types';
+import {
+  calculateCashFlowMatchedOpportunityCost,
+  calculateTimeWeightedReturns,
+  calendarDaysBetween,
+  toPercentageReturnPoints,
+} from './portfolioPerformance';
 
 // Sorted by region and index type
 export const BENCHMARKS = {
@@ -89,10 +95,29 @@ export type BenchmarkInfo = (typeof BENCHMARKS)[BenchmarkType];
  */
 export function normalizeToPercentageReturns(
   data: { date: string; value: number }[],
+  startDate?: string,
 ): { date: string; value: number }[] {
   if (data.length === 0) return [];
-  const startValue = data[0].value;
-  return data.map((point) => ({ date: point.date, value: ((point.value - startValue) / startValue) * 100 }));
+  const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!startDate) {
+    const startValue = sorted[0].value;
+    return sorted.map((point) => ({ date: point.date, value: ((point.value - startValue) / startValue) * 100 }));
+  }
+
+  const exactStart = sorted.find((point) => point.date === startDate);
+  const priorStart = [...sorted].reverse().find((point) => point.date < startDate);
+  const baseline = exactStart ?? priorStart ?? sorted.find((point) => point.date > startDate);
+  if (!baseline || baseline.value === 0) return [];
+
+  const normalized = sorted
+    .filter((point) => point.date >= startDate)
+    .map((point) => ({ date: point.date, value: ((point.value - baseline.value) / baseline.value) * 100 }));
+
+  if (!exactStart && normalized[0]?.date !== startDate) {
+    normalized.unshift({ date: startDate, value: 0 });
+  }
+  return normalized;
 }
 
 /**
@@ -103,22 +128,35 @@ export function normalizePortfolioToPercentageReturns(
 ): { date: string; value: number }[] {
   if (portfolios.length === 0) return [];
 
-  // Filter to only trading days (exclude weekends and holidays)
-  const tradingDayPortfolios = portfolios.filter((portfolio) => isTradingDay(dayjs(portfolio.date, DATE_FORMAT)));
+  const sortedPortfolios = [...portfolios].sort((a, b) => a.date.localeCompare(b.date));
+  return toPercentageReturnPoints(calculateTimeWeightedReturns(sortedPortfolios));
+}
 
-  if (tradingDayPortfolios.length === 0) return [];
+function getAlignedDailyReturns(
+  portfolioReturns: { date: string; value: number }[],
+  benchmarkReturns: { date: string; value: number }[],
+): Array<{ date: string; portfolio: number; benchmark: number }> {
+  const benchmarkMap = new Map(benchmarkReturns.map((point) => [point.date, point.value]));
+  const alignedLevels = portfolioReturns
+    .filter((point) => benchmarkMap.has(point.date))
+    .map((point) => ({ date: point.date, portfolio: point.value, benchmark: benchmarkMap.get(point.date) as number }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Calculate the starting P/L ratio to normalize against
-  const startPortfolio = tradingDayPortfolios[0];
-  const startPnl = startPortfolio.value - startPortfolio.deposits;
-  const startPnlRatio = startPortfolio.deposits !== 0 ? (startPnl / Math.abs(startPortfolio.deposits)) * 100 : 0;
+  const dailyReturns: Array<{ date: string; portfolio: number; benchmark: number }> = [];
+  for (let index = 1; index < alignedLevels.length; index++) {
+    const previous = alignedLevels[index - 1];
+    const current = alignedLevels[index];
+    const previousPortfolioGrowth = 1 + previous.portfolio / 100;
+    const previousBenchmarkGrowth = 1 + previous.benchmark / 100;
+    if (previousPortfolioGrowth === 0 || previousBenchmarkGrowth === 0) continue;
 
-  return tradingDayPortfolios.map((portfolio) => {
-    const pnl = portfolio.value - portfolio.deposits;
-    const pnlRatio = portfolio.deposits !== 0 ? (pnl / Math.abs(portfolio.deposits)) * 100 : 0;
-    // Normalize to 0% at start date
-    return { date: portfolio.date, value: pnlRatio - startPnlRatio };
-  });
+    dailyReturns.push({
+      date: current.date,
+      portfolio: (1 + current.portfolio / 100) / previousPortfolioGrowth - 1,
+      benchmark: (1 + current.benchmark / 100) / previousBenchmarkGrowth - 1,
+    });
+  }
+  return dailyReturns;
 }
 
 /**
@@ -142,20 +180,10 @@ export function calculateAlpha(
 export function calculateCorrelation(
   portfolioReturns: { date: string; value: number }[],
   benchmarkReturns: { date: string; value: number }[],
-): number {
-  // Align dates between portfolio and benchmark
-  const benchmarkMap = new Map(benchmarkReturns.map((b) => [b.date, b.value]));
+): number | null {
+  const alignedData = getAlignedDailyReturns(portfolioReturns, benchmarkReturns);
 
-  const alignedData: Array<{ portfolio: number; benchmark: number }> = [];
-
-  portfolioReturns.forEach((p) => {
-    const benchmarkValue = benchmarkMap.get(p.date);
-    if (benchmarkValue !== undefined) {
-      alignedData.push({ portfolio: p.value, benchmark: benchmarkValue });
-    }
-  });
-
-  if (alignedData.length < 2) return 0;
+  if (alignedData.length < 2) return null;
 
   // Calculate Pearson correlation coefficient
   const n = alignedData.length;
@@ -168,7 +196,7 @@ export function calculateCorrelation(
   const numerator = n * sumPB - sumP * sumB;
   const denominator = Math.sqrt((n * sumP2 - sumP * sumP) * (n * sumB2 - sumB * sumB));
 
-  if (denominator === 0) return 0;
+  if (denominator === 0) return null;
 
   return numerator / denominator;
 }
@@ -182,37 +210,13 @@ export function calculateCorrelation(
 export function calculateBeta(
   portfolioReturns: { date: string; value: number }[],
   benchmarkReturns: { date: string; value: number }[],
-): number {
-  // Align dates between portfolio and benchmark
-  const benchmarkMap = new Map(benchmarkReturns.map((b) => [b.date, b.value]));
-
-  const alignedData: Array<{ portfolio: number; benchmark: number }> = [];
-
-  portfolioReturns.forEach((p) => {
-    const benchmarkValue = benchmarkMap.get(p.date);
-    if (benchmarkValue !== undefined) {
-      alignedData.push({ portfolio: p.value, benchmark: benchmarkValue });
-    }
-  });
-
-  if (alignedData.length < 2) return 0;
-
-  // Calculate daily returns for both
-  const portfolioDailyReturns: number[] = [];
-  const benchmarkDailyReturns: number[] = [];
-
-  for (let i = 1; i < alignedData.length; i++) {
-    const pPrev = 100 + alignedData[i - 1].portfolio;
-    const pCurr = 100 + alignedData[i].portfolio;
-    const bPrev = 100 + alignedData[i - 1].benchmark;
-    const bCurr = 100 + alignedData[i].benchmark;
-
-    portfolioDailyReturns.push(((pCurr - pPrev) / pPrev) * 100);
-    benchmarkDailyReturns.push(((bCurr - bPrev) / bPrev) * 100);
-  }
+): number | null {
+  const alignedDailyReturns = getAlignedDailyReturns(portfolioReturns, benchmarkReturns);
+  const portfolioDailyReturns = alignedDailyReturns.map((point) => point.portfolio);
+  const benchmarkDailyReturns = alignedDailyReturns.map((point) => point.benchmark);
 
   const n = portfolioDailyReturns.length;
-  if (n === 0) return 0;
+  if (n < 2) return null;
 
   // Calculate means
   const pMean = portfolioDailyReturns.reduce((sum, r) => sum + r, 0) / n;
@@ -232,7 +236,7 @@ export function calculateBeta(
   covariance /= n;
   benchmarkVariance /= n;
 
-  if (benchmarkVariance === 0) return 0;
+  if (benchmarkVariance === 0) return null;
 
   return covariance / benchmarkVariance;
 }
@@ -243,24 +247,12 @@ export function calculateBeta(
 export function calculateConsistencyScore(
   portfolioReturns: { date: string; value: number }[],
   benchmarkReturns: { date: string; value: number }[],
-): number {
-  // Align dates between portfolio and benchmark
-  const benchmarkMap = new Map(benchmarkReturns.map((b) => [b.date, b.value]));
+): number | null {
+  const dailyReturns = getAlignedDailyReturns(portfolioReturns, benchmarkReturns);
+  const daysBeatingBenchmark = dailyReturns.filter((point) => point.portfolio > point.benchmark).length;
+  const totalDays = dailyReturns.length;
 
-  let daysBeatingBenchmark = 0;
-  let totalDays = 0;
-
-  portfolioReturns.forEach((p) => {
-    const benchmarkValue = benchmarkMap.get(p.date);
-    if (benchmarkValue !== undefined) {
-      totalDays++;
-      if (p.value > benchmarkValue) {
-        daysBeatingBenchmark++;
-      }
-    }
-  });
-
-  if (totalDays === 0) return 0;
+  if (totalDays === 0) return null;
 
   return (daysBeatingBenchmark / totalDays) * 100;
 }
@@ -273,24 +265,24 @@ export function calculateAverageRecoveryTime(returns: { date: string; value: num
 
   const recoveryPeriods: number[] = [];
   let peak = returns[0].value;
-  let drawdownStartIndex: number | null = null;
+  let drawdownStartDate: string | null = null;
 
   for (let i = 0; i < returns.length; i++) {
     const point = returns[i];
 
     if (point.value >= peak) {
       // New peak or recovery
-      if (drawdownStartIndex !== null) {
+      if (drawdownStartDate !== null) {
         // We were in a drawdown and just recovered
-        const recoveryDays = i - drawdownStartIndex;
+        const recoveryDays = calendarDaysBetween(drawdownStartDate, point.date);
         recoveryPeriods.push(recoveryDays);
-        drawdownStartIndex = null;
+        drawdownStartDate = null;
       }
       peak = point.value;
     } else {
       // In a drawdown
-      if (drawdownStartIndex === null) {
-        drawdownStartIndex = i;
+      if (drawdownStartDate === null) {
+        drawdownStartDate = point.date;
       }
     }
   }
@@ -307,8 +299,10 @@ export function calculateAverageRecoveryTime(returns: { date: string; value: num
 export function calculateRiskLevel(
   portfolioReturns: { date: string; value: number }[],
   benchmarkReturns: { date: string; value: number }[],
-): 'Lower Risk' | 'Similar Risk' | 'Higher Risk' {
+): 'Lower Risk' | 'Similar Risk' | 'Higher Risk' | 'Insufficient Data' {
+  if (getAlignedDailyReturns(portfolioReturns, benchmarkReturns).length < 2) return 'Insufficient Data';
   const beta = calculateBeta(portfolioReturns, benchmarkReturns);
+  if (beta === null) return 'Insufficient Data';
 
   if (beta < 0.85) return 'Lower Risk';
   if (beta > 1.15) return 'Higher Risk';
@@ -316,23 +310,14 @@ export function calculateRiskLevel(
 }
 
 /**
- * Calculate opportunity cost - dollar difference vs benchmark
- * Based on initial portfolio value
+ * Calculate the actual ending value minus a benchmark counterfactual that
+ * receives the portfolio's external cash flows on the same dates.
  */
 export function calculateOpportunityCost(
-  portfolioReturns: { date: string; value: number }[],
+  portfolios: Portfolio[],
   benchmarkReturns: { date: string; value: number }[],
-  initialValue: number,
-): number {
-  if (portfolioReturns.length === 0 || benchmarkReturns.length === 0) return 0;
-
-  const portfolioFinalReturn = portfolioReturns[portfolioReturns.length - 1].value;
-  const benchmarkFinalReturn = benchmarkReturns[benchmarkReturns.length - 1].value;
-
-  const portfolioFinalValue = initialValue * (1 + portfolioFinalReturn / 100);
-  const benchmarkFinalValue = initialValue * (1 + benchmarkFinalReturn / 100);
-
-  return portfolioFinalValue - benchmarkFinalValue;
+): number | null {
+  return calculateCashFlowMatchedOpportunityCost(portfolios, benchmarkReturns);
 }
 
 export type PeriodReturn = {
@@ -357,30 +342,35 @@ export function calculateYearlyReturns(
   const portfolioByYear = new Map<string, { start: number; end: number }>();
   const benchmarkByYear = new Map<string, { start: number; end: number }>();
 
-  // Process portfolio data
+  // Process portfolio data. A period starts at the prior observation so the first
+  // return inside each year is included.
+  let previousPortfolioValue = 0;
   portfolioReturns.forEach((point) => {
     const year = dayjs(point.date, DATE_FORMAT).year().toString();
     if (!portfolioByYear.has(year)) {
-      portfolioByYear.set(year, { start: point.value, end: point.value });
+      portfolioByYear.set(year, { start: previousPortfolioValue, end: point.value });
     } else {
       const yearData = portfolioByYear.get(year);
       if (yearData) {
         yearData.end = point.value;
       }
     }
+    previousPortfolioValue = point.value;
   });
 
   // Process benchmark data
+  let previousBenchmarkValue = 0;
   benchmarkReturns.forEach((point) => {
     const year = dayjs(point.date, DATE_FORMAT).year().toString();
     if (!benchmarkByYear.has(year)) {
-      benchmarkByYear.set(year, { start: point.value, end: point.value });
+      benchmarkByYear.set(year, { start: previousBenchmarkValue, end: point.value });
     } else {
       const yearData = benchmarkByYear.get(year);
       if (yearData) {
         yearData.end = point.value;
       }
     }
+    previousBenchmarkValue = point.value;
   });
 
   // Calculate yearly returns
@@ -419,32 +409,37 @@ export function calculateMonthlyReturns(
   const portfolioByMonth = new Map<string, { start: number; end: number }>();
   const benchmarkByMonth = new Map<string, { start: number; end: number }>();
 
-  // Process portfolio data
+  // Process portfolio data. Use the previous observation as the opening baseline
+  // so the first return in each month is not dropped.
+  let previousPortfolioValue = 0;
   portfolioReturns.forEach((point) => {
     const date = dayjs(point.date, DATE_FORMAT);
     const monthKey = date.format('YYYY-MM');
     if (!portfolioByMonth.has(monthKey)) {
-      portfolioByMonth.set(monthKey, { start: point.value, end: point.value });
+      portfolioByMonth.set(monthKey, { start: previousPortfolioValue, end: point.value });
     } else {
       const monthData = portfolioByMonth.get(monthKey);
       if (monthData) {
         monthData.end = point.value;
       }
     }
+    previousPortfolioValue = point.value;
   });
 
   // Process benchmark data
+  let previousBenchmarkValue = 0;
   benchmarkReturns.forEach((point) => {
     const date = dayjs(point.date, DATE_FORMAT);
     const monthKey = date.format('YYYY-MM');
     if (!benchmarkByMonth.has(monthKey)) {
-      benchmarkByMonth.set(monthKey, { start: point.value, end: point.value });
+      benchmarkByMonth.set(monthKey, { start: previousBenchmarkValue, end: point.value });
     } else {
       const monthData = benchmarkByMonth.get(monthKey);
       if (monthData) {
         monthData.end = point.value;
       }
     }
+    previousBenchmarkValue = point.value;
   });
 
   // Calculate monthly returns
@@ -484,62 +479,19 @@ export function calculateMonthlyReturns(
 export function calculateYearlyReturnsWithMonthlyBreakdown(
   portfolios: { date: string; value: number; deposits: number }[],
   benchmarkData: { date: string; value: number }[],
+  startDate?: string,
 ): PeriodReturn[] {
   if (portfolios.length === 0 || benchmarkData.length === 0) return [];
 
-  // Group portfolios and benchmark data by year
-  const portfoliosByYear = new Map<string, typeof portfolios>();
-  const benchmarkByYear = new Map<string, typeof benchmarkData>();
+  const portfolioReturns = normalizePortfolioToPercentageReturns(portfolios);
+  const benchmarkReturns = normalizeToPercentageReturns(benchmarkData, startDate);
+  const yearlyReturns = calculateYearlyReturns(portfolioReturns, benchmarkReturns);
+  const monthlyReturns = calculateMonthlyReturns(portfolioReturns, benchmarkReturns);
 
-  portfolios.forEach((point) => {
-    const year = dayjs(point.date, DATE_FORMAT).year().toString();
-    if (!portfoliosByYear.has(year)) {
-      portfoliosByYear.set(year, []);
-    }
-    portfoliosByYear.get(year)?.push(point);
-  });
-
-  benchmarkData.forEach((point) => {
-    const year = dayjs(point.date, DATE_FORMAT).year().toString();
-    if (!benchmarkByYear.has(year)) {
-      benchmarkByYear.set(year, []);
-    }
-    benchmarkByYear.get(year)?.push(point);
-  });
-
-  // Get all years
-  const years = Array.from(new Set([...portfoliosByYear.keys(), ...benchmarkByYear.keys()])).sort();
-
-  // Calculate returns for each year
-  return years.map((year) => {
-    const yearPortfolios = portfoliosByYear.get(year) || [];
-    const yearBenchmark = benchmarkByYear.get(year) || [];
-
-    // Re-normalize portfolio for this year only (accounts for deposits/withdrawals in this year)
-    const yearPortfolioReturns = normalizePortfolioToPercentageReturns(yearPortfolios);
-    const yearBenchmarkReturns = normalizeToPercentageReturns(yearBenchmark);
-
-    // Get final returns for the year
-    const portfolioReturn =
-      yearPortfolioReturns.length > 0 ? yearPortfolioReturns[yearPortfolioReturns.length - 1].value : 0;
-    const benchmarkReturn =
-      yearBenchmarkReturns.length > 0 ? yearBenchmarkReturns[yearBenchmarkReturns.length - 1].value : 0;
-    const difference = portfolioReturn - benchmarkReturn;
-
-    // Calculate monthly breakdown for this year
-    const monthlyReturns = calculateMonthlyReturns(yearPortfolioReturns, yearBenchmarkReturns);
-    const monthlyChildren = monthlyReturns.map((monthReturn) => ({
-      ...monthReturn,
-      period: monthReturn.period.split(' ')[0], // Extract just "Jan" from "Jan 2024"
-    }));
-
-    return {
-      period: year,
-      portfolioReturn,
-      benchmarkReturn,
-      difference,
-      outperformed: difference > 0,
-      children: monthlyChildren.length > 0 ? monthlyChildren : undefined,
-    };
+  return yearlyReturns.map((yearReturn) => {
+    const monthlyChildren = monthlyReturns
+      .filter((monthReturn) => monthReturn.period.endsWith(yearReturn.period))
+      .map((monthReturn) => ({ ...monthReturn, period: monthReturn.period.split(' ')[0] }));
+    return { ...yearReturn, children: monthlyChildren.length > 0 ? monthlyChildren : undefined };
   });
 }

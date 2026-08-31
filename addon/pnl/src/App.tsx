@@ -40,6 +40,7 @@ import dayjs from './dayjs';
 import type { Account, AccountTransaction, CashFlow, CurrencyCache, Portfolio, Position, Transaction } from './types';
 import { formatMoney, getSymbol } from './utils/common';
 import { debounce } from './utils/lodash-replacements';
+import { buildPortfolioSeries } from './utils/portfolioPerformance';
 import { enrichPositionsWithType } from './utils/positionEnricher';
 import { computeBookValue, computeXIRR } from './utils/xirr';
 
@@ -164,7 +165,10 @@ export default function App() {
       return fetch(`https://app.wealthica.com/api/currencies/${_baseCurrency}/history?base=${currency}`)
         .then((response) => response.json())
         .then((response) => parseCurrencyReponse(response))
-        .catch((error) => console.error(`Failed to load currency for ${currency}`, error));
+        .catch((error) => {
+          console.error(`Failed to load currency for ${currency}`, error);
+          throw error;
+        });
     };
 
     async function _loadCurrencies() {
@@ -239,31 +243,15 @@ export default function App() {
 
     positions.forEach((position) => {
       position.transactions = securityTransactionsBySymbol[getSymbol(position.security)] || [];
-      position.xirr = computeXIRR(position) ?? 0;
+      const valuationDate = dayjs(addOnOptions.toDate, DATE_FORMAT).endOf('day').toDate();
+      position.xirr = computeXIRR(position, valuationDate) ?? 0;
       computeBookValue(position, currencyRef.current);
     });
 
     const cashFlowByDate = computeCashFlowByDate(transactions, currencyRef.current);
 
     // Portfolio computation
-    const portfolios: Portfolio[] = [];
-    const sortedDates = Object.keys(portfolioByDate).sort();
-    let depositsToDate = Object.keys(cashFlowByDate)
-      .filter((date) => date < sortedDates[0])
-      .reduce((deposits, date) => {
-        const transaction = cashFlowByDate[date];
-        deposits += transaction.deposit - transaction.withdrawal;
-        return deposits;
-      }, 0);
-
-    sortedDates.forEach((date) => {
-      const portfolioValue = portfolioByDate[date];
-      const asOfTransactionValue = cashFlowByDate[date];
-      if (asOfTransactionValue) {
-        depositsToDate += asOfTransactionValue.deposit - asOfTransactionValue.withdrawal;
-      }
-      portfolios.push({ date, value: portfolioValue, deposits: depositsToDate });
-    });
+    const portfolios = buildPortfolioSeries(portfolioByDate, cashFlowByDate);
 
     // XIRR computation
     let xirrRate = 0;
@@ -272,7 +260,7 @@ export default function App() {
         const portfolio = cashFlowByDate[date];
         const amount = portfolio.withdrawal - portfolio.deposit;
         if (amount !== 0) {
-          transactions.push({ amount, when: new Date(date) });
+          transactions.push({ amount, when: dayjs(date, DATE_FORMAT).startOf('day').toDate() });
         }
         return transactions;
       },
@@ -281,7 +269,7 @@ export default function App() {
 
     const portfolio = portfolios[portfolios.length - 1];
     if (portfolio.value) {
-      values.push({ when: new Date(portfolio.date), amount: portfolio.value });
+      values.push({ when: dayjs(portfolio.date, DATE_FORMAT).endOf('day').toDate(), amount: portfolio.value });
     }
 
     try {

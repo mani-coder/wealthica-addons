@@ -1,6 +1,7 @@
 import { Collapse, List, Typography } from 'antd';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../../analytics';
+import type { Portfolio } from '../../types';
 import {
   calculateAlpha,
   calculateAverageRecoveryTime,
@@ -14,30 +15,29 @@ import { MetricsStatistics } from '../common/MetricsStatistics';
 
 // Metric descriptions used in tooltips and "Understanding the Metrics" section
 export const METRIC_DESCRIPTIONS = {
-  portfolioReturn: 'Total percentage gain/loss of your portfolio over the selected time period.',
-  benchmarkReturn: 'Total percentage gain/loss of the benchmark over the same time period.',
+  portfolioReturn: 'Time-weighted return after removing the effect of external deposits and withdrawals.',
+  benchmarkReturn: 'Benchmark total return over the same dates when adjusted-close data is available.',
   alpha:
     "Measures your portfolio's excess return compared to the benchmark. Positive alpha means you're outperforming.",
-  correlation:
-    'Measures how closely your portfolio moves with the benchmark (ranges from -1 to 1). Higher correlation means your portfolio behaves similarly to the market.',
+  correlation: 'Pearson correlation of aligned daily portfolio and benchmark returns (ranges from -1 to 1).',
   consistencyScore:
-    "Percentage of trading days your portfolio outperformed the benchmark. Higher % means you're beating the benchmark more often.",
-  recoveryTime: 'Average number of days it takes for your portfolio to recover from a decline (shorter is better).',
+    "Percentage of aligned trading days when the portfolio's daily return exceeded the benchmark's daily return.",
+  recoveryTime: 'Average calendar days for completed drawdowns to recover their prior peak.',
   riskLevel:
     'How volatile your portfolio is compared to the market. Shown as "Lower Risk", "Similar Risk", or "Higher Risk" relative to the benchmark.',
-  opportunityCost:
-    'Dollar amount you gained or missed compared to investing in the benchmark instead. Shows whether you would have made more or less with the benchmark.',
+  opportunityCost: 'Actual ending value minus a benchmark counterfactual using the same external cash-flow dates.',
 } as const;
 
 type Props = {
   portfolioReturns: { date: string; value: number }[];
   benchmarkReturns: { date: string; value: number }[];
-  portfolios: { value: number }[];
+  portfolios: Portfolio[];
   benchmarkName: string;
+  benchmarkReturnBasis: string;
 };
 
 function Metrics(props: Props) {
-  const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName } = props;
+  const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName, benchmarkReturnBasis } = props;
 
   // Calculate metrics
   const alpha = useMemo(() => {
@@ -61,9 +61,8 @@ function Metrics(props: Props) {
   }, [portfolioReturns, benchmarkReturns]);
 
   const opportunityCost = useMemo(() => {
-    const initialValue = portfolios.length > 0 ? portfolios[0].value : 0;
-    return calculateOpportunityCost(portfolioReturns, benchmarkReturns, initialValue);
-  }, [portfolioReturns, benchmarkReturns, portfolios]);
+    return calculateOpportunityCost(portfolios, benchmarkReturns);
+  }, [benchmarkReturns, portfolios]);
 
   const portfolioFinalReturn = portfolioReturns.length > 0 ? portfolioReturns[portfolioReturns.length - 1].value : 0;
   const benchmarkFinalReturn = benchmarkReturns.length > 0 ? benchmarkReturns[benchmarkReturns.length - 1].value : 0;
@@ -82,6 +81,7 @@ function Metrics(props: Props) {
           tooltip={METRIC_DESCRIPTIONS.benchmarkReturn}
           value={`${benchmarkFinalReturn.toFixed(2)}%`}
           styles={{ content: { color: benchmarkFinalReturn >= 0 ? '#10b981' : '#ef4444' } }}
+          suffix={<span className="text-xs text-gray-500 block mt-1">{benchmarkReturnBasis}</span>}
         />
         <MetricsStatistics
           title="Alpha (Outperformance)"
@@ -93,8 +93,8 @@ function Metrics(props: Props) {
         <MetricsStatistics
           title="Correlation"
           tooltip={METRIC_DESCRIPTIONS.correlation}
-          value={correlation.toFixed(3)}
-          styles={{ content: { color: '#3b82f6' } }}
+          value={correlation === null ? '—' : correlation.toFixed(3)}
+          styles={{ content: { color: correlation === null ? '#6b7280' : '#3b82f6' } }}
         />
       </div>
 
@@ -106,11 +106,24 @@ function Metrics(props: Props) {
           <MetricsStatistics
             title="Consistency Score"
             tooltip={METRIC_DESCRIPTIONS.consistencyScore}
-            value={`${consistencyScore.toFixed(1)}%`}
+            value={consistencyScore === null ? '—' : `${consistencyScore.toFixed(1)}%`}
             styles={{
-              content: { color: consistencyScore >= 60 ? '#10b981' : consistencyScore >= 40 ? '#f59e0b' : '#ef4444' },
+              content: {
+                color:
+                  consistencyScore === null
+                    ? '#6b7280'
+                    : consistencyScore >= 60
+                      ? '#10b981'
+                      : consistencyScore >= 40
+                        ? '#f59e0b'
+                        : '#ef4444',
+              },
             }}
-            suffix={<span className="text-xs text-gray-500 block mt-1">of days beating {benchmarkName}</span>}
+            suffix={
+              <span className="text-xs text-gray-500 block mt-1">
+                {consistencyScore === null ? 'insufficient data' : `of days beating ${benchmarkName}`}
+              </span>
+            }
           />
           <MetricsStatistics
             title="Average Recovery Time"
@@ -125,7 +138,14 @@ function Metrics(props: Props) {
             value={riskLevel}
             styles={{
               content: {
-                color: riskLevel === 'Lower Risk' ? '#10b981' : riskLevel === 'Higher Risk' ? '#ef4444' : '#3b82f6',
+                color:
+                  riskLevel === 'Insufficient Data'
+                    ? '#6b7280'
+                    : riskLevel === 'Lower Risk'
+                      ? '#10b981'
+                      : riskLevel === 'Higher Risk'
+                        ? '#ef4444'
+                        : '#3b82f6',
               },
             }}
             suffix={<span className="text-xs text-gray-500 block mt-1">vs {benchmarkName}</span>}
@@ -133,11 +153,18 @@ function Metrics(props: Props) {
           <MetricsStatistics
             title="Opportunity Cost"
             tooltip={METRIC_DESCRIPTIONS.opportunityCost}
-            value={`${opportunityCost >= 0 ? '+' : ''}$${formatMoney(opportunityCost)}`}
-            styles={{ content: { color: opportunityCost >= 0 ? '#10b981' : '#ef4444' } }}
+            value={
+              opportunityCost === null
+                ? '—'
+                : `${opportunityCost >= 0 ? '+$' : '-$'}${formatMoney(Math.abs(opportunityCost))}`
+            }
+            styles={{
+              content: { color: opportunityCost === null ? '#6b7280' : opportunityCost >= 0 ? '#10b981' : '#ef4444' },
+            }}
             suffix={
               <span className="text-xs text-gray-500 block mt-1">
-                {opportunityCost >= 0 ? 'gained' : 'missed'} vs {benchmarkName}
+                {opportunityCost === null ? 'insufficient data' : opportunityCost >= 0 ? 'gained' : 'missed'} vs{' '}
+                {benchmarkName}
               </span>
             }
           />

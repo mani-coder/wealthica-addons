@@ -3,56 +3,60 @@ import type { Currencies } from '../context/CurrencyContext';
 import type { Position } from '../types';
 import { getSymbol } from './common';
 
-export function computeXIRR(position: Position) {
-  const data = position.transactions.reduce(
-    (hash, transaction) => {
-      if (['buy', 'sell', 'reinvest', 'split'].includes(transaction.type)) {
-        const openShares = hash.book[transaction.account] || 0;
+export function computeXIRR(position: Position, valuationDate: Date = new Date()) {
+  const data = [...position.transactions]
+    .sort((left, right) => left.date.valueOf() - right.date.valueOf())
+    .reduce(
+      (hash, transaction) => {
+        if (['buy', 'sell', 'reinvest', 'split'].includes(transaction.type)) {
+          const openShares = hash.book[transaction.account] || 0;
 
-        let outstandingShares = 0;
-        if (transaction.type === 'split') {
-          outstandingShares = transaction.shares;
-        } else {
-          outstandingShares = transaction.shares + openShares;
+          let outstandingShares = 0;
+          if (transaction.type === 'split') {
+            outstandingShares = transaction.splitRatio ? openShares * transaction.splitRatio : openShares;
+          } else {
+            const shareDelta =
+              transaction.type === 'sell' ? -Math.abs(transaction.shares) : Math.abs(transaction.shares);
+            outstandingShares = shareDelta + openShares;
+          }
+
+          hash.book[transaction.account] = outstandingShares;
+          hash.shares = Object.values(hash.book).reduce((total, shares) => total + shares);
+
+          if (
+            hash.shares === 0 &&
+            !transaction.originalType.startsWith('transfer') &&
+            !transaction.description?.toLowerCase().includes('transfer')
+          ) {
+            hash.transactions = [];
+            return hash;
+          }
         }
 
-        hash.book[transaction.account] = outstandingShares;
-        hash.shares = Object.values(hash.book).reduce((total, shares) => total + shares);
-
-        if (
-          hash.shares === 0 &&
-          transaction.originalType !== 'transfer' &&
-          !transaction.description?.toLowerCase().includes('transfer')
-        ) {
-          hash.transactions = [];
-          return hash;
+        if (transaction.type !== 'split') {
+          hash.transactions.push({
+            amount: ['buy', 'tax', 'fee', 'reinvest'].includes(transaction.type)
+              ? -transaction.amount
+              : transaction.amount,
+            when: transaction.date.toDate(),
+          });
         }
-      }
 
-      if (transaction.type !== 'split') {
-        hash.transactions.push({
-          amount: ['buy', 'tax', 'fee', 'reinvest'].includes(transaction.type)
-            ? -transaction.amount
-            : transaction.amount,
-          when: transaction.date.toDate(),
-        });
-      }
-
-      return hash;
-    },
-    { transactions: [], shares: 0, book: {} } as {
-      transactions: { amount: number; when: Date }[];
-      book: { [K: string]: number };
-      shares: number;
-    },
-  );
+        return hash;
+      },
+      { transactions: [], shares: 0, book: {} } as {
+        transactions: { amount: number; when: Date }[];
+        book: { [K: string]: number };
+        shares: number;
+      },
+    );
 
   if (!data.transactions.length) {
     // Skip xirr computation if there are no transactions.
     return;
   }
 
-  data.transactions.push({ amount: position.market_value, when: new Date() });
+  data.transactions.push({ amount: position.market_value, when: valuationDate });
 
   try {
     const value = xirr(data.transactions);

@@ -13,6 +13,13 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2026-08-30',
+    tab: 'Performance',
+    title: 'Cash-Flow-Aware Portfolio and Benchmark Returns',
+    description:
+      'Portfolio performance now uses time-weighted returns, benchmarks use adjusted-close total returns when available, comparisons share the same market-data end date, and opportunity cost applies the same external deposits and withdrawals to the benchmark. Historical figures may differ from the previous profit-to-net-deposits ratio.',
+  },
+  {
     date: '2026-01-01',
     tab: 'Holdings',
     title: 'Enhanced Holding Details & Health Check Cards',

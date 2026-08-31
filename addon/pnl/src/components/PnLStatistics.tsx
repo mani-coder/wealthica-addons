@@ -5,6 +5,7 @@ import { Card, Divider, Statistic, type StatisticProps, Tooltip, Typography } fr
 import dayjs from 'dayjs';
 import React from 'react';
 import type { Portfolio, Position } from '../types';
+import { calculateTimeWeightedReturns } from '../utils/portfolioPerformance';
 
 function StatisticBox(props: StatisticProps & { tooltip?: string }) {
   const { styles, ...restProps } = props;
@@ -65,11 +66,12 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
     const startPnl = startPortfolio.value - startPortfolio.deposits;
     const endPnl = endPortfolio.value - endPortfolio.deposits;
 
-    const startRatio = (startPnl / Math.abs(startPortfolio.deposits)) * 100;
-    const endRatio = (endPnl / Math.abs(endPortfolio.deposits)) * 100;
-
     timelinePnlChangeValue = endPnl - startPnl;
-    timelinePnlChangeRatio = endRatio - startRatio;
+    const timelinePortfolios = portfolios.filter(
+      (portfolioPoint) => portfolioPoint.date >= fromDate && portfolioPoint.date <= toDate,
+    );
+    const timelineReturns = calculateTimeWeightedReturns(timelinePortfolios);
+    timelinePnlChangeRatio = (timelineReturns[timelineReturns.length - 1]?.cumulativeReturn ?? 0) * 100;
   }
 
   const fromDateDisplay = dayjs(fromDate).format('MMM DD, YY');
@@ -156,8 +158,8 @@ function PnLStatistics({ xirr, portfolios, privateMode, positions, fromDate, toD
               prefix="$"
             />
             <StatisticBox
-              title="P/L % Change"
-              tooltip={`P/L Ratio change from ${fromDateDisplay} to ${toDateDisplay}`}
+              title="Time-Weighted Return"
+              tooltip={`Return after removing external cash-flow effects from ${fromDateDisplay} to ${toDateDisplay}`}
               styles={{ content: { color: timelinePnlChangeRatio >= 0 ? 'green' : 'red' } }}
               value={timelinePnlChangeRatio}
               precision={2}

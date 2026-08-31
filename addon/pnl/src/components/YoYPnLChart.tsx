@@ -6,6 +6,7 @@ import { DATE_DISPLAY_FORMAT, DATE_FORMAT } from '../constants';
 import { useAddonContext } from '../context/AddonContext';
 import type { Portfolio } from '../types';
 import { formatCurrency, getPreviousWeekday } from '../utils/common';
+import { calculateTimeWeightedReturns } from '../utils/portfolioPerformance';
 import Charts from './Charts';
 import Collapsible from './Collapsible';
 
@@ -35,10 +36,10 @@ function YoYPnLChart(props: Props) {
       },
 
       title: {
-        text: 'P&L % Change Over Multiple Time Periods',
+        text: 'Time-Weighted Return Over Multiple Time Periods',
       },
       subtitle: {
-        text: 'This chart shows how your portfolio had performed in multiple time slices. This chart is inspired based on YoY growth. You might want to see the change in your P&L in the last few days, weeks, months, years etc.,',
+        text: 'Returns remove the effect of external deposits and withdrawals within each period.',
         style: {
           color: '#1F2A33',
         },
@@ -60,7 +61,7 @@ function YoYPnLChart(props: Props) {
           format: '{value}%',
         },
         title: {
-          text: 'P&L Change (%)',
+          text: 'Time-Weighted Return (%)',
         },
       },
 
@@ -207,11 +208,12 @@ function YoYPnLChart(props: Props) {
         const startPnl = value.startPortfolio.value - value.startPortfolio.deposits;
         const endPnl = value.endPortfolio.value - value.endPortfolio.deposits;
 
-        const startRatio = (startPnl / Math.abs(value.startPortfolio.deposits)) * 100;
-        const endRatio = (endPnl / Math.abs(value.endPortfolio.deposits)) * 100;
-
         const changeValue = endPnl - startPnl;
-        const changeRatio = endRatio - startRatio;
+        const periodPortfolios = props.portfolios.filter(
+          (portfolio) => portfolio.date >= value.startPortfolio.date && portfolio.date <= value.endPortfolio.date,
+        );
+        const periodReturns = calculateTimeWeightedReturns(periodPortfolios);
+        const changeRatio = (periodReturns[periodReturns.length - 1]?.cumulativeReturn ?? 0) * 100;
 
         return {
           id: value.id,
@@ -220,9 +222,9 @@ function YoYPnLChart(props: Props) {
           startDate: dayjs(value.startPortfolio.date).format(DATE_DISPLAY_FORMAT),
           endDate: dayjs(value.endPortfolio.date).format(DATE_DISPLAY_FORMAT),
           startPnl,
-          startRatio,
+          startValue: value.startPortfolio.value,
           endPnl,
-          endRatio,
+          endValue: value.endPortfolio.value,
           changeRatio,
           changeValue,
           color: changeRatio >= 0 ? 'green' : 'red',
@@ -231,7 +233,7 @@ function YoYPnLChart(props: Props) {
 
     const series: any[] = [
       {
-        name: 'PnL Change %',
+        name: 'Time-Weighted Return',
         type: 'column',
         data: data.map((value) => ({
           key: value.id,
@@ -240,12 +242,10 @@ function YoYPnLChart(props: Props) {
           y: value.changeRatio,
 
           startDate: value.startDate,
-          startPnl: !isPrivateMode ? formatCurrency(value.startPnl, 2) : '-',
-          startRatio: value.startRatio,
+          startValue: !isPrivateMode ? formatCurrency(value.startValue, 2) : '-',
 
           endDate: value.endDate,
-          endPnl: !isPrivateMode ? formatCurrency(value.endPnl, 2) : '-',
-          endRatio: value.endRatio,
+          endValue: !isPrivateMode ? formatCurrency(value.endValue, 2) : '-',
 
           changeValue: !isPrivateMode ? `$${formatCurrency(value.changeValue, 1)}` : '-',
         })),
@@ -262,8 +262,8 @@ function YoYPnLChart(props: Props) {
         tooltip: {
           headerFormat: '',
           pointFormat: `<b style="font-size: 13px;">{point.label} ({point.key})</b><br /><b style="color: {point.color};font-size: 14px;">{point.y:.1f}% ({point.changeValue})</b><br /><hr />
-            {point.startDate}: <b>{point.startRatio:.2f}%</b> (\${point.startPnl})<br />
-            {point.endDate}: <b>{point.endRatio:.2f}%</b> (\${point.endPnl})<br />`,
+            {point.startDate}: <b>\${point.startValue}</b><br />
+            {point.endDate}: <b>\${point.endValue}</b><br />`,
         },
         dataLabels: {
           enabled: true,
@@ -281,7 +281,7 @@ function YoYPnLChart(props: Props) {
   }, [getData, getOptions]);
 
   return (
-    <Collapsible title="P&L % Change Over Multiple Time Periods">
+    <Collapsible title="Time-Weighted Return Over Multiple Time Periods">
       <Charts options={options} />
     </Collapsible>
   );

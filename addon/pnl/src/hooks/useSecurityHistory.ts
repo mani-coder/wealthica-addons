@@ -3,11 +3,13 @@ import { useCallback } from 'react';
 import { DATE_FORMAT, USE_WEALTHICA_API_FOR_SECURITY_HISTORY } from '../constants';
 import { useAddon } from '../context/AddonContext';
 import dayjs from '../dayjs';
-import { buildCorsFreeUrl, getDate, getPreviousTradingDay, isTradingDay } from '../utils/common';
+import { buildCorsFreeUrl, getDate } from '../utils/common';
 
 export type SecurityPriceData = {
   timestamp: Dayjs;
   closePrice: number;
+  adjustedClosePrice?: number;
+  returnBasis: 'price' | 'total';
 };
 
 /**
@@ -38,9 +40,11 @@ function parseWealthicaSecurityPriceResponse(response: any, maxChangePercentage:
     const changePercentage = Math.abs((rawClosePrice - prevPrice) / prevPrice) * 100;
     const adjustedClosePrice = changePercentage > maxChangePercentage ? prevPrice : rawClosePrice;
 
-    // Only include trading days (exclude weekends, holidays, and current date)
-    if (isTradingDay(date) && date.isBefore(today)) {
-      data.push({ timestamp: date.clone(), closePrice: adjustedClosePrice });
+    // A non-null weekday observation is authoritative. Exclude weekend
+    // carry-forwards, but do not apply a local federal-holiday calendar.
+    const isWeekday = date.day() !== 0 && date.day() !== 6;
+    if (isWeekday && date.isBefore(today)) {
+      data.push({ timestamp: date.clone(), closePrice: adjustedClosePrice, returnBasis: 'price' });
     }
 
     date = date.subtract(1, 'days');
@@ -56,7 +60,9 @@ async function fetchSecurityHistoryFromFinanceApi(
   toDate: Dayjs,
 ): Promise<SecurityPriceData[]> {
   // curl 'https://finance-api.mani-coder.dev/api/historical?symbol=NVDA&period1=2024-01-01&period2=2026-01-05&interval=1d'
-  const url = `https://finance-api.mani-coder.dev/api/historical?symbol=${encodeURIComponent(yahooSymbol)}&period1=${fromDate.format(DATE_FORMAT)}&period2=${toDate.format(DATE_FORMAT)}&interval=1d`;
+  // Yahoo-style period2 is exclusive, so request one extra calendar day to include toDate.
+  const exclusiveToDate = toDate.add(1, 'day');
+  const url = `https://finance-api.mani-coder.dev/api/historical?symbol=${encodeURIComponent(yahooSymbol)}&period1=${fromDate.format(DATE_FORMAT)}&period2=${exclusiveToDate.format(DATE_FORMAT)}&interval=1d`;
   // [
   // {
   //   "date": "2024-01-02T14:30:00.000Z",
@@ -73,6 +79,8 @@ async function fetchSecurityHistoryFromFinanceApi(
       return data.map((item: any) => ({
         timestamp: dayjs(item.date),
         closePrice: item.close,
+        adjustedClosePrice: item.adjClose ?? item.close,
+        returnBasis: item.adjClose === undefined || item.adjClose === null ? 'price' : 'total',
       }));
     });
   return response;
@@ -97,7 +105,9 @@ const securityHistoryCache = new Map<string, SecurityPriceData[]>();
  * Generate cache key from request parameters
  */
 function getCacheKey(securityId: string, fromDate: Dayjs, toDate: Dayjs): string {
-  return `${securityId}:${fromDate.format(DATE_FORMAT)}:${toDate.format(DATE_FORMAT)}`;
+  return `${USE_WEALTHICA_API_FOR_SECURITY_HISTORY ? 'wealthica' : 'finance'}:${securityId}:${fromDate.format(
+    DATE_FORMAT,
+  )}:${toDate.format(DATE_FORMAT)}`;
 }
 
 type Symbol = {
@@ -116,10 +126,9 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
 
   const fetchSecurityHistory = useCallback(
     async (symbol: Symbol, fromDate: Dayjs, toDate: Dayjs): Promise<SecurityPriceData[]> => {
-      const adjustedToDate = isTradingDay(toDate) ? toDate : getPreviousTradingDay(toDate);
-
-      // Check cache first (using adjusted dates)
-      const cacheKey = getCacheKey(symbol.securityId, fromDate, adjustedToDate);
+      // Ask the data source through the requested boundary and derive the last
+      // market session from returned observations instead of a local holiday calendar.
+      const cacheKey = getCacheKey(symbol.securityId, fromDate, toDate);
       const cached = securityHistoryCache.get(cacheKey);
       if (cached) {
         return cached;
@@ -128,12 +137,12 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
       console.debug('Fetching security history for', {
         symbol: symbol.yahooSymbol,
         fromDate: fromDate.format(DATE_FORMAT),
-        toDate: adjustedToDate.format(DATE_FORMAT),
+        toDate: toDate.format(DATE_FORMAT),
         securityId: symbol.securityId,
       });
 
       if (USE_WEALTHICA_API_FOR_SECURITY_HISTORY) {
-        const endpoint = `securities/${symbol.securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${adjustedToDate.format(
+        const endpoint = `securities/${symbol.securityId}/history?from=${fromDate.format(DATE_FORMAT)}&to=${toDate.format(
           DATE_FORMAT,
         )}`;
         let response: any;
@@ -154,7 +163,7 @@ export function useSecurityHistory(options: UseSecurityHistoryOptions = {}) {
         // Store in cache
         securityHistoryCache.set(cacheKey, data);
       } else {
-        const data = await fetchSecurityHistoryFromFinanceApi(symbol.yahooSymbol, fromDate, adjustedToDate);
+        const data = await fetchSecurityHistoryFromFinanceApi(symbol.yahooSymbol, fromDate, toDate);
         securityHistoryCache.set(cacheKey, data);
         return data;
       }

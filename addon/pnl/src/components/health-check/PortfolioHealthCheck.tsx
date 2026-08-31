@@ -50,8 +50,9 @@ export default function PortfolioHealthCheck({ positions }: Props) {
       );
 
       if (data && data.length > 1) {
-        const firstPrice = data[0].closePrice;
-        const lastPrice = data[data.length - 1].closePrice;
+        const firstPrice = data[0].adjustedClosePrice ?? data[0].closePrice;
+        const lastPoint = data[data.length - 1];
+        const lastPrice = lastPoint.adjustedClosePrice ?? lastPoint.closePrice;
         const returnPercent = ((lastPrice - firstPrice) / firstPrice) * 100;
         setBenchmarkReturn3Y(returnPercent);
       }
