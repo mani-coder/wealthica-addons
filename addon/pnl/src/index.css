@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.performance-focused-row > td {
+  background: #ecfdf5 !important;
+}
+
 body {
   margin: 0;
   padding: 0;

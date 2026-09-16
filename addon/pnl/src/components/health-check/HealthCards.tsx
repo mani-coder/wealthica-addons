@@ -1,89 +1,145 @@
-import { Empty, Masonry } from 'antd';
-import type { MasonryItemType } from 'antd/es/masonry/MasonryItem';
+import { Button, Empty, Table, Tag, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { trackEvent } from '../../analytics';
-import type { HoldingHealthReport } from '../../types/healthCheck';
-import { HealthCard } from './HealthCard';
+import type { PortfolioReviewItem, PortfolioReviewReason } from '../../utils/portfolioHealth';
+import { StockHealthCheck } from './StockHealthCheck';
 
 interface HealthCardsProps {
-  reports: HoldingHealthReport[];
+  reports: PortfolioReviewItem[];
+}
+
+function reasonColor(reason: PortfolioReviewReason): string {
+  if (reason.tone === 'error') return 'red';
+  if (reason.tone === 'warning') return 'orange';
+  return 'blue';
 }
 
 export const HealthCards: React.FC<HealthCardsProps> = ({ reports }) => {
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const expandedCardRef = useRef<HTMLDivElement>(null);
+  const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
+  const expandedRef = useRef<HTMLDivElement>(null);
 
-  // Convert reports to Masonry items
-  const items: MasonryItemType<HoldingHealthReport>[] = reports.map((report) => ({
-    key: report.symbol,
-    data: report,
-  }));
+  const expandedReport = reports.find((report) => report.symbol === expandedSymbol);
 
-  const handleCardClick = (symbol: string) => {
-    setExpandedCard((prev) => {
-      const isExpanding = prev !== symbol;
-      const report = reports.find((r) => r.symbol === symbol);
+  useEffect(() => {
+    if (!expandedSymbol || !expandedRef.current) return;
+    const timeoutId = window.setTimeout(() => {
+      expandedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }, 100);
+    return () => window.clearTimeout(timeoutId);
+  }, [expandedSymbol]);
 
-      if (report) {
-        trackEvent(isExpanding ? 'health-card-expand' : 'health-card-collapse', {
-          severity: report.severity,
-          recommendation: report.recommendation,
-        });
-      }
-
-      return isExpanding ? symbol : null;
+  const openReport = (report: PortfolioReviewItem) => {
+    setExpandedSymbol(report.symbol);
+    trackEvent('health-row-expand', {
+      dataComplete: report.dataComplete,
+      reasonCount: report.reasons.length,
     });
   };
 
-  // Scroll to expanded card when it appears
-  useEffect(() => {
-    if (expandedCard && expandedCardRef.current) {
-      // Small delay to ensure the card is rendered
-      setTimeout(() => {
-        expandedCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-      }, 100);
-    }
-  }, [expandedCard]);
-
-  const expandedReport = reports.find((r) => r.symbol === expandedCard);
+  const columns: ColumnsType<PortfolioReviewItem> = [
+    {
+      title: 'Holding',
+      dataIndex: 'symbol',
+      width: 120,
+      fixed: 'left',
+      sorter: (left, right) => left.symbol.localeCompare(right.symbol),
+      render: (symbol: string) => <Typography.Text strong>{symbol}</Typography.Text>,
+    },
+    {
+      title: 'Why it is listed',
+      dataIndex: 'reasons',
+      render: (reasons: PortfolioReviewReason[]) =>
+        reasons.length === 0 ? (
+          <Typography.Text type="secondary">No snapshot flags</Typography.Text>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {reasons.map((reason) => (
+              <Tag key={`${reason.category}:${reason.label}`} color={reasonColor(reason)} title={reason.detail}>
+                {reason.label}: {reason.detail}
+              </Tag>
+            ))}
+          </div>
+        ),
+    },
+    {
+      title: 'Weight',
+      dataIndex: 'portfolioWeight',
+      width: 100,
+      align: 'right',
+      sorter: (left, right) => left.portfolioWeight - right.portfolioWeight,
+      render: (value: number) => `${(value * 100).toFixed(2)}%`,
+    },
+    {
+      title: 'Return vs cost basis',
+      dataIndex: 'returnVsCostBasis',
+      width: 160,
+      align: 'right',
+      sorter: (left, right) => (left.returnVsCostBasis ?? 0) - (right.returnVsCostBasis ?? 0),
+      render: (value: number | null) =>
+        value === null ? (
+          <Typography.Text type="secondary">Unavailable</Typography.Text>
+        ) : (
+          <Typography.Text type={value < 0 ? 'danger' : value > 0 ? 'success' : undefined}>
+            {value > 0 ? '+' : ''}
+            {value.toFixed(2)}%
+          </Typography.Text>
+        ),
+    },
+    {
+      title: 'Snapshot data',
+      dataIndex: 'dataComplete',
+      width: 110,
+      align: 'center',
+      filters: [
+        { text: 'Available', value: true },
+        { text: 'Check data', value: false },
+      ],
+      onFilter: (value, record) => record.dataComplete === value,
+      render: (complete: boolean) => (
+        <Tag color={complete ? 'green' : 'red'}>{complete ? 'Available' : 'Check data'}</Tag>
+      ),
+    },
+    {
+      title: '',
+      key: 'details',
+      width: 92,
+      align: 'right',
+      render: (_value, report) => (
+        <Button type="link" onClick={() => openReport(report)}>
+          Details
+        </Button>
+      ),
+    },
+  ];
 
   if (reports.length === 0) {
-    return <Empty description="No holdings match the selected filters" />;
+    return <Empty className="border-t border-slate-200 py-10" description="No holdings match these filters" />;
   }
 
   return (
-    <div className="relative">
-      {/* Expanded Card Overlay */}
-      {expandedCard && expandedReport && (
-        <div ref={expandedCardRef} className="my-4">
-          <HealthCard report={expandedReport} expanded onClick={() => setExpandedCard(null)} />
+    <div className="border-t border-slate-200">
+      {expandedReport && (
+        <div ref={expandedRef} className="border-b border-slate-200">
+          <StockHealthCheck position={expandedReport.position} showBenchmarkSelector={false} />
+          <div className="border-t border-slate-100 py-2 text-center">
+            <Button type="link" onClick={() => setExpandedSymbol(null)}>
+              Collapse details
+            </Button>
+          </div>
         </div>
       )}
-
-      {/* Masonry Grid - Only show tiles */}
-      <Masonry
-        items={items}
-        columns={{
-          xs: 1,
-          sm: 2,
-          md: 3,
-          lg: 4,
-          xl: 5,
-          xxl: 6,
-        }}
-        gutter={16}
-        itemRender={({ data: report }) => {
-          // Only render tile view in masonry
-          return (
-            <HealthCard
-              key={report.symbol}
-              report={report}
-              expanded={false}
-              onClick={() => handleCardClick(report.symbol)}
-            />
-          );
-        }}
+      <Table
+        rowKey="symbol"
+        columns={columns}
+        dataSource={reports}
+        size="small"
+        scroll={{ x: 900 }}
+        pagination={{ defaultPageSize: 20, showSizeChanger: true, pageSizeOptions: [20, 50, 100] }}
+        onRow={(report) => ({
+          onDoubleClick: () => openReport(report),
+        })}
       />
     </div>
   );

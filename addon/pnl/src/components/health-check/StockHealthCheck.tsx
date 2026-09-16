@@ -5,11 +5,10 @@
  * Loads historical data only for the specified symbol.
  */
 
-import { Alert, Card, Spin, Tag, Typography } from 'antd';
+import { Alert, Card, Spin, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '@/analytics';
-import { cn } from '@/utils/cn';
 import { formatDate, getSymbol, sumOf } from '@/utils/common';
 import { calculateOpenTransactions } from '@/utils/transactionUtils';
 import { DATE_FORMAT } from '../../constants';
@@ -20,13 +19,10 @@ import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecur
 import { HealthCheckService, type PriceHistory, type PricePoint } from '../../services/healthCheckService';
 import type { Position } from '../../types';
 import type { HoldingHealthReport } from '../../types/healthCheck';
-import { RECOMMENDATION_COLORS, SEVERITY_COLORS } from '../../types/healthCheck';
 import { BenchmarkSelector } from '../common/BenchmarkSelector';
 import { CloseButton } from '../common/CloseButton';
 import { HealthCheckMetrics } from './HealthCheckMetrics';
 import { OpportunityCostChart } from './OpportunityCostChart';
-
-const { Text } = Typography;
 
 interface Props {
   position: Position;
@@ -64,7 +60,11 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     return _openTransactions;
   }, [position.transactions, currencies]);
 
-  const positionStartDate = useMemo(() => openTransactions[0].date, [openTransactions]);
+  const positionStartDate = useMemo(
+    () =>
+      openTransactions[0]?.date ?? position.transactions?.[0]?.date ?? dayjs(toDate, DATE_FORMAT).subtract(1, 'year'),
+    [openTransactions, position.transactions, toDate],
+  );
 
   useEffect(() => {
     trackEvent('stock-health-check', { benchmark: selectedBenchmark });
@@ -90,7 +90,7 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
         );
         const prices: PricePoint[] = data.map((point) => ({
           date: point.timestamp,
-          close: convertCurrency(currency, point.closePrice, point.timestamp),
+          close: convertCurrency(currency, point.adjustedClosePrice ?? point.closePrice, point.timestamp),
         }));
         return { symbol, prices };
       } catch (error) {
@@ -165,26 +165,6 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
     analyzeStock();
   }, [analyzeStock]);
 
-  function getScoreColor(score: number): string {
-    if (score <= 30) return SEVERITY_COLORS.critical;
-    if (score <= 50) return SEVERITY_COLORS.warning;
-    if (score <= 70) return SEVERITY_COLORS.info;
-    return SEVERITY_COLORS.healthy;
-  }
-
-  function getRecommendationColor(recommendation: string): string {
-    switch (recommendation) {
-      case 'SELL':
-        return 'error';
-      case 'REVIEW':
-        return 'warning';
-      case 'ACCUMULATE':
-        return 'success';
-      default:
-        return 'default';
-    }
-  }
-
   if (loading) {
     return (
       <Card title={`Health Check Analysis: ${symbol}`}>
@@ -213,14 +193,8 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
       styles={{ body: { padding: 0 } }}
       title={
         <div className="flex items-center justify-between">
-          <span>Health Check Analysis: {symbol}</span>
+          <span>Historical analysis: {symbol}</span>
           {showBenchmarkSelector && <BenchmarkSelector analyticsEvent="stock-health-check-benchmark-change" />}
-          <div className="flex items-center gap-3">
-            <Text strong style={{ fontSize: 20, color: getScoreColor(report.score) }}>
-              {report.score}/100
-            </Text>
-            <Tag color={getRecommendationColor(report.recommendation)}>{report.recommendation}</Tag>
-          </div>
         </div>
       }
       extra={onClose && <CloseButton onClick={onClose} />}
@@ -236,13 +210,10 @@ export const StockHealthCheck = memo<Props>(({ position, showBenchmarkSelector =
         />
       )}
 
-      {report.suggestedAction && (
-        <div className={cn('px-4 py-1', RECOMMENDATION_COLORS[report.recommendation])}>
-          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">Insights:</h3>
-          <p className="text-sm">{report.suggestedAction}</p>
-          <p className="text-sm">{report.opportunityCostDescription}</p>
-        </div>
-      )}
+      <Typography.Paragraph type="secondary" className="!mx-4 !mb-4 text-sm">
+        Historical metrics are diagnostic only. Use the validated portfolio return and active-contribution analysis
+        before making a transition decision.
+      </Typography.Paragraph>
 
       {/* Issues and Strengths */}
       {(report.flagDescriptions.length > 0 || report.strengthDescriptions.length > 0) && (

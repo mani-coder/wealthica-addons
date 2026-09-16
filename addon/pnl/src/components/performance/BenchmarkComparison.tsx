@@ -8,7 +8,7 @@ import { useAddon, useAddonContext } from '../../context/AddonContext';
 import { useBenchmark } from '../../context/BenchmarkContext';
 import useCurrency from '../../hooks/useCurrency';
 import { type SecurityPriceData, useSecurityHistory } from '../../hooks/useSecurityHistory';
-import type { Portfolio } from '../../types';
+import type { Account, Portfolio, Position, Transaction } from '../../types';
 import {
   BENCHMARKS,
   type BenchmarkType,
@@ -18,6 +18,8 @@ import {
 } from '../../utils/benchmarkData';
 import { buildCorsFreeUrl } from '../../utils/common';
 import Charts from '../Charts';
+import AlternativeScenarios from './AlternativeScenarios';
+import HoldingsRelativePerformance from './HoldingsRelativePerformance';
 import Metrics from './Metrics';
 import PeriodReturnsTable from './PeriodReturnsTable';
 
@@ -31,6 +33,10 @@ type SecuritySearchResult = {
 
 type Props = {
   portfolios: Portfolio[];
+  positions: Position[];
+  transactions: Transaction[];
+  accounts: Account[];
+  rawTransactions: any[];
 };
 
 function BenchmarkComparison(props: Props) {
@@ -433,12 +439,33 @@ function BenchmarkComparison(props: Props) {
             />
 
             {benchmarkReturns.length > 0 ? (
-              <Charts constructorType="stockChart" options={getOptions()} />
+              <>
+                <div className="px-4 pb-2 text-sm text-slate-500 sm:px-6">
+                  Time-weighted portfolio return · {benchmarkReturnBasis} benchmark · market data through{' '}
+                  {formattedEffectiveEndDate}
+                </div>
+                <Charts constructorType="stockChart" options={getOptions()} />
+              </>
             ) : (
               <div className="text-center p-8 text-gray-600">
                 <Typography.Text>Unable to load benchmark data. Please try again later.</Typography.Text>
               </div>
             )}
+
+            <AlternativeScenarios portfolios={props.portfolios} fromDate={fromDate} toDate={toDate} />
+
+            <HoldingsRelativePerformance
+              positions={props.positions}
+              transactions={props.transactions}
+              portfolios={props.portfolios}
+              benchmarkReturns={benchmarkReturns}
+              benchmarkName={currentBenchmarkInfo?.name || 'Benchmark'}
+              benchmarkSymbol={currentBenchmarkInfo?.symbol || 'Benchmark'}
+              fromDate={fromDate}
+              toDate={effectiveEndDate}
+              accounts={props.accounts}
+              rawTransactions={props.rawTransactions}
+            />
 
             <PeriodReturnsTable
               periods={periodReturns}

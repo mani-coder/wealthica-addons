@@ -1,10 +1,12 @@
 import ErrorBoundary from 'antd/es/alert/ErrorBoundary';
+import HC_More from 'highcharts/highcharts-more';
 import * as Highcharts from 'highcharts/highstock';
 import HC_DrillDown from 'highcharts/modules/drilldown';
 import HighchartsReact from 'highcharts-react-official';
 import React from 'react';
 
 HC_DrillDown(Highcharts);
+HC_More(Highcharts);
 
 Highcharts.setOptions({
   credits: {

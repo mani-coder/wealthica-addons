@@ -198,23 +198,27 @@ export class HealthCheckService {
     benchmarkHistory: PriceHistory,
     totalPortfolioValue: number,
   ): HealthMetrics {
-    const oneYearAgo = dayjs().subtract(1, 'year').startOf('day');
-    const threeYearsAgo = dayjs().subtract(3, 'years').startOf('day');
-    const fiveYearsAgo = dayjs().subtract(5, 'years').startOf('day');
+    const sortedPrices = [...priceHistory.prices].sort(
+      (left, right) => dayjs(left.date).valueOf() - dayjs(right.date).valueOf(),
+    );
+    const analysisEndDate = dayjs(sortedPrices.at(-1)?.date);
+    const oneYearAgo = analysisEndDate.subtract(1, 'year').startOf('day');
+    const threeYearsAgo = analysisEndDate.subtract(3, 'years').startOf('day');
+    const fiveYearsAgo = analysisEndDate.subtract(5, 'years').startOf('day');
 
     // Dividend metrics
-    const dividendYield = this.calculateDividendYield(transactions, position);
-    const dividendGrowth3Y = this.calculateDividendGrowth(transactions);
-    const dividendTrend = this.determineDividendTrend(transactions);
+    const analysisTransactions = transactions.filter((transaction) => !transaction.date.isAfter(analysisEndDate));
+    const dividendYield = this.calculateDividendYield(analysisTransactions, position, analysisEndDate);
+    const dividendGrowth3Y = this.calculateDividendGrowth(analysisTransactions, analysisEndDate);
+    const dividendTrend = this.determineDividendTrend(analysisTransactions, analysisEndDate);
 
-    const holdingStartDate = openTransactions[0].date;
+    const holdingStartDate = openTransactions[0]?.date ?? dayjs(sortedPrices[0]?.date);
 
-    // Calculate total returns (price appreciation + dividends)
-    const return1Y = this.calculatePriceReturn(priceHistory, oneYearAgo, holdingStartDate, dividendYield);
-    const return3Y = this.calculatePriceReturn(priceHistory, threeYearsAgo, holdingStartDate, dividendYield * 3);
-    const return5Y = this.calculatePriceReturn(priceHistory, fiveYearsAgo, holdingStartDate, dividendYield * 5);
-    const returnSinceInception =
-      (position.gain_percent || 0) * 100 + (dividendYield * dayjs().diff(holdingStartDate, 'days')) / 365;
+    // Histories use adjusted closes, so these returns already include splits and ordinary distributions.
+    const return1Y = this.calculatePriceReturn(priceHistory, oneYearAgo, holdingStartDate);
+    const return3Y = this.calculatePriceReturn(priceHistory, threeYearsAgo, holdingStartDate);
+    const return5Y = this.calculatePriceReturn(priceHistory, fiveYearsAgo, holdingStartDate);
+    const returnSinceInception = this.calculatePriceReturn(priceHistory, holdingStartDate, holdingStartDate);
 
     const xirr = this.calculateXIRR(position);
 
@@ -242,11 +246,11 @@ export class HealthCheckService {
 
     // Underwater analysis
     const daysUnderwater = this.calculateDaysUnderwater(openTransactions, priceHistory);
-    const holdingPeriodDays = this.calculateHoldingPeriodDays(openTransactions);
+    const holdingPeriodDays = this.calculateHoldingPeriodDays(openTransactions, analysisEndDate);
 
     // Risk metrics
     const volatility = this.calculateVolatility(priceHistory);
-    const sharpeRatio = this.calculateSharpeRatio(priceHistory);
+    const sharpeRatio = this.calculateSharpeRatio(priceHistory, analysisEndDate);
 
     return {
       // Return metrics
@@ -720,14 +724,9 @@ export class HealthCheckService {
   // ============================================
 
   /**
-   * Calculate price-only return (capital appreciation) over a period
+   * Calculate return from the supplied price history. Callers provide adjusted closes.
    */
-  private calculatePriceReturn(
-    priceHistory: PriceHistory,
-    startDate: Dayjs,
-    holdingStartDate?: Dayjs,
-    dividendYield?: number,
-  ): number {
+  private calculatePriceReturn(priceHistory: PriceHistory, startDate: Dayjs, holdingStartDate?: Dayjs): number {
     if (!priceHistory.prices || priceHistory.prices.length < 2) return 0;
     if (holdingStartDate && dayjs(startDate).isBefore(holdingStartDate, 'day')) return 0;
 
@@ -740,7 +739,7 @@ export class HealthCheckService {
 
     if (!startPrice || startPrice === 0) return 0;
 
-    return ((endPrice - startPrice) / startPrice) * 100 + (dividendYield || 0);
+    return ((endPrice - startPrice) / startPrice) * 100;
   }
 
   /**
@@ -943,10 +942,14 @@ export class HealthCheckService {
    * Calculate Sharpe Ratio
    * (AnnualizedReturn - RiskFreeRate) / Volatility
    */
-  private calculateSharpeRatio(priceHistory: PriceHistory, riskFreeRate: number = 0.04): number {
+  private calculateSharpeRatio(
+    priceHistory: PriceHistory,
+    analysisEndDate: Dayjs,
+    riskFreeRate: number = 0.04,
+  ): number {
     // Use price-only return for Sharpe ratio to match volatility calculation
     // (volatility is based on price changes only)
-    const annualizedReturn = this.calculatePriceReturn(priceHistory, dayjs().subtract(1, 'year')) / 100;
+    const annualizedReturn = this.calculatePriceReturn(priceHistory, analysisEndDate.subtract(1, 'year')) / 100;
     const volatility = this.calculateVolatility(priceHistory);
 
     if (volatility === 0) return 0;
@@ -957,12 +960,12 @@ export class HealthCheckService {
   /**
    * Calculate current dividend yield
    */
-  private calculateDividendYield(transactions: Transaction[], position: Position): number {
+  private calculateDividendYield(transactions: Transaction[], position: Position, analysisEndDate: Dayjs): number {
     const dividendTxs = transactions.filter((t) => t.type === 'dividend' || t.type === 'distribution');
     if (dividendTxs.length === 0) return 0;
 
     // Get dividends from last 12 months
-    const oneYearAgo = dayjs().subtract(1, 'year');
+    const oneYearAgo = analysisEndDate.subtract(1, 'year');
     const recentDividends = dividendTxs.filter((t) => dayjs(t.date).isAfter(oneYearAgo));
 
     const annualDividends = recentDividends.reduce((sum, t) => sum + t.amount, 0);
@@ -975,8 +978,12 @@ export class HealthCheckService {
   /**
    * Calculate dividend growth rate
    */
-  private calculateDividendGrowth(_transactions: Transaction[]): number {
-    const transactions = _transactions;
+  private calculateDividendGrowth(_transactions: Transaction[], analysisEndDate: Dayjs): number {
+    const firstCompleteYear = analysisEndDate.startOf('year').subtract(4, 'years');
+    const currentYear = analysisEndDate.startOf('year');
+    const transactions = _transactions.filter(
+      (transaction) => !transaction.date.isBefore(firstCompleteYear) && transaction.date.isBefore(currentYear),
+    );
     const dividendTxs = transactions
       .filter((t) => t.type === 'dividend' || t.type === 'distribution')
       .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
@@ -990,7 +997,7 @@ export class HealthCheckService {
       yearlyDividends.set(year, (yearlyDividends.get(year) || 0) + tx.amount);
     }
 
-    const years = Array.from(yearlyDividends.keys()).sort();
+    const years = Array.from(yearlyDividends.keys()).sort().slice(-4);
     if (years.length < 2) return 0;
 
     const firstYear = years[0];
@@ -1011,20 +1018,20 @@ export class HealthCheckService {
   /**
    * Determine dividend trend based on transaction history
    */
-  private determineDividendTrend(transactions: Transaction[]): DividendTrend {
+  private determineDividendTrend(transactions: Transaction[], analysisEndDate: Dayjs): DividendTrend {
     const dividendTxs = transactions.filter((t) => t.type === 'dividend' || t.type === 'distribution');
 
     if (dividendTxs.length === 0) return 'none';
 
     // Check if dividends have been suspended (no dividends in last 12 months)
-    const oneYearAgo = dayjs().subtract(1, 'year');
+    const oneYearAgo = analysisEndDate.subtract(1, 'year');
     const recentDividends = dividendTxs.filter((t) => dayjs(t.date).isAfter(oneYearAgo));
 
     if (recentDividends.length === 0 && dividendTxs.length > 0) {
       return 'suspended';
     }
 
-    const growth = this.calculateDividendGrowth(transactions);
+    const growth = this.calculateDividendGrowth(transactions, analysisEndDate);
 
     if (growth >= 3) return 'growing';
     if (growth <= -3) return 'declining';
@@ -1034,9 +1041,9 @@ export class HealthCheckService {
   /**
    * Calculate number of days since first open purchase
    */
-  private calculateHoldingPeriodDays(openTransactions: OpenTransaction[]): number {
+  private calculateHoldingPeriodDays(openTransactions: OpenTransaction[], analysisEndDate: Dayjs): number {
     if (openTransactions.length === 0) return 0;
 
-    return openTransactions[openTransactions.length - 1].date.diff(openTransactions[0].date, 'day');
+    return Math.max(0, analysisEndDate.diff(openTransactions[0].date, 'day'));
   }
 }

@@ -8,6 +8,7 @@ yarn-error.log*
 firebase-debug.log*
 firebase-debug.*.log*
 src/mocks/prod/*
+.docs/
 
 # Firebase cache
 .firebase/

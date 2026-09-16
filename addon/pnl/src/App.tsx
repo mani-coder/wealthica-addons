@@ -45,6 +45,7 @@ import { enrichPositionsWithType } from './utils/positionEnricher';
 import { computeBookValue, computeXIRR } from './utils/xirr';
 
 type State = {
+  rawTransactions: any[];
   securityTransactions: Transaction[];
   accountTransactions: AccountTransaction[];
   portfolios: Portfolio[];
@@ -143,6 +144,7 @@ export default function App() {
   const addon = useRef(getAddon(addOnOptionsRef));
 
   const [state, setState] = useState<State>({
+    rawTransactions: [],
     securityTransactions: [],
     accountTransactions: [],
     portfolios: [],
@@ -283,6 +285,7 @@ export default function App() {
     }
     updateState({
       positions,
+      rawTransactions: transactions,
       securityTransactions,
       accountTransactions: parseAccountTransactionsResponse(transactions, currencyRef.current),
       allPortfolios: portfolios,
@@ -542,7 +545,13 @@ export default function App() {
                           destroyOnHidden: true,
                           children: (
                             <Suspense fallback={<BarLoader />}>
-                              <BenchmarkComparison portfolios={state.allPortfolios} />
+                              <BenchmarkComparison
+                                portfolios={state.allPortfolios}
+                                positions={state.positions}
+                                transactions={state.securityTransactions}
+                                accounts={state.accounts}
+                                rawTransactions={state.rawTransactions}
+                              />
                             </Suspense>
                           ),
                         },

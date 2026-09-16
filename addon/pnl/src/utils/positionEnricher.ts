@@ -47,6 +47,57 @@ function saveQuoteTypeCache(cache: Map<string, QuoteTypeData>): void {
 }
 
 /**
+ * Resolve Yahoo quote types in batches so historical holdings can be classified
+ * even when they no longer appear in the current positions response.
+ */
+export async function getSecurityTypesForSymbols(symbols: string[]): Promise<Map<string, SecurityType>> {
+  const uniqueSymbols = Array.from(new Set(symbols.filter(Boolean)));
+  const quoteTypeCache = loadQuoteTypeCache();
+  const typeMap = new Map<string, SecurityType>();
+  const symbolsToFetch: string[] = [];
+
+  uniqueSymbols.forEach((symbol) => {
+    const cached = quoteTypeCache.get(symbol);
+    if (cached) {
+      typeMap.set(symbol, mapQuoteTypeToSecurityType(cached.quoteType));
+    } else {
+      symbolsToFetch.push(symbol);
+    }
+  });
+
+  if (symbolsToFetch.length > 0) {
+    const chunks = chunkArray(symbolsToFetch, CHUNK_SIZE);
+    const timestamp = Date.now();
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        const symbolsParam = chunk.join(',');
+        const url = `https://finance-api.mani-coder.dev/api/quote?symbols=${encodeURIComponent(
+          symbolsParam,
+        )}&fields=quoteType`;
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+          const data = await response.json();
+          if (!Array.isArray(data)) return;
+          data.forEach((item: any) => {
+            if (!item.symbol) return;
+            const quoteType = item.quoteType || 'EQUITY';
+            quoteTypeCache.set(item.symbol, { symbol: item.symbol, quoteType, timestamp });
+            typeMap.set(item.symbol, mapQuoteTypeToSecurityType(quoteType));
+          });
+        } catch (error) {
+          console.error(`Error fetching quote types for ${symbolsParam}:`, error);
+        }
+      }),
+    );
+    saveQuoteTypeCache(quoteTypeCache);
+  }
+
+  return typeMap;
+}
+
+/**
  * Enrich positions with security type information from Yahoo Finance API
  * This function modifies positions in-place by adding the 'type' field
  */
@@ -65,65 +116,8 @@ export async function enrichPositionsWithType(positions: Position[]): Promise<vo
     return;
   }
 
-  // Get unique Yahoo symbols
-  const symbols = Array.from(new Set(nonCryptoPositions.map((position) => getYahooSymbol(position.security))));
-
-  // Load cache
-  const quoteTypeCache = loadQuoteTypeCache();
-  const symbolsToFetch: string[] = [];
-  const typeMap = new Map<string, SecurityType>();
-
-  // Check cache first
-  symbols.forEach((symbol) => {
-    const cached = quoteTypeCache.get(symbol);
-    if (cached) {
-      typeMap.set(symbol, mapQuoteTypeToSecurityType(cached.quoteType));
-    } else {
-      symbolsToFetch.push(symbol);
-    }
-  });
-
-  // Fetch missing symbols from API
-  if (symbolsToFetch.length > 0) {
-    try {
-      const chunks = chunkArray(symbolsToFetch, CHUNK_SIZE);
-      const timestamp = Date.now();
-
-      await Promise.all(
-        chunks.map(async (chunk) => {
-          const symbolsParam = chunk.join(',');
-          const url = `https://finance-api.mani-coder.dev/api/quote?symbols=${encodeURIComponent(
-            symbolsParam,
-          )}&fields=quoteType`;
-
-          try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (Array.isArray(data)) {
-              data.forEach((item: any) => {
-                const quoteType = item.quoteType || 'EQUITY';
-                const quoteTypeData: QuoteTypeData = {
-                  symbol: item.symbol,
-                  quoteType,
-                  timestamp,
-                };
-
-                quoteTypeCache.set(item.symbol, quoteTypeData);
-                typeMap.set(item.symbol, mapQuoteTypeToSecurityType(quoteType));
-              });
-            }
-          } catch (chunkError) {
-            console.error('Error fetching quote types for chunk:', chunkError);
-          }
-        }),
-      );
-
-      saveQuoteTypeCache(quoteTypeCache);
-    } catch (error) {
-      console.error('Error enriching positions with type:', error);
-    }
-  }
+  const symbols = nonCryptoPositions.map((position) => getYahooSymbol(position.security));
+  const typeMap = await getSecurityTypesForSymbols(symbols);
 
   // Apply types to positions
   positions.forEach((position) => {

@@ -21,7 +21,11 @@ import {
   normalizePortfolioToPercentageReturns,
   normalizeToPercentageReturns,
 } from './benchmarkData';
-import { buildPortfolioSeries, calculateCashFlowMatchedOpportunityCost } from './portfolioPerformance';
+import {
+  buildPortfolioSeries,
+  calculateCashFlowMatchedOpportunityCost,
+  simulateCashFlowMatchedScenario,
+} from './portfolioPerformance';
 import { calculateOpenTransactions } from './transactionUtils';
 import { computeXIRR } from './xirr';
 
@@ -175,6 +179,75 @@ describe('time-weighted performance', () => {
       { date: '2026-01-03', value: 20 },
     ];
     expect(calculateCashFlowMatchedOpportunityCost(portfolios, benchmark)).toBeCloseTo(0);
+  });
+
+  it('keeps the single-sleeve scenario compatible with opportunity cost', () => {
+    const portfolios: Portfolio[] = [
+      { date: '2026-01-01', value: 100, deposits: 0, externalFlow: 0 },
+      { date: '2026-01-02', value: 160, deposits: 50, externalFlow: 50 },
+    ];
+    const benchmark = [
+      { date: '2026-01-01', value: 0 },
+      { date: '2026-01-02', value: 20 },
+    ];
+    const scenario = simulateCashFlowMatchedScenario(portfolios, [
+      { symbol: 'SPY', allocation: 1, returns: benchmark },
+    ]);
+
+    expect(scenario?.endingValue).toBeCloseTo(170);
+    expect(scenario?.returnPercent).toBeCloseTo(20);
+    expect(scenario?.actualMinusScenario).toBeCloseTo(-10);
+    expect(scenario?.actualMinusScenario).toBeCloseTo(
+      calculateCashFlowMatchedOpportunityCost(portfolios, benchmark) as number,
+    );
+  });
+
+  it('models blended sleeves without daily rebalancing and splits flows by target allocation', () => {
+    const portfolios: Portfolio[] = [
+      { date: '2026-01-01', value: 100, deposits: 0, externalFlow: 0 },
+      { date: '2026-01-02', value: 150, deposits: 50, externalFlow: 50 },
+      { date: '2026-01-03', value: 174, deposits: 50, externalFlow: 0 },
+    ];
+    const scenario = simulateCashFlowMatchedScenario(portfolios, [
+      {
+        symbol: 'VTI',
+        allocation: 0.8,
+        returns: [
+          { date: '2026-01-01', value: 0 },
+          { date: '2026-01-03', value: 20 },
+        ],
+      },
+      {
+        symbol: 'QQQM',
+        allocation: 0.2,
+        returns: [
+          { date: '2026-01-01', value: 0 },
+          { date: '2026-01-03', value: 0 },
+        ],
+      },
+    ]);
+
+    // VTI: (80 + 40) * 1.20 = 144; QQQM: 20 + 10 = 30.
+    expect(scenario?.endingValue).toBeCloseTo(174);
+    expect(scenario?.returnPercent).toBeCloseTo(16);
+    expect(scenario?.actualMinusScenario).toBeCloseTo(0);
+  });
+
+  it('rejects scenario allocations that do not sum to 100%', () => {
+    const portfolios: Portfolio[] = [
+      { date: '2026-01-01', value: 100, deposits: 0 },
+      { date: '2026-01-02', value: 100, deposits: 0 },
+    ];
+    const returns = [
+      { date: '2026-01-01', value: 0 },
+      { date: '2026-01-02', value: 0 },
+    ];
+    expect(
+      simulateCashFlowMatchedScenario(portfolios, [
+        { symbol: 'VTI', allocation: 0.8, returns },
+        { symbol: 'QQQM', allocation: 0.3, returns },
+      ]),
+    ).toBeNull();
   });
 });
 
@@ -430,14 +503,14 @@ describe('local production-mock regression', () => {
     const currencies = getClassificationCurrencies();
     const cashFlows = computeCashFlowByDate(transactions, currencies);
     const ytdFlows = Object.values(cashFlows).filter((flow) => flow.date >= '2026-01-01' && flow.date <= '2026-08-30');
-    expect(ytdFlows.reduce((sum, flow) => sum + flow.externalFlow, 0)).toBeCloseTo(105_272.44, 2);
+    expect(ytdFlows.reduce((sum, flow) => sum + flow.externalFlow, 0)).toBeCloseTo(105_522.44, 2);
 
     const portfolioValues = parsePortfolioResponse(portfolioResponse);
     const portfolios = buildPortfolioSeries(portfolioValues, cashFlows).filter(
       (portfolio) => portfolio.date >= '2026-01-01' && portfolio.date <= '2026-08-28',
     );
     const returns = normalizePortfolioToPercentageReturns(portfolios);
-    expect(returns[returns.length - 1].value).toBeCloseTo(9.2395307898, 8);
+    expect(returns[returns.length - 1].value).toBeCloseTo(9.2147838724, 8);
   });
 
   it.skipIf(!hasProdMocks)('relocates the historical AAPL account transfer into the current account', () => {

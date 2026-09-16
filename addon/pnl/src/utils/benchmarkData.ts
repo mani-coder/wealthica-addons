@@ -39,6 +39,13 @@ export const BENCHMARKS = {
     currency: 'USD',
     securityId: '573a09835cfa2be20553ea64',
   },
+  QQQM: {
+    symbol: 'QQQM',
+    name: 'NASDAQ-100',
+    description: 'Invesco NASDAQ 100 ETF',
+    currency: 'USD',
+    securityId: '5f8a0172903d5972b926af05',
+  },
   VTI: {
     symbol: 'VTI',
     name: 'Total US Market',

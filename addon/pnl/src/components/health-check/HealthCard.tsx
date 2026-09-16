@@ -19,19 +19,6 @@ function getScoreColor(score: number): string {
   return SEVERITY_COLORS.healthy;
 }
 
-function getRecommendationColor(recommendation: string): string {
-  switch (recommendation) {
-    case 'SELL':
-      return 'error';
-    case 'REVIEW':
-      return 'warning';
-    case 'ACCUMULATE':
-      return 'success';
-    default:
-      return 'default';
-  }
-}
-
 export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClick }) => {
   if (expanded) {
     // Expanded view - just show StockHealthCheck with full details
@@ -69,7 +56,8 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
     );
   }
 
-  // Tile view - simple: just score and recommendation
+  // Tile view - score and diagnostic severity only. Trade-action labels are
+  // intentionally withheld until the corresponding attribution is validated.
   return (
     <Card
       hoverable
@@ -108,9 +96,8 @@ export const HealthCard: React.FC<HealthCardProps> = ({ report, expanded, onClic
           {report.name}
         </Text>
 
-        {/* Recommendation Tag */}
-        <Tag color={getRecommendationColor(report.recommendation)} className="text-sm text-center px-4 py-1">
-          {report.recommendation}
+        <Tag className="text-sm text-center px-4 py-1">
+          {report.severity === 'healthy' ? 'No snapshot flag' : 'Review snapshot'}
         </Tag>
       </div>
     </Card>

@@ -27,8 +27,8 @@ const METRIC_DESCRIPTIONS = {
     description: 'Extended Internal Rate of Return - annualized return accounting for timing of cash flows',
   },
   alpha: (context: { benchmark: string }) => ({
-    title: `Alpha vs ${context.benchmark}`,
-    description: `Performance difference compared to ${context.benchmark} benchmark. Positive means you're beating ${context.benchmark}, negative means ${context.benchmark} would have been better`,
+    title: `Return Gap vs ${context.benchmark}`,
+    description: `Security return minus ${context.benchmark} return over the same held period, shown in percentage points.`,
   }),
   volatility: {
     title: 'Volatility',
@@ -142,7 +142,7 @@ export function HealthCheckMetrics({ report, position }: Props) {
           <MetricStats
             metric="alpha"
             context={{ benchmark: benchmarkInfo.name }}
-            value={`${report.metrics.alphaSinceInception.toFixed(1)}%`}
+            value={`${report.metrics.alphaSinceInception.toFixed(1)} pts`}
             styles={{ content: { color: report.metrics.alphaSinceInception >= 0 ? '#10b981' : '#ef4444' } }}
           />
           {report.metrics.volatility > 0 && (

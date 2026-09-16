@@ -1,6 +1,7 @@
 import { Collapse, List, Typography } from 'antd';
 import React, { useMemo } from 'react';
 import { trackEvent } from '../../analytics';
+import useCurrency from '../../hooks/useCurrency';
 import type { Portfolio } from '../../types';
 import {
   calculateAlpha,
@@ -25,7 +26,8 @@ export const METRIC_DESCRIPTIONS = {
   recoveryTime: 'Average calendar days for completed drawdowns to recover their prior peak.',
   riskLevel:
     'How volatile your portfolio is compared to the market. Shown as "Lower Risk", "Similar Risk", or "Higher Risk" relative to the benchmark.',
-  opportunityCost: 'Actual ending value minus a benchmark counterfactual using the same external cash-flow dates.',
+  opportunityCost:
+    'Actual ending value minus a benchmark counterfactual using the same opening value and external cash-flow dates.',
 } as const;
 
 type Props = {
@@ -38,6 +40,7 @@ type Props = {
 
 function Metrics(props: Props) {
   const { portfolioReturns, benchmarkReturns, portfolios, benchmarkName, benchmarkReturnBasis } = props;
+  const { baseCurrencyDisplay } = useCurrency();
 
   // Calculate metrics
   const alpha = useMemo(() => {
@@ -151,20 +154,21 @@ function Metrics(props: Props) {
             suffix={<span className="text-xs text-gray-500 block mt-1">vs {benchmarkName}</span>}
           />
           <MetricsStatistics
-            title="Opportunity Cost"
+            title="Ending Value Gap"
             tooltip={METRIC_DESCRIPTIONS.opportunityCost}
             value={
               opportunityCost === null
                 ? '—'
-                : `${opportunityCost >= 0 ? '+$' : '-$'}${formatMoney(Math.abs(opportunityCost))}`
+                : `${opportunityCost >= 0 ? '+' : '-'}${baseCurrencyDisplay} ${formatMoney(Math.abs(opportunityCost))}`
             }
             styles={{
               content: { color: opportunityCost === null ? '#6b7280' : opportunityCost >= 0 ? '#10b981' : '#ef4444' },
             }}
             suffix={
               <span className="text-xs text-gray-500 block mt-1">
-                {opportunityCost === null ? 'insufficient data' : opportunityCost >= 0 ? 'gained' : 'missed'} vs{' '}
-                {benchmarkName}
+                {opportunityCost === null
+                  ? 'insufficient data'
+                  : `portfolio ended ${opportunityCost >= 0 ? 'above' : 'below'} ${benchmarkName}`}
               </span>
             }
           />

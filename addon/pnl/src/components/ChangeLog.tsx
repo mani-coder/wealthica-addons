@@ -13,6 +13,20 @@ const LOGS: {
   link?: React.ReactElement;
 }[] = [
   {
+    date: '2026-09-15',
+    tab: 'Performance',
+    title: 'Individual Stocks vs Selected Benchmark',
+    description:
+      'Compare individual stocks with the currently selected benchmark over the exact intervals they were held. A ranked impact chart highlights the largest drags, holding episodes start at a zero-percent benchmark baseline, and the table shows position-size-aware active contribution in the selected base currency.',
+  },
+  {
+    date: '2026-08-31',
+    tab: 'Performance',
+    title: 'Cash-Flow-Matched Alternative Scenarios',
+    description:
+      'Performance now compares SPY, QQQM, VOOG, and 80/20 VTI growth blends using the same opening value and every recorded contribution and withdrawal date. Blends use separate drifting sleeves without implicit daily rebalancing.',
+  },
+  {
     date: '2026-08-30',
     tab: 'Performance',
     title: 'Cash-Flow-Aware Portfolio and Benchmark Returns',
